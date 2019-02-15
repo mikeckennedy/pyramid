@@ -1,16 +1,16 @@
-graft pyramid
+graft src/pyramid
 graft docs
 prune docs/_build
+graft tests
 
 include README.rst
-include CHANGES.txt HISTORY.txt BFG_HISTORY.txt
+include CHANGES.rst HISTORY.rst BFG_HISTORY.rst
 include CONTRIBUTORS.txt LICENSE.txt COPYRIGHT.txt
 
-include contributing.md RELEASING.txt
+include .coveragerc .flake8 setup.cfg pyproject.toml
 include tox.ini appveyor.yml .travis.yml rtd.txt
-
-include HACKING.txt hacking-tox.ini
-include builddocs.sh coverage.sh scaffoldtests.sh
-include TODO.txt
+include contributing.md RELEASING.txt HACKING.txt TODO.txt
+graft .github
 
 global-exclude __pycache__ *.py[cod]
+global-exclude .DS_Store

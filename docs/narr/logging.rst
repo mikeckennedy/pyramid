@@ -9,10 +9,10 @@ to send log messages to loggers that you've configured.
 
 .. warning::
 
-   This chapter assumes you've used a :term:`cookiecutter` to create a project
+   This chapter assumes you've used our :term:`cookiecutter` to create a project
    which contains ``development.ini`` and ``production.ini`` files which help
-   configure logging.  All of the Pyramid cookiecutters provided by the Pylons Project do
-   this.  If you're not using a cookiecutter, or if you've used a third-party
+   configure logging.  The Pyramid cookiecutter provided by the Pylons Project does
+   this.  If you're not using our cookiecutter, or if you've used a third-party
    cookiecutter which does not create these files, the configuration information in
    this chapter may not be applicable.
 
@@ -26,28 +26,34 @@ to send log messages to loggers that you've configured.
 Logging Configuration
 ---------------------
 
-A :app:`Pyramid` project created from a :term:`cookiecutter` is configured to allow
+A :app:`Pyramid` project created from our :term:`cookiecutter` is configured to allow
 you to send messages to :mod:`Python standard library logging package
 <logging>` loggers from within your application.  In particular, the
 :term:`PasteDeploy` ``development.ini`` and ``production.ini`` files created
-when you use a cookiecutter include a basic configuration for the Python
+when you use our cookiecutter include a basic configuration for the Python
 :mod:`logging` package.
+These ``.ini`` file sections are passed to the `logging module's config file configuration engine <https://docs.python.org/3.7/howto/logging.html#configuring-logging>`_.
 
 PasteDeploy ``.ini`` files use the Python standard library :mod:`ConfigParser
 format <ConfigParser>`. This is the same format used as the Python
 :ref:`logging module's Configuration file format <logging-config-fileformat>`.
-The application-related and logging-related sections in the configuration file
-can coexist peacefully, and the logging-related sections in the file are used
-from when you run ``pserve``.
+The application-related and logging-related sections in the configuration file can coexist peacefully.
+The logging-related sections in the file configure logging when you run ``pserve``.
 
-The ``pserve`` command calls the :func:`pyramid.paster.setup_logging` function,
-a thin wrapper around the :func:`logging.config.fileConfig` using the specified
-``.ini`` file, if it contains a ``[loggers]`` section (all of the
-cookiecutter-generated ``.ini`` files do). ``setup_logging`` reads the logging
-configuration from the ini file upon which ``pserve`` was invoked.
+.. index::
+   pair: logging; startup
+
+If the configuration ``.ini`` file, specified when invoking ``pserve``, contains a ``[loggers]`` section then on :ref:`startup <the_startup_process>` the following process takes place:
+
+#.  The ``pserve`` command calls the :func:`pyramid.paster.setup_logging` function, passing the ``.ini`` file.
+
+#.  ``setup_logging`` is a thin wrapper which calls the Python standard library's :func:`logging.config.fileConfig`.
+
+#.  :func:`logging.config.fileConfig` reads the logging configuration from the ``.ini`` file and configures logging.
+
 
 Default logging configuration is provided in both the default
-``development.ini`` and the ``production.ini`` files.  If you use ``pyramid-cookiecutter-starter`` to generate a Pyramid project with the name of the package as ``hello_world``, then the logging configuration
+``development.ini`` and the ``production.ini`` files.  If you use our cookiecutter to generate a Pyramid project with the name of the package as ``hello_world``, then the logging configuration
 in the ``development.ini`` file is as follows:
 
 .. literalinclude:: myproject/development.ini
@@ -65,17 +71,17 @@ In this logging configuration:
 
   .. code-block:: text
 
-     2007-08-17 15:04:08,704 INFO [packagename] Loading resource, id: 86
+      2007-08-17 15:04:08,704 INFO [packagename] Loading resource, id: 86
 
-- a logger named ``myapp`` is configured that logs messages sent at a level
+- a logger named ``myproject`` is configured that logs messages sent at a level
   above or equal to ``DEBUG`` to stderr in the same format as the root logger.
 
 The ``root`` logger will be used by all applications in the Pyramid process
 that ask for a logger (via ``logging.getLogger``) that has a name which begins
-with anything except your project's package name (e.g., ``myapp``). The logger
+with anything except your project's package name (e.g., ``myproject``). The logger
 with the same name as your package name is reserved for your own usage in your
 :app:`Pyramid` application.  Its existence means that you can log to a known
-logging location from any :app:`Pyramid` application generated via a cookiecutter.
+logging location from any :app:`Pyramid` application generated via our cookiecutter.
 
 :app:`Pyramid` and many other libraries (such as Beaker, SQLAlchemy, Paste) log
 a number of messages to the root logger for debugging purposes. Switching the
@@ -88,18 +94,19 @@ root logger level to ``DEBUG`` reveals them:
     level = DEBUG
     handlers = console
 
-Some cookiecutters configure additional loggers for additional subsystems they use
-(such as SQLALchemy).  Take a look at the ``production.ini`` and
-``development.ini`` files rendered when you create a project from a cookiecutter.
+Some configurations of the :app:`Pyramid` cookiecutter configure additional loggers for
+additional subsystems they use (such as SQLAlchemy).  Take a look at the
+``production.ini`` and ``development.ini`` files rendered when you create a
+project from our cookiecutter.
 
 Sending Logging Messages
 ------------------------
 
 Python's special ``__name__`` variable refers to the current module's fully
-qualified name.  From any module in a package named ``myapp``, the ``__name__``
-builtin variable will always be something like ``myapp``, or
-``myapp.subpackage`` or ``myapp.package.subpackage`` if your project is named
-``myapp``.  Sending a message to this logger will send it to the ``myapp``
+qualified name.  From any module in a package named ``myproject``, the ``__name__``
+builtin variable will always be something like ``myproject``, or
+``myproject.subpackage`` or ``myproject.package.subpackage`` if your project is named
+``myproject``.  Sending a message to this logger will send it to the ``myproject``
 logger.
 
 To log messages to the package-specific logger configured in your ``.ini``
@@ -123,7 +130,7 @@ This will result in the following printed to the console, on ``stderr``:
 
 .. code-block:: text
 
-    16:20:20,440 DEBUG [myapp.views] Returning: Hello World!
+    16:20:20,440 DEBUG [myproject.views] Returning: Hello World!
                        (content-type: text/plain)
 
 Filtering log messages
@@ -150,7 +157,7 @@ then add it to the list of loggers:
 .. code-block:: ini
 
     [loggers]
-    keys = root, myapp, sqlalchemy.pool
+    keys = root, myproject, sqlalchemy.pool
 
 No handlers need to be configured for this logger as by default non-root
 loggers will propagate their log records up to their parent logger's handlers.
@@ -165,16 +172,16 @@ level is set to ``INFO``, whereas the application's log level is set to
     # Begin logging configuration
 
     [loggers]
-    keys = root, myapp
+    keys = root, myproject
 
-    [logger_myapp]
+    [logger_myproject]
     level = DEBUG
     handlers =
-    qualname = myapp
+    qualname = myproject
 
-All of the child loggers of the ``myapp`` logger will inherit the ``DEBUG``
-level unless they're explicitly set differently. Meaning the ``myapp.views``,
-``myapp.models``, and all your app's modules' loggers by default have an
+All of the child loggers of the ``myproject`` logger will inherit the ``DEBUG``
+level unless they're explicitly set differently. Meaning the ``myproject.views``,
+``myproject.models``, and all your app's modules' loggers by default have an
 effective level of ``DEBUG`` too.
 
 For more advanced filtering, the logging module provides a
@@ -191,7 +198,7 @@ To capture log output to a separate file, use :class:`logging.FileHandler` (or
 
     [handler_filelog]
     class = FileHandler
-    args = ('%(here)s/myapp.log','a')
+    args = ('%(here)s/myproject.log','a')
     level = INFO
     formatter = generic
 
@@ -200,7 +207,7 @@ Before it's recognized, it needs to be added to the list of handlers:
 .. code-block:: ini
 
     [handlers]
-    keys = console, myapp, filelog
+    keys = console, myproject, filelog
 
 and finally utilized by a logger.
 
@@ -211,7 +218,7 @@ and finally utilized by a logger.
     handlers = console, filelog
 
 These final three lines of configuration direct all of the root logger's output
-to the ``myapp.log`` as well as the console.
+to the ``myproject.log`` as well as the console.
 
 Logging Exceptions
 ------------------
@@ -235,7 +242,7 @@ Request Logging with Paste's TransLogger
 
 The :term:`WSGI` design is modular.  Waitress logs error conditions, debugging
 output, etc., but not web traffic.  For web traffic logging, Paste provides the
-`TransLogger <http://pythonpaste.org/modules/translogger.html>`_
+`TransLogger <https://web.archive.org/web/20160707041338/http://pythonpaste.org:80/modules/translogger.html>`_
 :term:`middleware`.  TransLogger produces logs in the `Apache Combined Log
 Format <http://httpd.apache.org/docs/2.2/logs.html#combined>`_.  But
 TransLogger does not write to files; the Python logging system must be
@@ -276,7 +283,7 @@ function of your project's ``__init__`` file:
 
 .. code-block:: python
 
-    ...
+    # ...
     app = config.make_wsgi_app()
     from paste.translogger import TransLogger
     app = TransLogger(app, setup_console_handler=False)
@@ -294,11 +301,11 @@ output to the console when we request a page:
 
 .. code-block:: text
 
-    00:50:53,694 INFO [myapp.views] Returning: Hello World!
+    00:50:53,694 INFO [myproject.views] Returning: Hello World!
                       (content-type: text/plain)
     00:50:53,695 INFO [wsgi] 192.168.1.111 - - [11/Aug/2011:20:09:33 -0700] "GET /hello
     HTTP/1.1" 404 - "-"
-    "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.6) Gecko/20070725
+    "Mozilla/5.0 (Macintosh; U; Intel macOS; en-US; rv:1.8.1.6) Gecko/20070725
     Firefox/2.0.0.6"
 
 To direct TransLogger to an ``access.log`` FileHandler, we need the following
@@ -310,7 +317,7 @@ that the ``wsgi`` logger is configured and uses this handler accordingly:
     # Begin logging configuration
 
     [loggers]
-    keys = root, myapp, wsgi
+    keys = root, myproject, wsgi
 
     [handlers]
     keys = console, accesslog

@@ -117,11 +117,11 @@ reading the code that performs a typical "unnamed utility" lookup using the
 :func:`zope.component.getUtility` global API:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.interfaces import ISettings
-   from zope.component import getUtility
-   settings = getUtility(ISettings)
+    from pyramid.interfaces import ISettings
+    from zope.component import getUtility
+    settings = getUtility(ISettings)
 
 After this code runs, ``settings`` will be a Python dictionary.  But it's
 unlikely that any civilian would know that just by reading the code.  There
@@ -181,33 +181,32 @@ developer needs to understand a ZCA concept or API during the creation of a
 
 Instead the framework hides the presence of the ZCA registry behind
 special-purpose API functions that *do* use ZCA APIs.  Take for example the
-``pyramid.security.authenticated_userid`` function, which returns the userid
+``request.authenticated_userid`` function, which returns the userid
 present in the current request or ``None`` if no userid is present in the
 current request.  The application developer calls it like so:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.security import authenticated_userid
-   userid = authenticated_userid(request)
+    userid = request.authenticated_userid
 
 They now have the current user id.
 
 Under its hood however, the implementation of ``authenticated_userid`` is this:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   def authenticated_userid(request):
-       """ Return the userid of the currently authenticated user or
-       ``None`` if there is no authentication policy in effect or there
-       is no currently authenticated user. """
+    def authenticated_userid(request):
+        """ Return the userid of the currently authenticated user or
+        ``None`` if there is no authentication policy in effect or there
+        is no currently authenticated user. """
 
-       registry = request.registry # the ZCA component registry
-       policy = registry.queryUtility(IAuthenticationPolicy)
-       if policy is None:
-           return None
-       return policy.authenticated_userid(request)
+        registry = request.registry # the ZCA component registry
+        policy = registry.queryUtility(IAuthenticationPolicy)
+        if policy is None:
+            return None
+        return policy.authenticated_userid(request)
 
 Using such wrappers, we strive to always hide the ZCA API from application
 developers.  Application developers should just never know about the ZCA API;
@@ -263,21 +262,21 @@ In all core code, we've made use of ZCA global API functions, such as
 instead of the rule.  So instead of:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.interfaces import IAuthenticationPolicy
-   from zope.component import getUtility
-   policy = getUtility(IAuthenticationPolicy)
+    from pyramid.interfaces import IAuthenticationPolicy
+    from zope.component import getUtility
+    policy = getUtility(IAuthenticationPolicy)
 
 :app:`Pyramid` code will usually do:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.interfaces import IAuthenticationPolicy
-   from pyramid.threadlocal import get_current_registry
-   registry = get_current_registry()
-   policy = registry.getUtility(IAuthenticationPolicy)
+    from pyramid.interfaces import IAuthenticationPolicy
+    from pyramid.threadlocal import get_current_registry
+    registry = get_current_registry()
+    policy = registry.getUtility(IAuthenticationPolicy)
 
 While the latter is more verbose, it also arguably makes it more obvious what's
 going on.  All of the :app:`Pyramid` core code uses this pattern rather than
@@ -483,20 +482,20 @@ accept positional arguments which match information in an associated "urlconf"
 such as ``r'^polls/(?P<poll_id>\d+)/$``:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   def aview(request, poll_id):
-       return HttpResponse(poll_id)
+    def aview(request, poll_id):
+        return HttpResponse(poll_id)
 
 Zope likewise allows you to add arbitrary keyword and positional arguments to
 any method of a resource object found via traversal:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from persistent import Persistent
+    from persistent import Persistent
 
-   class MyZopeObject(Persistent):
+    class MyZopeObject(Persistent):
         def aview(self, a, b, c=None):
             return '%s %s %c' % (a, b, c)
 
@@ -1527,22 +1526,22 @@ inlined comments take into account what we've discussed in the
 :ref:`microframeworks_smaller_hello_world` section.
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from wsgiref.simple_server import make_server  # explicitly WSGI
-   from pyramid.config import Configurator  # to configure app registry
-   from pyramid.response import Response  # explicit response, no threadlocal
+    from wsgiref.simple_server import make_server  # explicitly WSGI
+    from pyramid.config import Configurator  # to configure app registry
+    from pyramid.response import Response  # explicit response, no threadlocal
 
-   def hello_world(request):  # accept a request; no request threadlocal reqd
-       # explicit response object means no response threadlocal
-       return Response('Hello world!')
+    def hello_world(request):  # accept a request; no request threadlocal reqd
+        # explicit response object means no response threadlocal
+        return Response('Hello world!')
 
-   if __name__ == '__main__':
-       with Configurator() as config:    # no global application object
-           config.add_view(hello_world)  # explicit non-decorator registration
-           app = config.make_wsgi_app()  # explicitly WSGI
-       server = make_server('0.0.0.0', 8080, app)
-       server.serve_forever()            # explicitly WSGI
+    if __name__ == '__main__':
+        with Configurator() as config:    # no global application object
+            config.add_view(hello_world)  # explicit non-decorator registration
+            app = config.make_wsgi_app()  # explicitly WSGI
+        server = make_server('0.0.0.0', 8080, app)
+        server.serve_forever()            # explicitly WSGI
 
 
 Pyramid doesn't offer pluggable apps
@@ -1622,10 +1621,10 @@ reads something like this:
 
 .. code-block:: text
 
-   had a quick look at pyramid ... too complex to me and not really
-   understand for which benefits.. I feel should consider whether it's time
-   for me to step back to django .. I always hated zope (useless ?)
-   complexity and I love simple way of thinking
+    had a quick look at pyramid ... too complex to me and not really
+    understand for which benefits.. I feel should consider whether it's time
+    for me to step back to django .. I always hated zope (useless ?)
+    complexity and I love simple way of thinking
 
 (Paraphrased from a real email, actually.)
 
@@ -1637,21 +1636,22 @@ Too Complex
 If you can understand this "hello world" program, you can use Pyramid:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from wsgiref.simple_server import make_server
-   from pyramid.config import Configurator
-   from pyramid.response import Response
+    from wsgiref.simple_server import make_server
+    from pyramid.config import Configurator
+    from pyramid.response import Response
 
-   def hello_world(request):
-       return Response('Hello world!')
+    def hello_world(request):
+        return Response('Hello World!')
 
-   if __name__ == '__main__':
-       with Configurator() as config:
-           config.add_view(hello_world)
-           app = config.make_wsgi_app()
-       server = make_server('0.0.0.0', 8080, app)
-       server.serve_forever()
+    if __name__ == '__main__':
+        with Configurator() as config:
+            config.add_route('hello', '/')
+            config.add_view(hello_world, route_name='hello')
+            app = config.make_wsgi_app()
+        server = make_server('0.0.0.0', 6543, app)
+        server.serve_forever()
 
 Pyramid has over 1200 pages of documentation (printed), covering topics from
 the very basic to the most advanced. *Nothing* is left undocumented, quite
@@ -1689,7 +1689,7 @@ some sort of monolithic thing, and a lot of its software is usable
 externally.  And while it's not really the job of this document to defend it,
 Zope has been around for over 10 years and has an incredibly large, active
 community.  If you don't believe this,
-http://pypi-ranking.info/author is an eye-opening reality
+https://pypi.org/search/?q=zope is an eye-opening reality
 check.
 
 Love Simplicity

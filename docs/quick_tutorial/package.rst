@@ -53,7 +53,7 @@ Steps
 
    .. code-block:: bash
 
-    $ cd ..; mkdir package; cd package
+       cd ..; mkdir package; cd package
 
 #. In ``package/setup.py``, enter the following:
 
@@ -64,8 +64,8 @@ Steps
 
    .. code-block:: bash
 
-    $ $VENV/bin/pip install -e .
-    $ mkdir tutorial
+       $VENV/bin/pip install -e .
+       mkdir tutorial
 
 #. Enter the following into ``package/tutorial/__init__.py``:
 
@@ -79,7 +79,7 @@ Steps
 
    .. code-block:: bash
 
-    $ $VENV/bin/python tutorial/app.py
+       $VENV/bin/python tutorial/app.py
 
 #. Open http://localhost:6543/ in your browser.
 
@@ -108,4 +108,4 @@ idea to run a Python module inside a package directly as a script.
 
 .. seealso:: :ref:`Python Packages <python:tut-packages>` and `Working in
    "Development Mode"
-   <https://packaging.python.org/tutorials/distributing-packages/#working-in-development-mode>`_.
+   <https://packaging.python.org/tutorials/installing-packages/#installing-from-a-local-src-tree>`_.

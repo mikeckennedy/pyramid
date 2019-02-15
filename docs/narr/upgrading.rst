@@ -1,3 +1,6 @@
+.. index::
+   single: upgrading pyramid
+
 .. _upgrading_chapter:
 
 Upgrading Pyramid
@@ -83,14 +86,10 @@ At the time of a Pyramid version release, each supports all versions of Python
 through the end of their lifespans. The end-of-life for a given version of
 Python is when security updates are no longer released.
 
-- `Python 3.2 Lifespan <https://www.python.org/dev/peps/pep-0392/#lifespan>`_
-  ends February 2016.
-- `Python 3.3 Lifespan <https://www.python.org/dev/peps/pep-0392/#lifespan>`_
-  ends September 2017.
-- `Python 3.4 Lifespan <https://www.python.org/dev/peps/pep-0429/>`_ TBD.
-- `Python 3.5 Lifespan <https://www.python.org/dev/peps/pep-0478/>`_ TBD.
-- `Python 3.6 Lifespan <https://www.python.org/dev/peps/pep-0494/#id4>`_
-  December 2021.
+- `Python 3.4 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2019-03-16	.
+- `Python 3.5 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2020-09-13	.
+- `Python 3.6 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2021-12-23.
+- `Python 3.7 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2023-06-27	.
 
 To determine the Python support for a specific release of Pyramid, view its
 ``tox.ini`` file at the root of the repository's version.
@@ -124,11 +123,11 @@ you can see DeprecationWarnings printed to the console when the tests run.
 
 .. code-block:: bash
 
-   $ python -Wd setup.py test -q
+    python -Wd setup.py test -q
 
 The ``-Wd`` argument tells Python to print deprecation warnings to the console.
 See `the Python -W flag documentation
-<https://docs.python.org/2/using/cmdline.html#cmdoption-W>`_ for more
+<https://docs.python.org/2/using/cmdline.html#cmdoption-w>`_ for more
 information.
 
 As your tests run, deprecation warnings will be printed to the console
@@ -137,19 +136,19 @@ deprecation warning from being issued.  For example:
 
 .. code-block:: bash
 
-   $ python -Wd setup.py test -q
-   # .. elided ...
-   running build_ext
-   /home/chrism/projects/pyramid/env27/myproj/myproj/views.py:3:
-   DeprecationWarning: static: The "pyramid.view.static" class is deprecated
-   as of Pyramid 1.1; use the "pyramid.static.static_view" class instead with
-   the "use_subpath" argument set to True.
-     from pyramid.view import static
-   .
-   ----------------------------------------------------------------------
-   Ran 1 test in 0.014s
-   
-   OK
+    python -Wd setup.py test -q
+    # .. elided ...
+    running build_ext
+    /home/chrism/projects/pyramid/env27/myproj/myproj/views.py:3:
+    DeprecationWarning: static: The "pyramid.view.static" class is deprecated
+    as of Pyramid 1.1; use the "pyramid.static.static_view" class instead with
+    the "use_subpath" argument set to True.
+      from pyramid.view import static
+    .
+    ----------------------------------------------------------------------
+    Ran 1 test in 0.014s
+
+    OK
 
 In the above case, it's line #3 in the ``myproj.views`` module (``from
 pyramid.view import static``) that is causing the problem:
@@ -178,14 +177,14 @@ console:
 
 .. code-block:: bash
 
-   $ python -Wd setup.py test -q
-   # .. elided ...
-   running build_ext
-   .
-   ----------------------------------------------------------------------
-   Ran 1 test in 0.014s
-   
-   OK
+    python -Wd setup.py test -q
+    # .. elided ...
+    running build_ext
+    .
+    ----------------------------------------------------------------------
+    Ran 1 test in 0.014s
+
+    OK
 
 
 My application doesn't have any tests or has few tests
@@ -197,18 +196,18 @@ deprecation warnings won't be executed.
 
 In this circumstance, you can start your application interactively under a
 server run with the ``PYTHONWARNINGS`` environment variable set to ``default``.
-On UNIX, you can do that via:
+On Unix, you can do that via:
 
 .. code-block:: bash
 
-   $ PYTHONWARNINGS=default $VENV/bin/pserve development.ini
+    PYTHONWARNINGS=default $VENV/bin/pserve development.ini
 
 On Windows, you need to issue two commands:
 
 .. code-block:: doscon
 
-   c:\> set PYTHONWARNINGS=default
-   c:\> Scripts\pserve development.ini
+    set PYTHONWARNINGS=default
+    Scripts\pserve development.ini
 
 At this point, it's ensured that deprecation warnings will be printed to the
 console whenever a codepath is hit that generates one.  You can then click
@@ -218,7 +217,7 @@ as explained in :ref:`testing_under_new_release`.
 See `the PYTHONWARNINGS environment variable documentation
 <https://docs.python.org/2/using/cmdline.html#envvar-PYTHONWARNINGS>`_ or `the
 Python -W flag documentation
-<https://docs.python.org/2/using/cmdline.html#cmdoption-W>`_ for more
+<https://docs.python.org/2/using/cmdline.html#cmdoption-w>`_ for more
 information.
 
 Upgrading to the very latest Pyramid release

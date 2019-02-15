@@ -58,12 +58,12 @@ accepts a single argument named ``request``, and which returns a
 implemented as a function:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.response import Response
+    from pyramid.response import Response
 
-   def hello_world(request):
-       return Response('Hello world!')
+    def hello_world(request):
+        return Response('Hello world!')
 
 .. index::
    single: view calling convention
@@ -90,16 +90,16 @@ parameters.  Views defined as classes must have the following traits.
 For example:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.response import Response
+    from pyramid.response import Response
 
-   class MyView(object):
-       def __init__(self, request):
-           self.request = request
+    class MyView(object):
+        def __init__(self, request):
+            self.request = request
 
-       def __call__(self):
-           return Response('hello')
+        def __call__(self):
+            return Response('hello')
 
 The request object passed to ``__init__`` is the same type of request object
 described in :ref:`function_as_view`.
@@ -127,12 +127,12 @@ implements the :term:`Response` interface is to return a
 :class:`pyramid.response.Response` object instance directly.  For example:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.response import Response
+    from pyramid.response import Response
 
-   def view(request):
-       return Response('OK')
+    def view(request):
+        return Response('OK')
 
 :app:`Pyramid` provides a range of different "exception" classes which inherit
 from :class:`pyramid.response.Response`.  For example, an instance of the class
@@ -186,23 +186,23 @@ be raised.  This will cause a response to be generated with a ``401
 Unauthorized`` status:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.httpexceptions import HTTPUnauthorized
+    from pyramid.httpexceptions import HTTPUnauthorized
 
-   def aview(request):
-       raise HTTPUnauthorized()
+    def aview(request):
+        raise HTTPUnauthorized()
 
 An HTTP exception, instead of being raised, can alternately be *returned* (HTTP
 exceptions are also valid response objects):
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.httpexceptions import HTTPUnauthorized
+    from pyramid.httpexceptions import HTTPUnauthorized
 
-   def aview(request):
-       return HTTPUnauthorized()
+    def aview(request):
+        return HTTPUnauthorized()
 
 A shortcut for creating an HTTP exception is the
 :func:`pyramid.httpexceptions.exception_response` function.  This function
@@ -213,12 +213,12 @@ the :func:`~pyramid.httpexceptions.exception_response` function to construct
 and return the same object.
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.httpexceptions import exception_response
+    from pyramid.httpexceptions import exception_response
 
-   def aview(request):
-       raise exception_response(401)
+    def aview(request):
+        raise exception_response(401)
 
 This is the case because ``401`` is the HTTP status code for "HTTP
 Unauthorized".  Therefore, ``raise exception_response(401)`` is functionally
@@ -277,26 +277,26 @@ For example, given the following exception class in a module named
 ``helloworld.exceptions``:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   class ValidationFailure(Exception):
-       def __init__(self, msg):
-           self.msg = msg
+    class ValidationFailure(Exception):
+        def __init__(self, msg):
+            self.msg = msg
 
 You can wire a view callable to be called whenever any of your *other* code
 raises a ``helloworld.exceptions.ValidationFailure`` exception:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.view import exception_view_config
-   from helloworld.exceptions import ValidationFailure
+    from pyramid.view import exception_view_config
+    from helloworld.exceptions import ValidationFailure
 
-   @exception_view_config(ValidationFailure)
-   def failed_validation(exc, request):
-       response =  Response('Failed validation: %s' % exc.msg)
-       response.status_int = 500
-       return response
+    @exception_view_config(ValidationFailure)
+    def failed_validation(exc, request):
+        response =  Response('Failed validation: %s' % exc.msg)
+        response.status_int = 500
+        return response
 
 Assuming that a :term:`scan` was run to pick up this view registration, this
 view callable will be invoked whenever a
@@ -308,16 +308,16 @@ Other normal view predicates can also be used in combination with an exception
 view registration:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.view import view_config
-   from helloworld.exceptions import ValidationFailure
+    from pyramid.view import view_config
+    from helloworld.exceptions import ValidationFailure
 
-   @exception_view_config(ValidationFailure, route_name='home')
-   def failed_validation(exc, request):
-       response =  Response('Failed validation: %s' % exc.msg)
-       response.status_int = 500
-       return response
+    @exception_view_config(ValidationFailure, route_name='home')
+    def failed_validation(exc, request):
+        response =  Response('Failed validation: %s' % exc.msg)
+        response.status_int = 500
+        return response
 
 The above exception view names the ``route_name`` of ``home``, meaning that it
 will only be called when the route matched has a name of ``home``.  You can
@@ -374,22 +374,22 @@ instance of this class will cause the client to receive a "302 Found" response.
 To do so, you can *return* a :class:`pyramid.httpexceptions.HTTPFound` instance.
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.httpexceptions import HTTPFound
+    from pyramid.httpexceptions import HTTPFound
 
-   def myview(request):
-       return HTTPFound(location='http://example.com')
+    def myview(request):
+        return HTTPFound(location='http://example.com')
 
 Alternately, you can *raise* an HTTPFound exception instead of returning one.
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.httpexceptions import HTTPFound
+    from pyramid.httpexceptions import HTTPFound
 
-   def myview(request):
-       raise HTTPFound(location='http://example.com')
+    def myview(request):
+        raise HTTPFound(location='http://example.com')
 
 When the instance is raised, it is caught by the default :term:`exception
 response` handler and turned into a response.
@@ -407,7 +407,7 @@ various other clients.  In :app:`Pyramid`, form submission handling logic is
 always part of a :term:`view`.  For a general overview of how to handle form
 submission data using the :term:`WebOb` API, see :ref:`webob_chapter` and
 `"Query and POST variables" within the WebOb documentation
-<http://docs.webob.org/en/latest/reference.html#query-post-variables>`_.
+<https://docs.pylonsproject.org/projects/webob/en/latest/reference.html#query-post-variables>`_.
 :app:`Pyramid` defers to WebOb for its request and response implementations,
 and handling form submission data is a property of the request implementation. 
 Understanding WebOb's request API is the key to understanding how to process
@@ -439,53 +439,38 @@ As an example, let's assume that the following form page is served up to a
 browser client, and its ``action`` points at some :app:`Pyramid` view code:
 
 .. code-block:: xml
-   :linenos:
+    :linenos:
 
-   <html xmlns="http://www.w3.org/1999/xhtml">
-     <head>
-       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-     </head>
-     <form method="POST" action="myview">
-       <div>
-         <input type="text" name="firstname"/>
-       </div> 
-       <div>
-         <input type="text" name="lastname"/>
-       </div>
-       <input type="submit" value="Submit"/>
-     </form>
-   </html>
+    <html xmlns="http://www.w3.org/1999/xhtml">
+      <form method="POST" action="myview" accept-charset="UTF-8">
+        <div>
+          <input type="text" name="firstname"/>
+        </div>
+        <div>
+          <input type="text" name="lastname"/>
+        </div>
+        <input type="submit" value="Submit"/>
+      </form>
+    </html>
 
 The ``myview`` view code in the :app:`Pyramid` application *must* expect that
-the values returned by ``request.params`` will be of type ``unicode``, as
-opposed to type ``str``. The following will work to accept a form post from the
+the values returned by ``request.params`` will be of type ``str``, as opposed
+to type ``bytes``. The following will work to accept a form post from the
 above form:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   def myview(request):
-       firstname = request.params['firstname']
-       lastname = request.params['lastname']
-
-But the following ``myview`` view code *may not* work, as it tries to decode
-already-decoded (``unicode``) values obtained from ``request.params``:
-
-.. code-block:: python
-   :linenos:
-
-   def myview(request):
-       # the .decode('utf-8') will break below if there are any high-order
-       # characters in the firstname or lastname
-       firstname = request.params['firstname'].decode('utf-8')
-       lastname = request.params['lastname'].decode('utf-8')
+    def myview(request):
+        firstname = request.params['firstname']
+        lastname = request.params['lastname']
 
 For implicit decoding to work reliably, you should ensure that every form you
 render that posts to a :app:`Pyramid` view explicitly defines a charset
 encoding of UTF-8. This can be done via a response that has a
 ``;charset=UTF-8`` in its ``Content-Type`` header; or, as in the form above,
-with a ``meta http-equiv`` tag that implies that the charset is UTF-8 within
-the HTML ``head`` of the page containing the form.  This must be done
+with an ``accept-charset`` attribute, informing the browser that the
+server expects the form content to be encoded using UTF-8.  This must be done
 explicitly because all known browser clients assume that they should encode
 form data in the same character set implied by the ``Content-Type`` value of
 the response containing the form when subsequently submitting that form. There
@@ -499,20 +484,14 @@ when it can't decode some high-order character encoded in another character set
 within form data, e.g., when ``request.params['somename']`` is accessed.
 
 If you are using the :class:`~pyramid.response.Response` class to generate a
-response, or if you use the ``render_template_*`` templating APIs, the UTF-8
-``charset`` is set automatically as the default via the ``Content-Type``
-header. If you return a ``Content-Type`` header without an explicit
-``charset``, a request will add a ``;charset=utf-8`` trailer to the
+response, or if you use the ``pyramid.renderers.render_*`` templating APIs,
+the UTF-8 ``charset`` is set automatically as the default via the
+``Content-Type`` header. If you return a ``Content-Type`` header without an
+explicit ``charset``, a request will add a ``;charset=utf-8`` trailer to the
 ``Content-Type`` header value for you for response content types that are
 textual (e.g., ``text/html`` or ``application/xml``) as it is rendered.  If you
 are using your own response object, you will need to ensure you do this
 yourself.
-
-.. note:: Only the *values* of request params obtained via ``request.params``,
-   ``request.GET`` or ``request.POST`` are decoded to Unicode objects
-   implicitly in the :app:`Pyramid` default configuration.  The keys are still
-   (byte) strings.
-
 
 .. index::
    single: view calling convention
@@ -553,30 +532,30 @@ The following types work as view callables in this style:
    and a ``__call__`` method which accepts no arguments, e.g.:
 
    .. code-block:: python
-      :linenos:
+       :linenos:
 
-      from pyramid.response import Response
+       from pyramid.response import Response
 
-      class view(object):
-         def __init__(self, context, request):
-             self.context = context
-             self.request = request
+       class view(object):
+           def __init__(self, context, request):
+               self.context = context
+               self.request = request
 
-         def __call__(self):
-             return Response('OK')
+           def __call__(self):
+               return Response('OK')
 
 #. Arbitrary callables that have a ``__call__`` method that accepts ``context,
    request``, e.g.:
 
    .. code-block:: python
-      :linenos:
+       :linenos:
 
-      from pyramid.response import Response
+       from pyramid.response import Response
 
-      class View(object):
-          def __call__(self, context, request):
-              return Response('OK')
-      view = View() # this is the view callable
+       class View(object):
+           def __call__(self, context, request):
+               return Response('OK')
+       view = View() # this is the view callable
 
 This style of calling convention is most useful for :term:`traversal` based
 applications, where the context object is frequently used within the view

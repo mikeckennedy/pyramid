@@ -297,6 +297,8 @@ Contributors
 
 - Kirill Kuzminykh, 2017/03/01
 
+- Charlie Choiniere, 2017/04/03
+
 - Aleph Melo, 2017/04/16
 
 - Jeremy(Ching-Rui) Chen, 2017/04/19
@@ -314,3 +316,23 @@ Contributors
 - Lars Blumberg, 2017/08/14
 
 - Deneys Maartens, 2017/11/03
+
+- Heron Rossi, 2018/03/08
+
+- Hunter Senft-Grupp, 2018/05/14
+
+- Junhak Lee, 2018/05/14
+
+- Alex Gaynor, 2018/05/24
+
+- Jason Williams, 2018/06/11
+
+- Benjamin Gmurczyk, 2018/06/14
+
+- Stephen Martin, 2018/09/04
+
+- Kuzma Leshakov, 2018/09/07
+
+- Colin Dunklau, 2018/09/19
+
+- Alexandre Yukio Harano, 2018/10/05

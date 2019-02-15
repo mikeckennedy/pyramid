@@ -51,7 +51,7 @@ This approach allows you to develop view code that is simpler, more easily under
 Stop Worrying About Transactions
 --------------------------------
 
-:app:`Pyramid`\ 's :term:`cookiecutter`\ s render projects that include a *transaction management* system.  When you use this system, you can stop worrying about when to commit your changes, :app:`Pyramid` handles it for you. The system will commit at the end of a request or abort if there was an exception.
+:app:`Pyramid`\ 's :term:`cookiecutter` renders projects that include a *transaction management* system.  When you use this system, you can stop worrying about when to commit your changes, :app:`Pyramid` handles it for you. The system will commit at the end of a request or abort if there was an exception.
 
 Why is that a good thing? Imagine a situation where you manually commit a change to your persistence layer. It's very likely that other framework code will run *after* your changes are done. If an error happens in that other code, you can easily wind up with inconsistent data if you're not extremely careful.
 
@@ -92,10 +92,10 @@ For example, if you want to reuse an existing application that already has a bun
     from pyramid.config import Configurator
 
     if __name__ == '__main__':
-       config = Configurator()
-       config.include('pyramid_jinja2')
-       config.include('pyramid_exclog')
-       config.include('some.other.package', route_prefix='/somethingelse')
+        config = Configurator()
+        config.include('pyramid_jinja2')
+        config.include('pyramid_exclog')
+        config.include('some.other.package', route_prefix='/somethingelse')
 
 .. seealso::
 
@@ -262,12 +262,12 @@ You can extend :app:`Pyramid`\ 's :term:`configurator` with your own directives.
 
     config = Configurator()
     config.add_route('xhr_route', '/xhr/{id}')
-    config.add_view('my.package.GET_view', route_name='xhr_route',
-                    xhr=True,  permission='view', request_method='GET')
-    config.add_view('my.package.POST_view', route_name='xhr_route',
-                    xhr=True, permission='view', request_method='POST')
-    config.add_view('my.package.HEAD_view', route_name='xhr_route',
-                    xhr=True, permission='view', request_method='HEAD')
+    config.add_view('my.package.GET_view', route_name='xhr_route', xhr=True,
+        permission='view', request_method='GET')
+    config.add_view('my.package.POST_view', route_name='xhr_route', xhr=True,
+        permission='view', request_method='POST')
+    config.add_view('my.package.HEAD_view', route_name='xhr_route', xhr=True,
+        permission='view', request_method='HEAD')
 
 Pretty tedious right? You can add a directive to the :app:`Pyramid` :term:`configurator` to automate some of the tedium away:
 

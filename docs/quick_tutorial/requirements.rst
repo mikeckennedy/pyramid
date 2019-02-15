@@ -19,12 +19,11 @@ virtual environment.)
 
 This *Quick Tutorial* is based on:
 
-* **Python 3.6**. Pyramid fully supports Python 3.4+ and Python 2.7+. This
-  tutorial uses **Python 3.6** but runs fine under Python 2.7.
+* **Python 3.7**. Pyramid fully supports Python 3.4+.
+  This tutorial uses **Python 3.7**.
 
-* **venv**. We believe in virtual environments. For this tutorial, we use
-  Python 3.6's built-in solution :term:`venv`. For Python 2.7, you can install
-  :term:`virtualenv`.
+* **venv**. We believe in virtual environments.
+  For this tutorial, we use Python 3's built-in solution :term:`venv`.
 
 * **pip**. We use :term:`pip` for package management.
 
@@ -33,7 +32,7 @@ This *Quick Tutorial* is based on:
   projects* (a directory with packaging information and *Python packages* of
   working code.)
 
-* **Unix commands**. Commands in this tutorial use UNIX syntax and paths.
+* **Unix commands**. Commands in this tutorial use Unix syntax and paths.
   Windows users should adjust commands accordingly.
 
 .. note::
@@ -62,7 +61,7 @@ Install Python 3
 See the detailed recommendation for your operating system described under
 :ref:`installing_chapter`.
 
-- :ref:`for-mac-os-x-users`
+- :ref:`for-macos-users`
 - :ref:`if-you-don-t-yet-have-a-python-interpreter-unix`
 - :ref:`if-you-don-t-yet-have-a-python-interpreter-windows`
 
@@ -79,33 +78,33 @@ will reside as we proceed through the tutorial:
 
 .. code-block:: text
 
-    `── ~
-        `── projects
-            `── quick_tutorial
-                │── env
-                `── step_one
-                    │── intro
-                    │   │── __init__.py
-                    │   `── app.py
-                    `── setup.py
+    ~
+    └── projects
+        └── quick_tutorial
+            ├── env
+            └── step_one
+                ├── intro
+                │   ├── __init__.py
+                │   └── app.py
+                └── setup.py
 
-For Linux, the commands to do so are as follows:
+For macOS and Linux, the commands to do so are as follows:
 
 .. code-block:: bash
 
-    # Mac and Linux
-    $ cd ~
-    $ mkdir -p projects/quick_tutorial
-    $ cd projects/quick_tutorial
+    # macOS and Linux
+    cd ~
+    mkdir -p projects/quick_tutorial
+    cd projects/quick_tutorial
 
 For Windows:
 
 .. code-block:: doscon
 
     # Windows
-    c:\> cd \
-    c:\> mkdir projects\quick_tutorial
-    c:\> cd projects\quick_tutorial
+    cd \
+    mkdir projects\quick_tutorial
+    cd projects\quick_tutorial
 
 In the above figure, your user home directory is represented by ``~``. In your
 home directory, all of your projects are in the ``projects`` directory. This is
@@ -129,13 +128,13 @@ environment`. We set an environment variable to save typing later.
 
 .. code-block:: bash
 
-    # Mac and Linux
-    $ export VENV=~/projects/quick_tutorial/env
+    # macOS and Linux
+    export VENV=~/projects/quick_tutorial/env
 
 .. code-block:: doscon
 
     # Windows
-    c:\> set VENV=c:\projects\quick_tutorial\env
+    set VENV=c:\projects\quick_tutorial\env
 
 
 .. _create-a-virtual-environment:
@@ -150,16 +149,15 @@ environment variable.
 
 .. code-block:: bash
 
-    # Mac and Linux
-    $ python3 -m venv $VENV
+    # macOS and Linux
+    python3 -m venv $VENV
 
 .. code-block:: doscon
 
     # Windows
-    c:\> python -m venv %VENV%
+    python -m venv %VENV%
 
-.. seealso:: See also Python 3's :mod:`venv module <python:venv>` and Python
-   2's `virtualenv <https://virtualenv.pypa.io/en/latest/>`_ package.
+.. seealso:: See also :mod:`venv module <python:venv>`.
 
 
 Update packaging tools in the virtual environment
@@ -171,13 +169,13 @@ time of its release.
 
 .. code-block:: bash
 
-    # Mac and Linux
-    $ $VENV/bin/pip install --upgrade pip setuptools
+    # macOS and Linux
+    $VENV/bin/pip install --upgrade pip setuptools
 
 .. code-block:: doscon
 
     # Windows
-    c:\> %VENV%\Scripts\pip install --upgrade pip setuptools
+    %VENV%\Scripts\pip install --upgrade pip setuptools
 
 .. seealso:: See also :ref:`Why use $VENV/bin/pip instead of source
    bin/activate, then pip <venv-bin-pip-vs-source-bin-activate>`.
@@ -193,26 +191,12 @@ part is pretty easy. We'll also install a WSGI server, Waitress.
 
 .. parsed-literal::
 
-    # Mac and Linux
-    $ $VENV/bin/pip install "pyramid==\ |release|\ " waitress
+    # macOS and Linux
+    $VENV/bin/pip install "pyramid==\ |release|\ " waitress
 
     # Windows
-    c:\\> %VENV%\\Scripts\\pip install "pyramid==\ |release|\ " waitress
+    %VENV%\\Scripts\\pip install "pyramid==\ |release|\ " waitress
 
 Our Python virtual environment now has the Pyramid software available
 as well as the ``waitress`` package.
 
-You can optionally install some of the extra Python packages used in this
-tutorial.
-
-.. code-block:: bash
-
-    # Mac and Linux
-    $ $VENV/bin/pip install webtest pytest pytest-cov deform sqlalchemy \
-      pyramid_chameleon pyramid_debugtoolbar pyramid_jinja2 waitress \
-      pyramid_tm zope.sqlalchemy
-
-.. code-block:: doscon
-
-    # Windows
-    c:\> %VENV%\Scripts\pip install webtest pytest pytest-cov deform sqlalchemy pyramid_chameleon pyramid_debugtoolbar pyramid_jinja2 waitress pyramid_tm zope.sqlalchemy

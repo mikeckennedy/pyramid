@@ -14,7 +14,7 @@
                      model_url, resource_url, resource_path, set_property, 
                      effective_principals, authenticated_userid,
                      unauthenticated_userid, has_permission,
-                     invoke_exception_view
+                     invoke_exception_view, localizer
 
    .. attribute:: context
 
@@ -228,8 +228,7 @@
         handed.
 
       - sets request extensions (such as those added via
-        :meth:`~pyramid.config.Configurator.add_request_method` or
-        :meth:`~pyramid.config.Configurator.set_request_property`) on the
+        :meth:`~pyramid.config.Configurator.add_request_method`) on the
         request it's passed.
 
       - causes a :class:`~pyramid.events.NewRequest` event to be sent at the
@@ -284,17 +283,6 @@
 
    .. automethod:: resource_path
 
-   .. attribute:: json_body
-
-       This property will return the JSON-decoded variant of the request
-       body.  If the request body is not well-formed JSON, or there is no
-       body associated with this request, this property will raise an
-       exception.
-       
-       .. seealso::
-       
-           See also :ref:`request_json_body`.
-
    .. method:: set_property(callable, name=None, reify=False)
 
        Add a callable or a property descriptor to the request instance.
@@ -321,25 +309,25 @@
        from the name of the ``callable``.
 
        .. code-block:: python
-          :linenos:
+           :linenos:
 
-          def _connect(request):
-              conn = request.registry.dbsession()
-              def cleanup(request):
-                  # since version 1.5, request.exception is no
-                  # longer eagerly cleared
-                  if request.exception is not None:
-                      conn.rollback()
-                  else:
-                      conn.commit()
-                  conn.close()
-              request.add_finished_callback(cleanup)
-              return conn
+           def _connect(request):
+               conn = request.registry.dbsession()
+               def cleanup(request):
+                   # since version 1.5, request.exception is no
+                   # longer eagerly cleared
+                   if request.exception is not None:
+                       conn.rollback()
+                   else:
+                       conn.commit()
+                   conn.close()
+               request.add_finished_callback(cleanup)
+               return conn
 
-          @subscriber(NewRequest)
-          def new_request(event):
-              request = event.request
-              request.set_property(_connect, 'db', reify=True)
+           @subscriber(NewRequest)
+           def new_request(event):
+               request = event.request
+               request.set_property(_connect, 'db', reify=True)
 
        The subscriber doesn't actually connect to the database, it just
        provides the API which, when accessed via ``request.db``, will

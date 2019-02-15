@@ -52,14 +52,14 @@ Modern
 Tested
 ~~~~~~
 
-Untested code is broken by design. The :app:`Pyramid` community has a strong testing culture and our framework reflects that. Every release of :app:`Pyramid` has 100% statement coverage (as measured by `coverage <http://coverage.readthedocs.io/en/latest/>`_) and 95% decision/condition coverage. (as measured by `instrumental <http://instrumental.readthedocs.io/en/latest/intro.html>`_) It is automatically tested using `Travis <https://travis-ci.org/Pylons/pyramid>`_ and `Jenkins <http://jenkins.pylonsproject.org/job/pyramid/>`_ on supported versions of Python after each commit to its GitHub repository. `Official Pyramid add-ons <https://trypyramid.com/resources-extending-pyramid.html>`_ are held to a similar testing standard.
+Untested code is broken by design. The :app:`Pyramid` community has a strong testing culture and our framework reflects that. Every release of :app:`Pyramid` has 100% statement coverage (as measured by `coverage <https://coverage.readthedocs.io/en/latest/>`_) and 95% decision/condition coverage. (as measured by `instrumental <https://instrumental.readthedocs.io/en/latest/intro.html>`_) It is automatically tested using `Travis <https://travis-ci.org/Pylons/pyramid>`_ and `Jenkins <http://jenkins.pylonsproject.org/job/pyramid/>`_ on supported versions of Python after each commit to its GitHub repository. `Official Pyramid add-ons <https://trypyramid.com/extending-pyramid.html>`_ are held to a similar testing standard.
 
 We still find bugs in :app:`Pyramid`, but we've noticed we find a lot fewer of them while working on projects with a solid testing regime.
 
 Documented
 ~~~~~~~~~~
 
-The :app:`Pyramid` documentation is comprehensive. We strive to keep our narrative documentation both complete and friendly to newcomers. We also maintain the :ref:`Pyramid Community Cookbook <cookbook:pyramid-cookbook>` of  recipes demonstrating common scenarios you might face. Contributions in the form of improvements to our documentation are always appreciated. And we always welcome improvements to our `official tutorials <html_tutorials>`_ as well as new contributions to our `community maintained tutorials <tutorials:pyramid-tutorials>`_.
+The :app:`Pyramid` documentation is comprehensive. We strive to keep our narrative documentation both complete and friendly to newcomers. We also maintain the :ref:`Pyramid Community Cookbook <cookbook:pyramid-cookbook>` of  recipes demonstrating common scenarios you might face. Contributions in the form of improvements to our documentation are always appreciated. And we always welcome improvements to our :ref:`official tutorials <html_tutorials>` as well as new contributions to our :ref:`community maintained tutorials <tutorials:pyramid-tutorials>`.
 
 Supported
 ~~~~~~~~~
@@ -104,12 +104,12 @@ Configure applications with decorators
 
 .. code-block:: python
 
-   from pyramid.view import view_config
-   from pyramid.response import Response
+    from pyramid.view import view_config
+    from pyramid.response import Response
 
-   @view_config(route_name='fred')
-   def fred_view(request):
-       return Response('fred')
+    @view_config(route_name='fred')
+    def fred_view(request):
+        return Response('fred')
 
 However, using :app:`Pyramid` configuration decorators does not change your code. It remains easy to extend, test, or reuse. You can test your code as if the decorators were not there. You can instruct the framework to ignore some decorators. You can even use an imperative style to write your configuration, skipping decorators entirely.
 
@@ -144,7 +144,7 @@ Develop interactively
 
 When your application has an error, an interactive debugger allows you to poke around from your browser to find out what happened.
 
-To use the :app:`Pyramid` debug toolbar, build your project with a :app:`Pyramid` :term:`cookiecutter`.
+To use the :app:`Pyramid` debug toolbar, build your project with our :term:`cookiecutter`.
 
 .. seealso::
 
@@ -173,7 +173,7 @@ Supported :app:`Pyramid` add-ons are held to the same demanding standards as the
 
 .. seealso::
 
-    See also https://trypyramid.com/resources-extending-pyramid.html
+    See also https://trypyramid.com/extending-pyramid.html
 
 Write your views, *your* way
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -183,34 +183,34 @@ A fundamental task for any framework is to map URLs to code. In :app:`Pyramid`, 
 Here's a view callable defined as a function:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.response import Response
-   from pyramid.view import view_config
+    from pyramid.response import Response
+    from pyramid.view import view_config
 
-   @view_config(route_name='aview')
-   def aview(request):
-       return Response('one')
+    @view_config(route_name='aview')
+    def aview(request):
+        return Response('one')
 
 Here's a few views defined as methods of a class instead:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.response import Response
-   from pyramid.view import view_config
+    from pyramid.response import Response
+    from pyramid.view import view_config
 
-   class AView(object):
-       def __init__(self, request):
-           self.request = request
+    class AView(object):
+        def __init__(self, request):
+            self.request = request
 
-       @view_config(route_name='view_one')
-       def view_one(self):
-           return Response('one')
+        @view_config(route_name='view_one')
+        def view_one(self):
+            return Response('one')
 
-       @view_config(route_name='view_two')
-       def view_two(self):
-           return Response('two')
+        @view_config(route_name='view_two')
+        def view_two(self):
+            return Response('two')
 
 .. seealso::
 

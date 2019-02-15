@@ -25,7 +25,7 @@ Using the Default Session Factory
 In order to use sessions, you must set up a :term:`session factory` during your
 :app:`Pyramid` configuration.
 
-A very basic, insecure sample session factory implementation is provided in the
+A very basic session factory implementation is provided in the
 :app:`Pyramid` core.  It uses a cookie to store session information.  This
 implementation has the following limitations:
 
@@ -38,37 +38,84 @@ implementation has the following limitations:
   of the session is fewer than 4000.  This is suitable only for very small data
   sets.
 
-It is digitally signed, however, and thus its data cannot easily be tampered
-with.
+It is digitally signed, however, and thus a client cannot easily tamper with
+the content without having access to the secret key.
 
 You can configure this session factory in your :app:`Pyramid` application by
 using the :meth:`pyramid.config.Configurator.set_session_factory` method.
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.session import SignedCookieSessionFactory
-   my_session_factory = SignedCookieSessionFactory('itsaseekreet')
+    from pyramid.session import SignedCookieSessionFactory
+    my_session_factory = SignedCookieSessionFactory('itsaseekreet')
 
-   from pyramid.config import Configurator
-   config = Configurator()
-   config.set_session_factory(my_session_factory)
+    from pyramid.config import Configurator
+    config = Configurator()
+    config.set_session_factory(my_session_factory)
 
 .. warning::
 
    By default the :func:`~pyramid.session.SignedCookieSessionFactory`
-   implementation is *unencrypted*.  You should not use it when you keep
-   sensitive information in the session object, as the information can be
-   easily read by both users of your application and third parties who have
-   access to your users' network traffic.  And, if you use this sessioning
-   implementation, and you inadvertently create a cross-site scripting
-   vulnerability in your application, because the session data is stored
-   unencrypted in a cookie, it will also be easier for evildoers to obtain the
-   current user's cross-site scripting token.  In short, use a different
-   session factory implementation (preferably one which keeps session data on
-   the server) for anything but the most basic of applications where "session
-   security doesn't matter", and you are sure your application has no
-   cross-site scripting vulnerabilities.
+   implementation contains the following security concerns:
+
+   - Session data is *unencrypted* (but it is signed / authenticated).
+
+     This means an attacker cannot change the session data, but they can view it.
+     You should not use it when you keep sensitive information in the session object, as the information can be easily read by both users of your application and third parties who have access to your users' network traffic.
+
+     At the very least, use TLS and set ``secure=True`` to avoid arbitrary users on the network from viewing the session contents.
+
+   - If you use this sessioning implementation, and you inadvertently create a cross-site scripting vulnerability in your application, because the session data is stored unencrypted in a cookie, it will also be easier for evildoers to obtain the current user's cross-site scripting token.
+
+     Set ``httponly=True`` to mitigate this vulnerability by hiding the cookie from client-side JavaScript.
+
+   In short, use a different session factory implementation (preferably one which keeps session data on the server) for anything but the most basic of applications where "session security doesn't matter", you are sure your application has no cross-site scripting vulnerabilities, and you are confident your secret key will not be exposed.
+
+.. index::
+    triple: pickle deprecation; JSON-serializable; ISession interface
+
+.. _pickle_session_deprecation:
+
+Changes to ISession in Pyramid 2.0
+----------------------------------
+
+In :app:`Pyramid` 2.0 the :class:`pyramid.interfaces.ISession` interface was changed to require that session implementations only need to support JSON-serializable data types.
+This is a stricter contract than the previous requirement that all objects be pickleable and it is being done for security purposes.
+This is a backward-incompatible change.
+Previously, if a client-side session implementation was compromised, it left the application vulnerable to remote code execution attacks using specially-crafted sessions that execute code when deserialized.
+
+For users with compatibility concerns, it's possible to craft a serializer that can handle both formats until you are satisfied that clients have had time to reasonably upgrade.
+Remember that sessions should be short-lived and thus the number of clients affected should be small (no longer than an auth token, at a maximum). An example serializer:
+
+.. code-block:: python
+    :linenos:
+
+    from pyramid.session import JSONSerializer
+    from pyramid.session import PickleSerializer
+    from pyramid.session import SignedCookieSessionFactory
+
+    class JSONSerializerWithPickleFallback(object):
+        def __init__(self):
+            self.json = JSONSerializer()
+            self.pickle = PickleSerializer()
+
+        def dumps(self, value):
+            # maybe catch serialization errors here and keep using pickle
+            # while finding spots in your app that are not storing
+            # JSON-serializable objects, falling back to pickle
+            return self.json.dumps(value)
+
+        def loads(self, value):
+            try:
+                return self.json.loads(value)
+            except ValueError:
+                return self.pickle.loads(value)
+
+    # somewhere in your configuration code
+    serializer = JSONSerializerWithPickleFallback()
+    session_factory = SignedCookieSessionFactory(..., serializer=serializer)
+    config.set_session_factory(session_factory)
 
 .. index::
    single: session object
@@ -81,19 +128,19 @@ session objects provided by the session factory via the ``session`` attribute
 of any :term:`request` object.  For example:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from pyramid.response import Response
+    from pyramid.response import Response
 
-   def myview(request):
-       session = request.session
-       if 'abc' in session:
-           session['fred'] = 'yes'
-       session['abc'] = '123'
-       if 'fred' in session:
-           return Response('Fred was in the session')
-       else:
-           return Response('Fred was not in the session')
+    def myview(request):
+        session = request.session
+        if 'abc' in session:
+            session['fred'] = 'yes'
+        session['abc'] = '123'
+        if 'fred' in session:
+            return Response('Fred was in the session')
+        else:
+            return Response('Fred was not in the session')
 
 The first time this view is invoked produces ``Fred was not in the session``.
 Subsequent invocations produce ``Fred was in the session``, assuming of course
@@ -126,11 +173,10 @@ object are in the :class:`pyramid.interfaces.ISession` documentation.
 
 Some gotchas:
 
-- Keys and values of session data must be *pickleable*.  This means, typically,
-  that they are instances of basic types of objects, such as strings, lists,
-  dictionaries, tuples, integers, etc.  If you place an object in a session
-  data key or value that is not pickleable, an error will be raised when the
-  session is serialized.
+- Keys and values of session data must be JSON-serializable.
+  This means, typically, that they are instances of basic types of objects, such as strings, lists, dictionaries, tuples, integers, etc.
+  If you place an object in a session data key or value that is not JSON-serializable, an error will be raised when the session is serialized.
+  Please also see :ref:`pickle_session_deprecation`.
 
 - If you place a mutable value (for example, a list or a dictionary) in a
   session object, and you subsequently mutate that value, you must call the
@@ -170,13 +216,13 @@ pyramid_beaker_         Beaker_ Session factory for Pyramid
                                 sessioning system.
 ======================= ======= =============================
 
-.. _pyramid_nacl_session: https://pypi.python.org/pypi/pyramid_nacl_session
+.. _pyramid_nacl_session: https://pypi.org/project/pyramid_nacl_session/
 .. _PyNaCl: https://pynacl.readthedocs.io/en/latest/secret/
 
-.. _pyramid_redis_sessions: https://pypi.python.org/pypi/pyramid_redis_sessions
+.. _pyramid_redis_sessions: https://pypi.org/project/pyramid_redis_sessions/
 .. _Redis: https://redis.io/
 
-.. _pyramid_beaker: https://pypi.python.org/pypi/pyramid_beaker
+.. _pyramid_beaker: https://pypi.org/project/pyramid_beaker/
 .. _Beaker: https://beaker.readthedocs.io/en/latest/
 
 .. index::
@@ -223,7 +269,7 @@ method:
 
 .. code-block:: python
 
-   request.session.flash('mymessage')
+    request.session.flash('mymessage')
 
 The ``flash()`` method appends a message to a flash queue, creating the queue
 if necessary.
@@ -246,7 +292,7 @@ represents the default flash message queue.
 
 .. code-block:: python
 
-   request.session.flash(msg, 'myappsqueue')
+    request.session.flash(msg, 'myappsqueue')
 
 The ``allow_duplicate`` argument defaults to ``True``.  If this is ``False``,
 and you attempt to add a message value which is already present in the queue,

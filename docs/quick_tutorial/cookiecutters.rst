@@ -4,7 +4,7 @@
 Prelude: Quick Project Startup with Cookiecutters
 =================================================
 
-To ease the process of getting started on a project, the Pylons Project provides :term:`cookiecutter`\ s that generate sample :app:`Pyramid` projects from project templates. These cookiecutters will install :app:`Pyramid` and its dependencies as well. We will still cover many topics of web application development using :app:`Pyramid`, but it's good to know of this facility. This prelude will demonstrate how to get a working :app:`Pyramid` web application running via ``cookiecutter``.
+To ease the process of getting started on a project, the Pylons Project provides a :term:`cookiecutter` that generates sample :app:`Pyramid` projects from project templates. The cookiecutter will install :app:`Pyramid` and its dependencies as well. We will still cover many topics of web application development using :app:`Pyramid`, but it's good to know of this facility. This prelude will demonstrate how to get a working :app:`Pyramid` web application running via ``cookiecutter``.
 
 
 Objectives
@@ -28,7 +28,7 @@ Steps
 
     .. code-block:: bash
 
-        $ $VENV/bin/cookiecutter gh:Pylons/pyramid-cookiecutter-starter --checkout master
+        $VENV/bin/cookiecutter gh:Pylons/pyramid-cookiecutter-starter --checkout master
 
     If prompted for the first item, accept the default ``yes`` by hitting return.
 
@@ -43,26 +43,31 @@ Steps
         2 - chameleon
         3 - mako
         Choose from 1, 2, 3 [1]: 1
+        Select backend:
+        1 - none
+        2 - sqlalchemy
+        3 - zodb
+        Choose from 1, 2, 3 [1]: 1
 
 #.  We then run through the following commands.
 
     .. code-block:: bash
 
         # Change directory into your newly created project.
-        $ cd cc_starter
+        cd cc_starter
         # Create a new virtual environment...
-        $ python3 -m venv env
+        python3 -m venv env
         # ...where we upgrade packaging tools...
-        $ env/bin/pip install --upgrade pip setuptools
+        env/bin/pip install --upgrade pip setuptools
         # ...and into which we install our project.
-        $ env/bin/pip install -e .
+        env/bin/pip install -e .
 
 #.  Start up the application by pointing :app:`Pyramid`'s ``pserve`` command at the
     project's (generated) configuration file:
 
     .. code-block:: bash
 
-        $ env/bin/pserve development.ini --reload
+        env/bin/pserve development.ini --reload
 
     On start up, ``pserve`` logs some output:
 
@@ -79,7 +84,7 @@ Analysis
 ========
 
 Rather than starting from scratch, a cookiecutter can make it easy to get a Python
-project containing a working :app:`Pyramid` application. The Pylons Project provides `several cookiecutters <https://github.com/Pylons?q=pyramid-cookiecutter>`_.
+project containing a working :app:`Pyramid` application.
 
 ``pserve`` is :app:`Pyramid`'s application runner, separating operational details from
 your code. When you install :app:`Pyramid`, a small command program called ``pserve``

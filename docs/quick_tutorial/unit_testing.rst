@@ -29,7 +29,7 @@ broken the code. As you're writing your code, you might find this more
 convenient than changing to your browser constantly and clicking reload.
 
 We'll also leave discussion of `pytest-cov
-<http://pytest-cov.readthedocs.io/en/latest/>`_ for another section.
+<https://pytest-cov.readthedocs.io/en/latest/>`_ for another section.
 
 
 Objectives
@@ -43,28 +43,39 @@ Objectives
 Steps
 =====
 
-#. First we copy the results of the previous step, as well as install the
-   ``pytest`` package:
+#.  First we copy the results of the previous step.
 
-   .. code-block:: bash
+    .. code-block:: bash
 
-    $ cd ..; cp -r debugtoolbar unit_testing; cd unit_testing
-    $ $VENV/bin/pip install -e .
-    $ $VENV/bin/pip install pytest
+        cd ..; cp -r debugtoolbar unit_testing; cd unit_testing
 
-#. Now we write a simple unit test in ``unit_testing/tutorial/tests.py``:
+#.  Add ``pytest`` to our project's dependencies in ``setup.py`` as a :term:`Setuptools` "extra":
 
-   .. literalinclude:: unit_testing/tutorial/tests.py
-    :linenos:
+    .. literalinclude:: unit_testing/setup.py
+        :language: python
+        :linenos:
+        :emphasize-lines: 15
 
-#. Now run the tests:
+#.  Install our project and its newly added dependency.
+    Note that we use the extra specifier ``[dev]`` to install testing requirements for development and surround it and the period with double quote marks.
 
-   .. code-block:: bash
+    .. code-block:: bash
+
+        $VENV/bin/pip install -e ".[dev]"
+
+#.  Now we write a simple unit test in ``unit_testing/tutorial/tests.py``:
+
+    .. literalinclude:: unit_testing/tutorial/tests.py
+        :linenos:
+
+#.  Now run the tests:
+
+    .. code-block:: bash
 
 
-    $ $VENV/bin/py.test tutorial/tests.py -q
-    .
-    1 passed in 0.14 seconds
+        $VENV/bin/pytest tutorial/tests.py -q
+        .
+        1 passed in 0.14 seconds
 
 
 Analysis
@@ -96,7 +107,7 @@ Extra credit
 ============
 
 #. Change the test to assert that the response status code should be ``404``
-   (meaning, not found). Run ``py.test`` again. Read the error report and see
+   (meaning, not found). Run ``pytest`` again. Read the error report and see
    if you can decipher what it is telling you.
 
 #. As a more realistic example, put the ``tests.py`` back as you found it, and
@@ -114,4 +125,4 @@ Extra credit
 #. Why do we import the ``hello_world`` view function *inside* the
    ``test_hello_world`` method instead of at the top of the module?
 
-.. seealso:: See also :ref:`testing_chapter`
+.. seealso:: See also :ref:`testing_chapter` and `Setuptools Declaring "Extras" (optional features with their own dependencies) <https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-extras-optional-features-with-their-own-dependencies>`_.

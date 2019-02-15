@@ -13,8 +13,8 @@ Here is one of the simplest :app:`Pyramid` applications you can make:
 .. literalinclude:: narr/helloworld.py
 
 After you install :app:`Pyramid` and run this application, when you visit
-`<http://localhost:8080/hello/world>`_ in a browser, you will see the text
-``Hello, world!`` See :ref:`firstapp_chapter` for a full explanation of how
+`<http://localhost:6543/>`_ in a browser, you will see the text
+``Hello World!`` See :ref:`firstapp_chapter` for a full explanation of how
 this application works.
 
 
@@ -66,7 +66,7 @@ Official tutorials provide a quick overview of :app:`Pyramid`'s features in more
 Support and Development
 =======================
 
-The `Pyramid website <https://trypyramid.com/resources.html>`_ is the main
+The `Pyramid website <https://trypyramid.com/documentation.html>`_ is the main
 entry point to :app:`Pyramid` web framework resources for support and
 development information.
 
@@ -85,11 +85,11 @@ the trunk via ``git``, use either command:
 
 .. code-block:: text
 
-  # If you have SSH keys configured on GitHub:
-  git clone git@github.com:Pylons/pyramid.git
-  
-  # Otherwise, HTTPS will work, using your GitHub login:
-  git clone https://github.com/Pylons/pyramid.git
+    # If you have SSH keys configured on GitHub:
+    git clone git@github.com:Pylons/pyramid.git
+
+    # Otherwise, HTTPS will work, using your GitHub login:
+    git clone https://github.com/Pylons/pyramid.git
 
 To find out how to become a contributor to :app:`Pyramid`, please see `How to Contribute Source Code and Documentation <https://pylonsproject.org/community-how-to-contribute.html>`_.
 
@@ -140,7 +140,6 @@ Narrative documentation in chapter form explaining how to use :app:`Pyramid`.
    narr/advconfig
    narr/extconfig
    narr/cookiecutters
-   narr/scaffolding
    narr/upgrading
    narr/threadlocals
    narr/zca
@@ -179,6 +178,7 @@ Change History
 .. toctree::
    :maxdepth: 1
 
+   whatsnew-1.10
    whatsnew-1.9
    whatsnew-1.8
    whatsnew-1.7

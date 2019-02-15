@@ -17,6 +17,7 @@
     .. automethod:: end
     .. automethod:: include
     .. automethod:: make_wsgi_app()
+    .. automethod:: route_prefix_context
     .. automethod:: scan
 
   :methodcategory:`Adding Routes and Views`
@@ -44,7 +45,6 @@
    :methodcategory:`Extending the Request Object`
 
      .. automethod:: add_request_method
-     .. automethod:: set_request_property
 
    :methodcategory:`Using I18N`
 
@@ -62,6 +62,7 @@
 
    :methodcategory:`Hooking Pyramid Behavior`
 
+     .. automethod:: add_accept_view_order
      .. automethod:: add_renderer
      .. automethod:: add_resource_url_adapter
      .. automethod:: add_response_adapter

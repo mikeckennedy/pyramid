@@ -33,20 +33,20 @@ Steps
 
    .. code-block:: bash
 
-    $ cd ..; cp -r view_classes authentication; cd authentication
+       cd ..; cp -r view_classes authentication; cd authentication
 
 #. Add ``bcrypt`` as a dependency in ``authentication/setup.py``:
 
    .. literalinclude:: authentication/setup.py
     :language: python
-    :emphasize-lines: 7
+    :emphasize-lines: 6
     :linenos:
 
 #. We can now install our project in development mode:
 
    .. code-block:: bash
 
-    $ $VENV/bin/pip install -e .
+       $VENV/bin/pip install -e .
 
 #. Put the security hash in the ``authentication/development.ini``
    configuration file as ``tutorial.secret`` instead of putting it in the code:
@@ -88,13 +88,13 @@ Steps
 
    .. code-block:: bash
 
-    $ $VENV/bin/pserve development.ini --reload
+       $VENV/bin/pserve development.ini --reload
 
 #. Open http://localhost:6543/ in a browser.
 
 #. Click the "Log In" link.
 
-#. Submit the login form with the username ``editor`` and the password 
+#. Submit the login form with the username ``editor`` and the password
    ``editor``.
 
 #. Note that the "Log In" link has changed to "Logout".
@@ -152,4 +152,4 @@ Extra credit
 
 .. seealso:: See also :ref:`security_chapter`,
    :ref:`AuthTktAuthenticationPolicy <authentication_module>`, `bcrypt
-   <https://pypi.python.org/pypi/bcrypt>`_
+   <https://pypi.org/project/bcrypt/>`_

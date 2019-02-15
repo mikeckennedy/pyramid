@@ -10,21 +10,21 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
 
 requires = [
     'plaster_pastedeploy',
-    'pyramid >= 1.9a',
+    'pyramid',
     'pyramid_chameleon',
     'pyramid_debugtoolbar',
+    'waitress',
     'pyramid_retry',
     'pyramid_tm',
     'pyramid_zodbconn',
     'transaction',
     'ZODB3',
-    'waitress',
     'docutils',
     'bcrypt',
 ]
 
 tests_require = [
-    'WebTest >= 1.3.1',  # py3 compat
+    'WebTest',
     'pytest',
     'pytest-cov',
 ]

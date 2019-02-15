@@ -5,21 +5,21 @@ Creating a :app:`Pyramid` Project
 
 As we saw in :ref:`firstapp_chapter`, it's possible to create a :app:`Pyramid`
 application completely manually.  However, it's usually more convenient to use
-a :term:`cookiecutter` to generate a basic :app:`Pyramid` :term:`project`.
+our :term:`cookiecutter` to generate a basic :app:`Pyramid` :term:`project`.
 
 A project is a directory that contains at least one Python :term:`package`.
-You'll use a cookiecutter to create a project, and you'll create your application
-logic within a package that lives inside the project.  Even if your application
-is extremely simple, it is useful to place code that drives the application
-within a package, because (1) a package is more easily extended with new code,
-and (2) an application that lives inside a package can also be distributed more
-easily than one which does not live within a package.
+You'll use the :app:`Pyramid` cookiecutter to create a project, and you'll
+create your application logic within a package that lives inside the project.
+Even if your application is extremely simple, it is useful to place code that
+drives the application within a package, because (1) a package is more easily
+extended with new code, and (2) an application that lives inside a package can
+also be distributed more easily than one which does not live within a package.
 
-The Pylons Project provides several :app:`Pyramid` cookiecutters that you can use to generate a
-project.  Each cookiecutter makes different configuration assumptions about what
-type of application you're trying to construct.
+The Pylons Project provides a :app:`Pyramid` cookiecutter that you can use to
+generate a project.  Our cookiecutter allows several configuration options
+to generate the type of application you're trying to construct.
 
-These cookiecutters are rendered using the ``cookiecutter`` command that you may install.
+This cookiecutter is rendered using the ``cookiecutter`` command that you may install.
 
 .. seealso::
 
@@ -29,36 +29,34 @@ These cookiecutters are rendered using the ``cookiecutter`` command that you may
 .. index::
    single: cookiecutters
    single: pyramid-cookiecutter-starter
-   single: pyramid-cookiecutter-zodb
-   single: pyramid-cookiecutter-alchemy
 
 .. _additional_cookiecutters:
 
 :app:`Pyramid` cookiecutters
 ----------------------------
 
-Pyramid cookiecutters released under the Pylons Project differ from each other on a number of axes:
-
-- the persistence mechanism they offer (no persistence mechanism, :term:`SQLAlchemy` with SQLite, or :term:`ZODB`)
-
-- the mechanism they use to map URLs to code (:term:`URL dispatch` or :term:`traversal`)
+The Pyramid cookiecutter released under the Pylons Project offers the following configuration options:
 
 - templating libraries (:term:`Jinja2`, :term:`Chameleon`, or :term:`Mako`)
 
+- the persistence mechanism (no persistence mechanism, :term:`SQLAlchemy` with SQLite, or :term:`ZODB`)
+
+- the mechanism of mapping URLs to code (:term:`URL dispatch` or :term:`traversal`)
+
 * `pyramid-cookiecutter-starter <https://github.com/Pylons/pyramid-cookiecutter-starter>`_
-* `pyramid-cookiecutter-alchemy <https://github.com/Pylons/pyramid-cookiecutter-alchemy>`_
-* `pyramid-cookiecutter-zodb <https://github.com/Pylons/pyramid-cookiecutter-zodb>`_
 
-These cookiecutters include:
+All configuration options offer a choice of templating language.
 
-``pyramid-cookiecutter-starter``
-    :term:`URL dispatch` for routing and either :term:`Jinja2`, :term:`Chameleon`, or :term:`Mako` for templating
+The configuration of mapping URLs to code (routing) depends on the backend option selected, with additional variations as follows.
 
-``pyramid-cookiecutter-alchemy``
-    SQLite for persistent storage, :term:`SQLAlchemy` for an ORM, :term:`URL dispatch` for routing, and :term:`Jinja2` for templating.
+``none``
+    :term:`URL dispatch` for routing
 
-``pyramid-cookiecutter-zodb``
-    :term:`ZODB` for persistent storage, :term:`traversal` for routing, and :term:`Chameleon` for templating
+``sqlalchemy``
+    SQLite for persistent storage, :term:`SQLAlchemy` for an ORM, :term:`URL dispatch` for routing, and :term:`Alembic` for database migrations
+
+``zodb``
+    :term:`ZODB` for persistent storage and :term:`traversal` for routing
 
 
 .. index::
@@ -77,7 +75,7 @@ In :ref:`installing_chapter`, you created a virtual Python environment via the
 
 We assume that you :ref:`previously installed cookiecutter <cookiecutters>`, following its installation instructions.
 
-We'll choose ``pyramid-cookiecutter-starter`` to start the project.  When we invoke ``cookiecutter``, it will create a directory that represents our project.
+When we invoke ``cookiecutter``, it will create a directory that represents our project.
 
 We assume our current working directory is the value of ``VENV``.
 
@@ -85,7 +83,7 @@ On all platforms, generate a project using cookiecutter.
 
 .. code-block:: bash
 
-   $ cookiecutter gh:Pylons/pyramid-cookiecutter-starter --checkout master
+    cookiecutter gh:Pylons/pyramid-cookiecutter-starter --checkout master
 
 If prompted for the first item, accept the default ``yes`` by hitting return.
 
@@ -100,34 +98,39 @@ If prompted for the first item, accept the default ``yes`` by hitting return.
     2 - chameleon
     3 - mako
     Choose from 1, 2, 3 [1]: 1
+    Select backend:
+    1 - none
+    2 - sqlalchemy
+    3 - zodb
+    Choose from 1, 2, 3 [1]: 1
 
 We then run through the following commands.
 
-On UNIX:
+On Unix:
 
 .. code-block:: bash
 
     # Reset our environment variable for a new virtual environment.
-    $ export VENV=~/env/myproject/env
+    export VENV=~/env/myproject/env
     # Change directory into your newly created project.
-    $ cd myproject
+    cd myproject
     # Create a new virtual environment...
-    $ python3 -m venv $VENV
+    python3 -m venv $VENV
     # ...where we upgrade packaging tools.
-    $ env/bin/pip install --upgrade pip setuptools
+    env/bin/pip install --upgrade pip setuptools
 
 Or on Windows:
 
 .. code-block:: doscon
 
     # Reset our environment variable for a new virtual environment.
-    c:\> set VENV=c:\env\myproject\env
+    set VENV=c:\env\myproject\env
     # Change directory into your newly created project.
-    c:\> cd myproject
+    cd myproject
     # Create a new virtual environment...
-    c:\myproject> python -m venv %VENV%
+    python -m venv %VENV%
     # ...where we upgrade packaging tools.
-    c:\myproject> %VENV%\Scripts\pip install --upgrade pip setuptools
+    %VENV%\Scripts\pip install --upgrade pip setuptools
 
 As a result of invoking the ``cookiecutter`` command, a directory named
 ``myproject`` is created.  That directory is a :term:`project` directory. The
@@ -136,8 +139,8 @@ or install your application for deployment or development.
 
 An ``.ini`` file named ``development.ini`` will be created in the project
 directory.  You will use this ``.ini`` file to configure a server, to run your
-application, and to debug your application.  It contains configuration that
-enables an interactive debugger and settings optimized for development.
+application, and to debug your application.
+It contains configuration that enables an interactive debugger and :term:`settings` optimized for development.
 
 Another ``.ini`` file named ``production.ini`` will also be created in the
 project directory.  It contains configuration that disables any interactive
@@ -188,23 +191,23 @@ in the ``bin`` (or ``Scripts`` on Windows) directory of your virtual Python
 environment.  Your terminal's current working directory *must* be the newly
 created project directory.
 
-On UNIX:
+On Unix:
 
 .. code-block:: bash
 
-    $ $VENV/bin/pip install -e .
+    $VENV/bin/pip install -e .
 
 Or on Windows:
 
 .. code-block:: doscon
 
-    c:\env\myproject> %VENV%\Scripts\pip install -e .
+    %VENV%\Scripts\pip install -e .
 
-Elided output from a run of this command on UNIX is shown below:
+Elided output from a run of this command on Unix is shown below:
 
 .. code-block:: bash
 
-      Running setup.py develop for myproject
+    Running setup.py develop for myproject
     Successfully installed Jinja2-2.8 Mako-1.0.6 MarkupSafe-0.23 \
     PasteDeploy-1.5.2 Pygments-2.1.3 WebOb-1.7.0 myproject pyramid-1.7.3 \
     pyramid-debugtoolbar-3.0.5 pyramid-jinja2-2.7 pyramid-mako-1.0.2 \
@@ -226,75 +229,75 @@ Running the Tests for Your Application
 To run unit tests for your application, you must first install the testing
 dependencies.
 
-On UNIX:
+On Unix:
 
 .. code-block:: bash
 
-   $ $VENV/bin/pip install -e ".[testing]"
+    $VENV/bin/pip install -e ".[testing]"
 
 On Windows:
 
 .. code-block:: doscon
 
-   c:\env\myproject> %VENV%\Scripts\pip install -e ".[testing]"
+    %VENV%\Scripts\pip install -e ".[testing]"
 
 Once the testing requirements are installed, then you can run the tests using
-the ``py.test`` command that was just installed in the ``bin`` directory of
+the ``pytest`` command that was just installed in the ``bin`` directory of
 your virtual environment.
 
-On UNIX:
+On Unix:
 
 .. code-block:: bash
 
-   $ $VENV/bin/py.test -q
+    $VENV/bin/pytest -q
 
 On Windows:
 
 .. code-block:: doscon
 
-   c:\env\myproject> %VENV%\Scripts\py.test -q
+    %VENV%\Scripts\pytest -q
 
-Here's sample output from a test run on UNIX:
+Here's sample output from a test run on Unix:
 
 .. code-block:: bash
 
-   $ $VENV/bin/py.test -q
-   ..
-   2 passed in 0.47 seconds
+    $VENV/bin/pytest -q
+    ..
+    2 passed in 0.47 seconds
 
 The tests themselves are found in the ``tests.py`` module in your ``cookiecutter``-generated project.  Within a project generated by the ``pyramid-cookiecutter-starter`` cookiecutter, only two sample tests exist.
 
 .. note::
 
-    The ``-q`` option is passed to the ``py.test`` command to limit the output
+    The ``-q`` option is passed to the ``pytest`` command to limit the output
     to a stream of dots. If you don't pass ``-q``, you'll see verbose test
     result output (which normally isn't very useful).
 
 Alternatively, if you'd like to see test coverage, pass the ``--cov`` option
-to ``py.test``:
+to ``pytest``:
 
 .. code-block:: bash
 
-   $ $VENV/bin/py.test --cov -q
+    $VENV/bin/pytest --cov -q
 
-Cookiecutters include configuration defaults for ``py.test`` and test coverage.
+Cookiecutters include configuration defaults for ``pytest`` and test coverage.
 These configuration files are ``pytest.ini`` and ``.coveragerc``, located at
 the root of your package. Without these defaults, we would need to specify the
 path to the module on which we want to run tests and coverage.
 
 .. code-block:: bash
 
-   $ $VENV/bin/py.test --cov=myproject myproject/tests.py -q
+    $VENV/bin/pytest --cov=myproject myproject/tests.py -q
 
-.. seealso:: See py.test's documentation for :ref:`pytest:usage` or invoke
-   ``py.test -h`` to see its full set of options.
+.. seealso:: See ``pytest``'s documentation for :ref:`pytest:usage` or invoke
+   ``pytest -h`` to see its full set of options.
 
 
 .. index::
    single: running an application
    single: pserve
    single: reload
-   single: startup
+   single: starting
 
 .. _running_the_project_application:
 
@@ -307,26 +310,26 @@ Once a project is installed for development, you can run the application it
 represents using the ``pserve`` command against the generated configuration
 file.  In our case, this file is named ``development.ini``.
 
-On UNIX:
+On Unix:
 
 .. code-block:: bash
 
-   $ $VENV/bin/pserve development.ini
+    $VENV/bin/pserve development.ini
 
 On Windows:
 
 .. code-block:: doscon
 
-   c:\env\myproject> %VENV%\Scripts\pserve development.ini
+    %VENV%\Scripts\pserve development.ini
 
-Here's sample output from a run of ``pserve`` on UNIX:
+Here's sample output from a run of ``pserve`` on Unix:
 
 .. code-block:: bash
 
-   $ $VENV/bin/pserve development.ini
-   Starting server in PID 77171.
-   Serving on http://localhost:6543
-   Serving on http://localhost:6543
+    $VENV/bin/pserve development.ini
+    Starting server in PID 77171.
+    Serving on http://localhost:6543
+    Serving on http://localhost:6543
 
 Access is restricted such that only a browser running on the same machine as
 Pyramid will be able to access your Pyramid application.  However, if you want
@@ -337,9 +340,9 @@ to open access to other machines on the same network, then edit the
 
 .. code-block:: ini
 
-   [server:main]
-   use = egg:waitress#main
-   listen = *:6543
+    [server:main]
+    use = egg:waitress#main
+    listen = *:6543
 
 Now when you use ``pserve`` to start the application, it will respond to
 requests on *all* IP addresses possessed by your system, not just requests to
@@ -394,26 +397,26 @@ module your project uses will cause the server to restart.  This typically
 makes development easier, as changes to Python code made within a
 :app:`Pyramid` application is not put into effect until the server restarts.
 
-For example, on UNIX:
+For example, on Unix:
 
 .. code-block:: text
 
-   $ $VENV/bin/pserve development.ini --reload
-   Starting subprocess with file monitor
-   Starting server in PID 16601.
-   Serving on http://localhost:6543
-   Serving on http://localhost:6543
+    $VENV/bin/pserve development.ini --reload
+    Starting subprocess with file monitor
+    Starting server in PID 16601.
+    Serving on http://localhost:6543
+    Serving on http://localhost:6543
 
 Now if you make a change to any of your project's ``.py`` files or ``.ini``
 files, you'll see the server restart automatically:
 
 .. code-block:: text
 
-   development.ini changed; reloading...
-   -------------------- Restarting --------------------
-   Starting server in PID 16602.
-   Serving on http://localhost:6543
-   Serving on http://localhost:6543
+    development.ini changed; reloading...
+    -------------------- Restarting --------------------
+    Starting server in PID 16602.
+    Serving on http://localhost:6543
+    Serving on http://localhost:6543
 
 Changes to template files (such as ``.pt`` or ``.mak`` files) won't cause the
 server to restart.  Changes to template files don't require a server restart as
@@ -466,9 +469,9 @@ like this to enable the toolbar when your system contacts Pyramid:
 
 .. code-block:: ini
 
-   [app:main]
-   # .. other settings ...
-   debugtoolbar.hosts = 192.168.1.1
+    [app:main]
+    # .. other settings ...
+    debugtoolbar.hosts = 192.168.1.1
 
 For more information about what the debug toolbar allows you to do, see the
 :ref:`documentation for pyramid_debugtoolbar <toolbar:overview>`.
@@ -481,22 +484,22 @@ You can also turn the debug toolbar off by editing ``development.ini`` and
 commenting out a line.  For example, instead of:
 
 .. code-block:: ini
-   :linenos:
+    :linenos:
 
-   [app:main]
-   # ... elided configuration
-   pyramid.includes =
-       pyramid_debugtoolbar
+    [app:main]
+    # ... elided configuration
+    pyramid.includes =
+        pyramid_debugtoolbar
 
 Put a hash mark at the beginning of the ``pyramid_debugtoolbar`` line:
 
 .. code-block:: ini
-   :linenos:
+    :linenos:
 
-   [app:main]
-   # ... elided configuration
-   pyramid.includes =
-   #    pyramid_debugtoolbar
+    [app:main]
+    # ... elided configuration
+    pyramid.includes =
+    #    pyramid_debugtoolbar
 
 Then restart the application to see that the toolbar has been turned off.
 
@@ -507,7 +510,7 @@ this:
 
 .. code-block:: text
 
-   ImportError: No module named #pyramid_debugtoolbar
+    ImportError: No module named #pyramid_debugtoolbar
 
 .. index::
    single: project structure
@@ -525,26 +528,32 @@ The ``myproject`` project we've generated has the following directory structure:
 
 .. code-block:: text
 
-   myproject/
-   ├── .coveragerc
-   ├── CHANGES.txt
-   ├── MANIFEST.in
-   ├── myproject
-   │   ├── __init__.py
-   │   ├── static
-   │   │   ├── pyramid-16x16.png
-   │   │   ├── pyramid.png
-   │   │   └── theme.css
-   │   ├── templates
-   │   │   ├── layout.jinja2
-   │   │   └── mytemplate.jinja2
-   │   ├── tests.py
-   │   └── views.py
-   ├── README.txt
-   ├── development.ini
-   ├── production.ini
-   ├── pytest.ini
-   └── setup.py
+    myproject
+    ├── .coveragerc
+    ├── .gitignore
+    ├── CHANGES.txt
+    ├── MANIFEST.in
+    ├── myproject
+    │   ├── __init__.py
+    │   ├── routes.py
+    │   ├── static
+    │   │   ├── pyramid-16x16.png
+    │   │   ├── pyramid.png
+    │   │   └── theme.css
+    │   ├── templates
+    │   │   ├── 404.jinja2
+    │   │   ├── layout.jinja2
+    │   │   └── mytemplate.jinja2
+    │   ├── tests.py
+    │   └── views
+    │       ├── __init__.py
+    │       ├── default.py
+    │       └── notfound.py
+    ├── README.txt
+    ├── development.ini
+    ├── production.ini
+    ├── pytest.ini
+    └── setup.py
 
 
 The ``myproject`` :term:`Project`
@@ -556,6 +565,8 @@ wrapper for your application.  It contains both the ``myproject``
 describe, run, and test your application.
 
 #. ``.coveragerc`` configures coverage when running tests.
+
+#. ``.gitignore`` tells git which files and directories to ignore from source code version control.
 
 #. ``CHANGES.txt`` describes the changes you've made to the application.  It is
    conventionally written in :term:`reStructuredText` format.
@@ -576,7 +587,7 @@ describe, run, and test your application.
 #. ``pytest.ini`` is a configuration file for running tests.
 
 #. ``setup.py`` is the file you'll use to test and distribute your application.
-   It is a standard :term:`setuptools` ``setup.py`` file.
+   It is a standard :term:`Setuptools` ``setup.py`` file.
 
 .. index::
    single: PasteDeploy
@@ -647,12 +658,10 @@ only (``127.0.0.1``).
 .. _myproject_ini_logging:
 
 The sections after ``# logging configuration`` represent Python's standard
-library :mod:`logging` module configuration for your application.  These
-sections are passed to the `logging module's config file configuration engine
-<https://docs.python.org/2/howto/logging.html#configuring-logging>`_ when the
-``pserve`` or ``pshell`` commands are executed.  The default configuration
+library :mod:`logging` module configuration for your application.
+The default configuration
 sends application logging output to the standard error output of your terminal.
-For more information about logging configuration, see :ref:`logging_chapter`.
+For more information see :ref:`logging_chapter`.
 
 See the :term:`PasteDeploy` documentation for more information about other
 types of things you can put into this ``.ini`` file, such as other
@@ -700,7 +709,7 @@ Without the presence of a ``MANIFEST.in`` file or without checking your source
 code into a version control repository, ``setup.py sdist`` places only *Python
 source files* (files ending with a ``.py`` extension) into tarballs generated
 by ``python setup.py sdist``.  This means, for example, if your project was not
-checked into a setuptools-compatible source control system, and your project
+checked into a Setuptools-compatible source control system, and your project
 directory didn't contain a ``MANIFEST.in`` file that told the ``sdist``
 machinery to include ``*.pt`` files, the ``myproject/templates/mytemplate.pt``
 file would not be included in the generated tarball.
@@ -709,20 +718,20 @@ Projects generated by Pyramid cookiecutters include a default ``MANIFEST.in`` fi
 The ``MANIFEST.in`` file contains declarations which tell it to include files
 like ``*.pt``, ``*.css`` and ``*.js`` in the generated tarball. If you include
 files with extensions other than the files named in the project's
-``MANIFEST.in`` and you don't make use of a setuptools-compatible version
+``MANIFEST.in`` and you don't make use of a Setuptools-compatible version
 control system, you'll need to edit the ``MANIFEST.in`` file and include the
 statements necessary to include your new files.  See
 https://docs.python.org/2/distutils/sourcedist.html#principle for more
 information about how to do this.
 
-You can also delete ``MANIFEST.in`` from your project and rely on a setuptools
+You can also delete ``MANIFEST.in`` from your project and rely on a :term:`Setuptools`
 feature which simply causes all files checked into a version control system to
 be put into the generated tarball.  To allow this to happen, check all the
 files that you'd like to be distributed along with your application's Python
 files into Subversion.  After you do this, when you rerun ``setup.py sdist``,
 all files checked into the version control system will be included in the
 tarball.  If you don't use Subversion, and instead use a different version
-control system, you may need to install a setuptools add-on such as
+control system, you may need to install a :term:`Setuptools` add-on such as
 ``setuptools-git`` or ``setuptools-hg`` for this behavior to work properly.
 
 .. index::
@@ -731,7 +740,7 @@ control system, you may need to install a setuptools add-on such as
 ``setup.py``
 ~~~~~~~~~~~~
 
-The ``setup.py`` file is a :term:`setuptools` setup file.  It is meant to be
+The ``setup.py`` file is a :term:`Setuptools` setup file.  It is meant to be
 used to define requirements for installing dependencies for your package and
 testing, as well as distributing your application.
 
@@ -741,7 +750,7 @@ testing, as well as distributing your application.
    distribute their reusable code.  You can read more about ``setup.py`` files
    and their usage in the `Python Packaging User Guide
    <https://packaging.python.org/>`_ and `Setuptools documentation
-   <http://pythonhosted.org/setuptools/>`_.
+   <https://setuptools.readthedocs.io/en/latest/>`_.
 
 Our generated ``setup.py`` looks like this:
 
@@ -749,13 +758,13 @@ Our generated ``setup.py`` looks like this:
    :language: python
    :linenos:
 
-The ``setup.py`` file calls the setuptools ``setup`` function, which does
+The ``setup.py`` file calls the :term:`Setuptools` ``setup`` function, which does
 various things depending on the arguments passed to ``pip`` on the command
 line.
 
 Within the arguments to this function call, information about your application
 is kept.  While it's beyond the scope of this documentation to explain
-everything about setuptools setup files, we'll provide a whirlwind tour of what
+everything about :term:`Setuptools` setup files, we'll provide a whirlwind tour of what
 exists in this file in this section.
 
 Your application's name can be any string; it is specified in the ``name``
@@ -763,7 +772,7 @@ field.  The version number is specified in the ``version`` value.  A short
 description is provided in the ``description`` field.  The ``long_description``
 is conventionally the content of the ``README`` and ``CHANGES`` files appended
 together. The ``classifiers`` field is a list of `Trove classifiers
-<https://pypi.python.org/pypi?%3Aaction=list_classifiers>`_ describing your
+<https://pypi.org/pypi?%3Aaction=list_classifiers>`_ describing your
 application.  ``author`` and ``author_email`` are text fields which probably
 don't need any description. ``url`` is a field that should point at your
 application project's URL (if any). ``packages=find_packages()`` causes all
@@ -785,7 +794,7 @@ you can try this command now:
 
 .. code-block:: text
 
-   $ $VENV/bin/python setup.py sdist
+    $VENV/bin/python setup.py sdist
 
 This will create a tarball of your application in a ``dist`` subdirectory named
 ``myproject-0.0.tar.gz``.  You can send this tarball to other people who want
@@ -810,7 +819,11 @@ The ``myproject`` :term:`package` lives inside the ``myproject``
 
 #. A ``tests.py`` module, which contains unit test code for the application.
 
-#. A ``views.py`` module, which contains view code for the application.
+#. A ``routes.py`` module, which contains routing code for the application.
+
+#. A ``views`` package, which contains view code for the application.
+
+#. A ``static`` directory, which contains static files, including images and CSS.
 
 These are purely conventions established by the cookiecutter. :app:`Pyramid`
 doesn't insist that you name things in any particular way. However, it's
@@ -841,38 +854,64 @@ also informs Python that the directory which contains it is a *package*.
    WSGI application.  This function is meant to be called by the
    :term:`PasteDeploy` framework as a result of running ``pserve``.
 
-   Within this function, application configuration is performed.
+   The ``main`` function configures the application.
 
-   Line 7 creates an instance of a :term:`Configurator`.
+   Line 7 opens a context manager with an instance of a :term:`Configurator`.
 
    Line 8 adds support for Jinja2 templating bindings, allowing us to
    specify renderers with the ``.jinja2`` extension.
 
-   Line 9 registers a static view, which will serve up the files from the
-   ``myproject:static`` :term:`asset specification` (the ``static`` directory
-   of the ``myproject`` package).
+   Line 9 includes the ``routes.py`` module.
 
-   Line 10 adds a :term:`route` to the configuration.  This route is later used
-   by a view in the ``views`` module.
-
-   Line 11 calls ``config.scan()``, which picks up view registrations declared
+   Line 10 calls ``config.scan()``, which picks up view registrations declared
    elsewhere in the package (in this case, in the ``views.py`` module).
 
-   Line 12 returns a :term:`WSGI` application to the caller of the function
+   Line 11 returns a :term:`WSGI` application to the caller of the function
    (Pyramid's pserve).
+
+.. seealso::
+   
+   See :ref:`the_startup_process` for more about the application's :ref:`settings <startup_settings>` and ``main``\'s :ref:`arguments <startup_constructor_arguments>` and statements.
+
+
+.. index::
+    single: routes.py
+
+.. _routes_py:
+
+``routes.py``
+~~~~~~~~~~~~~
+
+The ``routes.py`` module gets included by the ``main`` function in our ``__init__.py``.
+It registers a view and a route.
+
+.. literalinclude:: myproject/myproject/routes.py
+    :language: python
+    :linenos:
+
+Line 2 registers a static view, which will serve up the files from the ``myproject:static`` :term:`asset specification` (the ``static`` directory of the ``myproject`` package).
+
+Line 3 adds a :term:`route` to the configuration.  This route is later used by a view in the ``views`` module.
+
 
 .. index::
    single: views.py
 
-``views.py``
-~~~~~~~~~~~~
+``views`` package
+~~~~~~~~~~~~~~~~~
 
 Much of the heavy lifting in a :app:`Pyramid` application is done by *view
 callables*.  A :term:`view callable` is the main tool of a :app:`Pyramid` web
 application developer; it is a bit of code which accepts a :term:`request` and
 which returns a :term:`response`.
 
-.. literalinclude:: myproject/myproject/views.py
+Our project has a ``views`` package by virtue of it being a directory containing an ``__init__.py`` file.
+This ``__init__.py`` file happens to have no content, although it could as a project develops.
+
+We have two view modules in the ``views`` package.
+Let's look at ``default.py``.
+
+.. literalinclude:: myproject/myproject/views/default.py
    :language: python
    :linenos:
 
@@ -880,17 +919,17 @@ Lines 4-6 define and register a :term:`view callable` named ``my_view``.  The
 function named ``my_view`` is decorated with a ``view_config`` decorator (which
 is processed by the ``config.scan()`` line in our ``__init__.py``). The
 view_config decorator asserts that this view be found when a :term:`route`
-named ``home`` is matched.  In our case, because our ``__init__.py`` maps the
+named ``home`` is matched.  In our case, because our ``routes.py`` maps the
 route named ``home`` to the URL pattern ``/``, this route will match when a
 visitor visits the root URL.  The view_config decorator also names a
 ``renderer``, which in this case is a template that will be used to render the
 result of the view callable.  This particular view declaration points at
-``templates/mytemplate.pt``, which is an :term:`asset specification` that
-specifies the ``mytemplate.pt`` file within the ``templates`` directory of the
+``../templates/mytemplate.jinja2``, which is an :term:`asset specification` that
+specifies the ``mytemplate.jinja2`` file within the ``templates`` directory of the
 ``myproject`` package.  The asset specification could have also been specified
-as ``myproject:templates/mytemplate.pt``; the leading package name and colon is
+as ``myproject:templates/mytemplate.jinja2``; the leading package name and colon is
 optional.  The template file pointed to is a :term:`Jinja2` template
-file (``templates/my_template.jinja2``).
+file (``templates/mytemplate.jinja2``).
 
 This view callable function is handed a single piece of information: the
 :term:`request`.  The *request* is an instance of the :term:`WebOb` ``Request``
@@ -902,6 +941,15 @@ substitutes into the template when generating HTML.  The renderer then returns
 the HTML in a :term:`response`.
 
 .. note:: Dictionaries provide values to :term:`template`\s.
+
+Now let's look at ``notfound.py``.
+
+.. literalinclude:: myproject/myproject/views/notfound.py
+   :language: python
+   :linenos:
+
+This file is similar to ``default.py``.
+It merely returns a ``404`` response status and an empty dictionary to the template at ``../templates/404.jinja2``.
 
 .. note:: When the application is run with the cookiecutter's :ref:`default
    development.ini <myproject_ini>` configuration, :ref:`logging is set up
@@ -964,7 +1012,7 @@ This is the base layout content. It contains a single marker for content block. 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is the content :term:`Jinja2` template that exists in the project.  It is referenced by the call to ``@view_config`` as the ``renderer``
-of the ``my_view`` view callable in the ``views.py`` file.  See
+of the ``my_view`` view callable in the ``views/default.py`` file.  See
 :ref:`views_which_use_a_renderer` for more information about renderers. It inherits ("extends") the HTML provided by ``layout.jinja2``, replacing the content block with its own content.
 
 .. literalinclude:: myproject/myproject/templates/mytemplate.jinja2
@@ -974,6 +1022,18 @@ of the ``my_view`` view callable in the ``views.py`` file.  See
 Templates are accessed and used by view configurations and sometimes by view
 functions themselves.  See :ref:`templates_used_directly` and
 :ref:`templates_used_as_renderers`.
+
+
+``templates/404.jinja2``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+This template is similar to ``mytemplate.jinja2``, but with a few differences.
+It is referenced by the call to ``@notfound_view_config`` as the ``renderer`` of the ``notfound_view`` view callable in the ``views/notfound.py`` file.
+It inherits the HTML provided by ``layout.jinja2``, replacing the content block with its own content.
+
+.. literalinclude:: myproject/myproject/templates/404.jinja2
+   :language: jinja
+   :linenos:
 
 
 .. index::
@@ -989,7 +1049,7 @@ The ``tests.py`` module includes tests for your application.
    :linenos:
 
 This sample ``tests.py`` file has one unit test and one functional test defined
-within it. These tests are executed when you run ``py.test -q``. You may add
+within it. These tests are executed when you run ``pytest -q``. You may add
 more tests here as you build your application. You are not required to write
 tests to use :app:`Pyramid`. This file is simply provided for convenience and
 example.
@@ -1015,32 +1075,11 @@ cookiecutter, you can decide to lay your code out any way you see fit.
 For example, the configuration method named
 :meth:`~pyramid.config.Configurator.add_view` requires you to pass a
 :term:`dotted Python name` or a direct object reference as the class or
-function to be used as a view.  By default, the ``starter`` cookiecutter would have
-you add view functions to the ``views.py`` module in your package. However, you
-might be more comfortable creating a ``views`` *directory*, and adding a single
-file for each view.
+function to be used as a view.
+By default, the ``starter`` cookiecutter would have you create a ``views`` directory, and add a single file for each view or collection of related views.
+However, you might be more comfortable creating a single ``views.py`` module in your package and add view functions to it.
 
-If your project package name was ``myproject`` and you wanted to arrange all
-your views in a Python subpackage within the ``myproject`` :term:`package`
-named ``views`` instead of within a single ``views.py`` file, you might do the
-following.
-
-- Create a ``views`` directory inside your ``myproject`` package directory (the
-  same directory which holds ``views.py``).
-
-- Create a file within the new ``views`` directory named ``__init__.py``.  (It
-  can be empty.  This just tells Python that the ``views`` directory is a
-  *package*.)
-
-- *Move* the content from the existing ``views.py`` file to a file inside the
-  new ``views`` directory named, say, ``blog.py``.  Because the ``templates``
-  directory remains in the ``myproject`` package, the template :term:`asset
-  specification` values in ``blog.py`` must now be fully qualified with the
-  project's package name (``myproject:templates/blog.pt``).
-
-You can then continue to add view callable functions to the ``blog.py`` module,
-but you can also add other ``.py`` files which contain view callable functions
-to the ``views`` directory.  As long as you use the ``@view_config`` directive
+Whatever structure you prefer, as long as you use the ``@view_config`` directive
 to register views in conjunction with ``config.scan()``, they will be picked up
 automatically when the application is restarted.
 
@@ -1122,7 +1161,7 @@ inotify support
 By default ``hupper`` will poll the filesystem for changes to all Python
 code. This can be pretty inefficient in larger projects. To be nicer to your
 hard drive, you should install the
-`watchdog <http://pythonhosted.org/watchdog/>`_ package in development.
+`watchdog <https://pythonhosted.org/watchdog/>`_ package in development.
 ``hupper`` will automatically use ``watchdog`` to more efficiently poll the
 filesystem.
 
@@ -1141,7 +1180,7 @@ serve it many times. When you change it, you want ``pserve`` to restart:
 
     [pserve]
     watch_files =
-        myapp/static/favicon.ico
+        myproject/static/favicon.ico
 
 Paths may be absolute or relative to the configuration file. They may also
 be an :term:`asset specification`. These paths are passed to ``hupper``, which

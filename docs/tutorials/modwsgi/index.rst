@@ -9,7 +9,7 @@ server.
 
 This guide will outline broad steps that can be used to get a :app:`Pyramid`
 application running under Apache via ``mod_wsgi``.  This particular tutorial
-was developed under Apple's Mac OS X platform (Snow Leopard, on a 32-bit
+was developed under Apple's macOS platform (Snow Leopard, on a 32-bit
 Mac), but the instructions should be largely the same for all systems, delta
 specific path information for commands and files.
 
@@ -32,14 +32,14 @@ specific path information for commands and files.
     <https://code.google.com/archive/p/modwsgi/wikis/InstallationInstructions.wiki>`_
     for your platform into your system's Apache installation.
 
-#.  Create a :app:`Pyramid` application. For this tutorial we'll use the
-    ``starter`` :term:`cookiecutter`. See :ref:`project_narr` for more
-    in-depth information about creating a new project.
+#.  Create a :app:`Pyramid` application using our :term:`cookiecutter`. See
+    :ref:`project_narr` for more in-depth information about creating a new
+    project.
 
     .. code-block:: bash
 
-       $ cd ~
-       $ cookiecutter gh:Pylons/pyramid-cookiecutter-starter --checkout master
+        cd ~
+        cookiecutter gh:Pylons/pyramid-cookiecutter-starter --checkout master
 
     If prompted for the first item, accept the default ``yes`` by hitting return.
 
@@ -54,6 +54,11 @@ specific path information for commands and files.
         2 - chameleon
         3 - mako
         Choose from 1, 2, 3 [1]: 1
+        Select backend:
+        1 - none
+        2 - sqlalchemy
+        3 - zodb
+        Choose from 1, 2, 3 [1]: 1
 
 #.  Create a :term:`virtual environment` which we'll use to install our
     application. It is important to use the same base Python interpreter
@@ -63,24 +68,24 @@ specific path information for commands and files.
 
     .. code-block:: bash
 
-       $ cd myproject
-       $ python3 -m venv env
+        cd myproject
+        python3 -m venv env
 
 #.  Install your :app:`Pyramid` application and its dependencies.
 
     .. code-block:: bash
 
-       $ env/bin/pip install -e .
+        env/bin/pip install -e .
 
 #.  Within the project directory (``~/myproject``), create a script
     named ``pyramid.wsgi``.  Give it these contents:
 
     .. code-block:: python
 
-       from pyramid.paster import get_app, setup_logging
-       ini_path = '/Users/chrism/myproject/production.ini'
-       setup_logging(ini_path)
-       application = get_app(ini_path, 'main')
+        from pyramid.paster import get_app, setup_logging
+        ini_path = '/Users/chrism/myproject/production.ini'
+        setup_logging(ini_path)
+        application = get_app(ini_path, 'main')
 
     The first argument to :func:`pyramid.paster.get_app` is the project
     configuration file name.  It's best to use the ``production.ini`` file
@@ -106,25 +111,25 @@ specific path information for commands and files.
 
     .. code-block:: apache
 
-       # Use only 1 Python sub-interpreter.  Multiple sub-interpreters
-       # play badly with C extensions.  See
-       # http://stackoverflow.com/a/10558360/209039
-       WSGIApplicationGroup %{GLOBAL}
-       WSGIPassAuthorization On
-       WSGIDaemonProcess pyramid user=chrism group=staff threads=4 \
+        # Use only 1 Python sub-interpreter.  Multiple sub-interpreters
+        # play badly with C extensions.  See
+        # http://stackoverflow.com/a/10558360/209039
+        WSGIApplicationGroup %{GLOBAL}
+        WSGIPassAuthorization On
+        WSGIDaemonProcess pyramid user=chrism group=staff threads=4 \
           python-path=/Users/chrism/myproject/env/lib/python3.5/site-packages
-       WSGIScriptAlias /myapp /Users/chrism/myproject/pyramid.wsgi
+        WSGIScriptAlias /myapp /Users/chrism/myproject/pyramid.wsgi
 
-       <Directory /Users/chrism/myproject>
+        <Directory /Users/chrism/myproject>
          WSGIProcessGroup pyramid
          Require all granted
-       </Directory>
- 
+        </Directory>
+
 #.  Restart Apache
 
     .. code-block:: bash
 
-       $ sudo /usr/sbin/apachectl restart
+        sudo /usr/sbin/apachectl restart
 
 #.  Visit ``http://localhost/myapp`` in a browser.  You should see the
     sample application rendered in your browser.

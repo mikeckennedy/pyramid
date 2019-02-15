@@ -22,7 +22,7 @@ instance of the :class:`pyramid.request.Request` class, which is a subclass of
 
 WebOb is a project separate from :app:`Pyramid` with a separate set of authors
 and a fully separate `set of documentation
-<http://docs.webob.org/en/latest/index.html>`_.  :app:`Pyramid` adds some
+<https://docs.pylonsproject.org/projects/webob/en/latest/index.html>`_.  :app:`Pyramid` adds some
 functionality to the standard WebOb request, which is documented in the
 :ref:`request_module` API documentation.
 
@@ -35,7 +35,7 @@ requests and forming WSGI responses.  WebOb is a nice way to represent "raw"
 WSGI requests and responses.  However, we won't cover that use case in this
 document, as users of :app:`Pyramid` don't typically need to use the
 WSGI-related features of WebOb directly.  The `reference documentation
-<http://docs.webob.org/en/latest/reference.html>`_ shows many examples of
+<https://docs.pylonsproject.org/projects/webob/en/latest/reference.html>`_ shows many examples of
 creating requests and using response objects in this manner, however.
 
 .. index::
@@ -188,15 +188,10 @@ of them.  Here are a couple that might be useful:
 Text (Unicode)
 ++++++++++++++
 
-Many of the properties of the request object will be text values (``unicode``
-under Python 2 or ``str`` under Python 3) if the request encoding/charset is
-provided.  If it is provided, the values in ``req.POST``, ``req.GET``,
-``req.params``, and ``req.cookies`` will contain text.  The client *can*
-indicate the charset with something like ``Content-Type:
-application/x-www-form-urlencoded; charset=utf8``, but browsers seldom set
-this.  You can reset the charset of an existing request with ``newreq =
-req.decode('utf-8')``, or during instantiation with ``Request(environ,
-charset='utf8')``.
+Most of the properties of the request object will be text values.
+The values in ``req.POST``, ``req.GET``, ``req.params``, and ``req.cookies`` will contain text and are generated assuming a UTF-8 charset.
+The client *can* indicate the charset with something like ``Content-Type: application/x-www-form-urlencoded; charset=utf8``, but browsers seldom set this.
+You can reset the charset of an existing request with ``newreq = req.decode('utf-8')``, or during instantiation with ``Request(environ, charset='utf8')``.
 
 .. index::
    single: multidict (WebOb)
@@ -252,8 +247,8 @@ Using ``request.json_body`` is equivalent to:
 
 .. code-block:: python
 
-   from json import loads
-   loads(request.body, encoding=request.charset)
+    from json import loads
+    loads(request.body, encoding=request.charset)
 
 Here's how to construct an AJAX request in JavaScript using :term:`jQuery` that
 allows you to use the ``request.json_body`` attribute when the request is sent
@@ -264,7 +259,7 @@ to a :app:`Pyramid` application:
     jQuery.ajax({type:'POST',
                  url: 'http://localhost:6543/', // the pyramid server
                  data: JSON.stringify({'a':1}),
-                 contentType: 'application/json; charset=utf-8'});
+                 contentType: 'application/json'});
 
 When such a request reaches a view in your application, the
 ``request.json_body`` attribute will be available in the view callable body.
@@ -280,7 +275,7 @@ For the above view, printed to the console will be:
 
 .. code-block:: python
 
-    {u'a': 1}
+    {'a': 1}
 
 For bonus points, here's a bit of client-side code that will produce a request
 that has a body suitable for reading via ``request.json_body`` using Python's
@@ -292,7 +287,7 @@ that has a body suitable for reading via ``request.json_body`` using Python's
     import json
 
     json_payload = json.dumps({'a':1})
-    headers = {'Content-Type':'application/json; charset=utf-8'}
+    headers = {'Content-Type':'application/json'}
     req = urllib2.Request('http://localhost:6543/', json_payload, headers)
     resp = urllib2.urlopen(req)
 
@@ -302,7 +297,7 @@ to handle this is to add an extra ``view_config`` for the same route, with
 ``request_method`` set to ``OPTIONS``, and set the desired response header
 before returning. You can find examples of response headers `Access control
 CORS, Preflighted requests
-<https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS#Preflighted_requests>`_.
+<https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#Preflighted_requests>`_.
 
 .. index::
    single: cleaning up after request
@@ -321,19 +316,19 @@ session to be removed after each request.  Put the following in the
 ``mypackage.__init__`` module:
 
 .. code-block:: python
-   :linenos:
+    :linenos:
 
-   from mypackage.models import DBSession
+    from mypackage.models import DBSession
 
-   from pyramid.events import subscriber
-   from pyramid.events import NewRequest
+    from pyramid.events import subscriber
+    from pyramid.events import NewRequest
 
-   def cleanup_callback(request):
-       DBSession.remove()
+    def cleanup_callback(request):
+        DBSession.remove()
 
-   @subscriber(NewRequest)
-   def add_cleanup_callback(event):
-       event.request.add_finished_callback(cleanup_callback)
+    @subscriber(NewRequest)
+    def add_cleanup_callback(event):
+        event.request.add_finished_callback(cleanup_callback)
 
 Registering the ``cleanup_callback`` finished callback at the start of a
 request (by causing the ``add_cleanup_callback`` to receive a
@@ -345,7 +340,7 @@ against your ``mypackage`` package during application initialization.
 
 .. note::
    This is only an example.  In particular, it is not necessary to cause
-   ``DBSession.remove`` to be called in an application generated from a
+   ``DBSession.remove`` to be called in an application generated from the
    :app:`Pyramid` cookiecutter, because these all use the ``pyramid_tm`` package.
    The cleanup done by ``DBSession.remove`` is unnecessary when ``pyramid_tm``
    :term:`middleware` is configured into the application.
@@ -357,7 +352,7 @@ More detail about the request object API is available as follows.
 
 - :class:`pyramid.request.Request` API documentation
 
-- `WebOb documentation <http://docs.webob.org/en/latest/index.html>`_.  All
+- `WebOb documentation <https://docs.pylonsproject.org/projects/webob/en/latest/index.html>`_.  All
   methods and attributes of a ``webob.Request`` documented within the WebOb
   documentation will work with request objects created by :app:`Pyramid`.
 
@@ -386,8 +381,8 @@ A response object has three fundamental parts:
 
 ``response.app_iter``
     An iterable (such as a list or generator) that will produce the content of
-    the response.  This is also accessible as ``response.body`` (a string),
-    ``response.text`` (a unicode object, informed by ``response.charset``), and
+    the response.  This is also accessible as ``response.body`` (bytes),
+    ``response.text`` (a Unicode string, informed by ``response.charset``), and
     ``response.body_file`` (a file-like object; writing to it appends to
     ``app_iter``).
 
@@ -406,13 +401,13 @@ Here are some highlights:
     ``response.text``. ``response.content_type_params`` is a dictionary of all
     the parameters.
 
-``response.set_cookie(key, value, max_age=None, path='/', ...)``
+``response.set_cookie(name, value, max_age=None, path='/', ...)``
     Set a cookie.  The keyword arguments control the various cookie parameters.
     The ``max_age`` argument is the length for the cookie to live in seconds
     (you may also use a timedelta object).  The ``Expires`` key will also be
     set based on the value of ``max_age``.
 
-``response.delete_cookie(key, path='/', domain=None)``
+``response.delete_cookie(name, path='/', domain=None)``
     Delete a cookie from the client.  This sets ``max_age`` to 0 and the cookie
     value to ``''``.
 
@@ -450,10 +445,10 @@ attribute of the response can be passed in as a keyword argument to the class,
 e.g.:
 
 .. code-block:: python
-  :linenos:
+    :linenos:
 
-  from pyramid.response import Response
-  response = Response(body='hello world!', content_type='text/plain')
+    from pyramid.response import Response
+    response = Response(body='hello world!', content_type='text/plain')
 
 The status defaults to ``'200 OK'``.
 
@@ -496,4 +491,4 @@ More Details
 More details about the response object API are available in the
 :mod:`pyramid.response` documentation.  More details about exception responses
 are in the :mod:`pyramid.httpexceptions` API documentation.  The `WebOb
-documentation <http://docs.webob.org/en/latest/index.html>`_ is also useful.
+documentation <https://docs.pylonsproject.org/projects/webob/en/latest/index.html>`_ is also useful.

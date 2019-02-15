@@ -32,30 +32,40 @@ Objectives
 Steps
 =====
 
-#. First we copy the results of the previous step, as well as install the
-   ``pyramid_debugtoolbar`` package:
+#.  First we copy the results of the previous step.
 
-   .. code-block:: bash
+    .. code-block:: bash
 
-    $ cd ..; cp -r ini debugtoolbar; cd debugtoolbar
-    $ $VENV/bin/pip install -e .
-    $ $VENV/bin/pip install pyramid_debugtoolbar
+        cd ..; cp -r ini debugtoolbar; cd debugtoolbar
 
-#. Our ``debugtoolbar/development.ini`` gets a configuration entry for
-   ``pyramid.includes``:
+#.  Add ``pyramid_debugtoolbar`` to our project's dependencies in ``setup.py`` as a :term:`Setuptools` "extra" for development:
 
-   .. literalinclude:: debugtoolbar/development.ini
-    :language: ini
-    :linenos:
+    .. literalinclude:: debugtoolbar/setup.py
+        :language: python
+        :linenos:
+        :emphasize-lines: 10-16, 20-22
 
-#. Run the WSGI application with:
+#.  Install our project and its newly added dependency.
+    Note that we use the extra specifier ``[dev]`` to install development requirements and surround it and the period with double quote marks.
 
-   .. code-block:: bash
+    .. code-block:: bash
 
-    $ $VENV/bin/pserve development.ini --reload
+        $VENV/bin/pip install -e ".[dev]"
 
-#. Open http://localhost:6543/ in your browser. See the handy
-   toolbar on the right.
+#.  Our ``debugtoolbar/development.ini`` gets a configuration entry for ``pyramid.includes``:
+
+    .. literalinclude:: debugtoolbar/development.ini
+        :language: ini
+        :linenos:
+
+#.  Run the WSGI application with:
+
+    .. code-block:: bash
+
+        $VENV/bin/pserve development.ini --reload
+
+#.  Open http://localhost:6543/ in your browser.
+    See the handy toolbar on the right.
 
 
 Analysis
@@ -87,30 +97,36 @@ experience otherwise inexplicable client-side weirdness, you can shut it off
 by commenting out the ``pyramid_debugtoolbar`` line in ``pyramid.includes``
 temporarily.
 
+Finally we've introduced the concept of :term:`Setuptools` extras.
+These are optional or recommended features that may be installed with an "extras" specifier, in this case, ``dev``.
+The specifier is the name of a key in a Python dictionary, and is surrounded by square brackets when invoked on the command line, for example, .
+The value for the key is a Python list of dependencies.
+
 .. seealso:: See also :ref:`pyramid_debugtoolbar <toolbar:overview>`.
 
 
 Extra credit
 ============
 
-#. Why don't we add ``pyramid_debugtoolbar`` to the list of
-   ``install_requires`` dependencies in ``debugtoolbar/setup.py``?
+#.  We added ``pyramid_debugtoolbar`` to the list of ``dev_requires`` dependencies in ``debugtoolbar/setup.py``.
+    We then installed the dependencies via ``pip install -e ".[dev]"`` by virtue of the Setuptools ``extras_require`` value in the Python dictionary.
+    Why did we add them there instead of in the ``requires`` list?
 
-#. Introduce a bug into your application. Change:
+#.  Introduce a bug into your application. Change:
 
-   .. code-block:: python
+    .. code-block:: python
 
-     def hello_world(request):
-         return Response('<body><h1>Hello World!</h1></body>')
+        def hello_world(request):
+            return Response('<body><h1>Hello World!</h1></body>')
 
-   to:
+    to:
 
-   .. code-block:: python
+    .. code-block:: python
 
-    def hello_world(request):
-        return xResponse('<body><h1>Hello World!</h1></body>')
+        def hello_world(request):
+            return xResponse('<body><h1>Hello World!</h1></body>')
 
-   Save, and visit http://localhost:6543/ again. Notice the nice traceback
-   display. On the lowest line, click the "screen" icon to the right, and try
-   typing the variable names ``request`` and ``Response``. What else can you
-   discover?
+    Save, and visit http://localhost:6543/ again.
+    Notice the nice traceback display.
+    On the lowest line, click the "screen" icon to the right, and try typing the variable names ``request`` and ``Response``.
+    What else can you discover?

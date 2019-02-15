@@ -73,17 +73,17 @@ XML:
 
     <somesnippet>Some XML</somesnippet>
 
-Unix shell commands are prefixed with a ``$`` character. (See :term:`venv` for the meaning of ``$VENV``.)
+Unix shell commands (See :term:`venv` for the meaning of ``$VENV``.):
 
 .. code-block:: bash
 
-    $ $VENV/bin/pip install -e .
+    $VENV/bin/pip install -e .
 
-Windows commands are prefixed with a drive letter with an optional directory name. (See :term:`venv` for the meaning of ``%VENV%``.)
+Windows commands (See :term:`venv` for the meaning of ``%VENV%``.):
 
 .. code-block:: doscon
 
-    c:\> %VENV%\Scripts\pserve development.ini
+    %VENV%\Scripts\pserve development.ini
 
 cfg:
 
@@ -128,7 +128,7 @@ When a command that should be typed on one line is too long to fit on the displa
 
 .. code-block:: bash
 
-    $ $VENV/bin/py.test tutorial/tests.py --cov-report term-missing \
+    $VENV/bin/pytest tutorial/tests.py --cov-report term-missing \
         --cov=tutorial -q
 
 
@@ -217,18 +217,6 @@ The version in which a feature is deprecated in a project is displayed as follow
     Use the ``require_csrf`` option or read :ref:`auto_csrf_checking` instead to have :class:`pyramid.exceptions.BadCSRFToken` exceptions raised.
 
 
-.. _typographical-conventions-danger:
-
-Danger
-------
-
-Danger represents critical information related to a topic or concept, and should recommend to the user "don't do this dangerous thing".
-
-.. danger::
-
-    This is danger or an error.
-
-
 .. _typographical-conventions-warnings:
 
 Warnings
@@ -263,18 +251,6 @@ See also
 .. seealso::
 
     See :ref:`Quick Tutorial section on Requirements <qtut_requirements>`.
-
-
-.. _typographical-conventions-todo:
-
-Todo
-----
-
-Todo items designated tasks that require further work.
-
-.. todo::
-
-    This is a todo item.
 
 
 .. _typographical-conventions-cross-references:

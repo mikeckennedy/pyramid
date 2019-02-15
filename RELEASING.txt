@@ -33,11 +33,6 @@ Prepare new release branch
 
 - Run tests on Windows if feasible.
 
-- Make sure all scaffold tests pass (CPython 2.7, 3.4, 3.5, and 3.6, and PyPy
-  on UNIX; this doesn't work on Windows):
-
-  $ ./scaffoldtests.sh
-
 - For each ``pyramid-cookiecutter-*``, make a new branch off "master" with the
   same name to align with the new Pyramid release branch name.
 
@@ -46,15 +41,15 @@ Prepare new release branch
   x.y-branch``. A search for ``cookiecutter gh:Pylons/pyramid-cookiecutter-``
   should return all instances to be updated.
 
-- Ensure all features of the release are documented (audit CHANGES.txt or
+- Ensure all features of the release are documented (audit CHANGES.rst or
   communicate with contributors).
 
-- Change CHANGES.txt heading to reflect the new version number.
+- Change CHANGES.rst heading to reflect the new version number.
 
-- Copy relevant changes (delta bug fixes) from CHANGES.txt to
+- Copy relevant changes (delta bug fixes) from CHANGES.rst to
   docs/whatsnew-X.X (if it's a major release).  Minor releases should
   include a link under "Bug Fix Releases" to the minor feature
-  changes in CHANGES.txt.
+  changes in CHANGES.rst.
 
 - Update README.rst to use correct versions of badges, URLs, and ALT option
   according to the new release branch name.
@@ -71,11 +66,20 @@ Prepare new release branch
 
 - Change setup.py version to the release version number.
 
+- Make sure PyPI long description renders::
+
+  $ tox -e lint
+
 - Create a release tag.
 
-- Build and publish to PyPI::
+  $ git tag X.X
 
-  $ python setup.py sdist bdist_wheel
+- Build the sdist and wheel.
+
+  $ tox -e build
+
+- Upload the artifacts to PyPI:
+
   $ twine upload dist/pyramid-X.X-*
 
 - Configure RTD to publish the new release version of the docs.
@@ -85,11 +89,11 @@ Prepare master for further development (major releases only)
 
 - Checkout master.
 
-- In CHANGES.txt, preserve headings but clear out content. Add heading
+- In CHANGES.rst, preserve headings but clear out content. Add heading
   "unreleased" for the version number.
 
-- From the release branch, forward port the changes in CHANGES.txt to
-  HISTORY.txt.
+- From the release branch, forward port the changes in CHANGES.rst to
+  HISTORY.rst.
 
 - In contributing.md, forward port branch descriptions from release branch.
 
@@ -125,13 +129,15 @@ Cookiecutters
 Marketing and communications
 ----------------------------
 
-- Edit Pylons/trypyramid.com/src/templates/resources.html for major releases,
-  pre-releases, and once pre-releases are final.
+- Edit Pylons/trypyramid.com/src/templates/documentation.ejs for major
+  releases, pre-releases, and once pre-releases are final.
 
-- Edit `http://wiki.python.org/moin/WebFrameworks
-  <http://wiki.python.org/moin/WebFrameworks>`_.
+- Edit `https://wiki.python.org/moin/WebFrameworks
+  <https://wiki.python.org/moin/WebFrameworks>`_.
 
 - Edit `https://en.wikipedia.org/wiki/Pylons_project <https://en.wikipedia.org/wiki/Pylons_project>`_.
+
+- Edit `https://en.wikipedia.org/wiki/Comparison_of_web_frameworks <https://en.wikipedia.org/wiki/Comparison_of_web_frameworks>`_.
 
 - Announce to Twitter.
 
@@ -139,7 +145,7 @@ Marketing and communications
 Pyramid 1.x released.
 
 PyPI
-https://pypi.python.org/pypi/pyramid/1.x
+https://pypi.org/project/pyramid/1.x/
 
 === One time only for new version, first pre-release ===
 What's New

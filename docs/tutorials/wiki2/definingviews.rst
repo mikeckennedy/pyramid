@@ -32,7 +32,7 @@ Open ``tutorial/setup.py`` and edit it to look like the following:
 
 .. literalinclude:: src/views/setup.py
    :linenos:
-   :emphasize-lines: 13
+   :emphasize-lines: 14
    :language: python
 
 Only the highlighted line needs to be added.
@@ -126,16 +126,16 @@ edit it to look like the following:
 .. literalinclude:: src/views/tutorial/views/default.py
    :linenos:
    :language: python
-   :emphasize-lines: 1-9,12-
+   :emphasize-lines: 1-9,14-
 
 The highlighted lines need to be added or edited.
 
 We added some imports, and created a regular expression to find "WikiWords".
 
 We got rid of the ``my_view`` view function and its decorator that was added
-when we originally rendered the ``alchemy`` cookiecutter.  It was only an example
-and isn't relevant to our application.  We also deleted the ``db_err_msg``
-string.
+when originally rendered after we selected the ``sqlalchemy`` backend option in
+the cookiecutter.  It was only an example and isn't relevant to our
+application.  We also deleted the ``db_err_msg`` string.
 
 Then we added four :term:`view callable` functions to our ``views/default.py``
 module, as mentioned in the previous step:
@@ -149,7 +149,7 @@ We'll describe each one briefly in the following sections.
 
 .. note::
 
-  There is nothing special about the filename ``default.py`` exept that it is a
+  There is nothing special about the filename ``default.py`` except that it is a
   Python module. A project may have many view callables throughout its codebase
   in arbitrarily named modules. Modules implementing view callables often have
   ``view`` in their name (or may live in a Python subpackage of your
@@ -267,7 +267,7 @@ which will be used as the action of the generated form.
 
    Since our ``request.dbsession`` defined in the previous chapter is
    registered with the ``pyramid_tm`` transaction manager, any changes we make
-   to objects managed by the that session will be committed automatically. In
+   to objects managed by the session will be committed automatically. In
    the event that there was an error (even later, in our template code), the
    changes would be aborted. This means the view itself does not need to
    concern itself with commit/rollback logic.
@@ -436,8 +436,8 @@ There are several important things to note about this configuration:
   the view.
 
 Finally, we may delete the ``tutorial/templates/mytemplate.jinja2`` template
-that was provided by the ``alchemy`` cookiecutter, as we have created our own
-templates for the wiki.
+that was provided by selecting the backend option of ``sqlalchemy``, as we
+have created our own templates for the wiki.
 
 .. note::
 

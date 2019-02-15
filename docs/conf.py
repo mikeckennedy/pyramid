@@ -53,7 +53,6 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinxcontrib.autoprogram',
     # enable pylons_sphinx_latesturl when this branch is no longer "latest"
@@ -62,28 +61,21 @@ extensions = [
 
 # Looks for objects in external projects
 intersphinx_mapping = {
-    'colander': ('https://docs.pylonsproject.org/projects/colander/en/latest', None),
+    'colander': ('https://docs.pylonsproject.org/projects/colander/en/latest/', None),
     'cookbook': ('https://docs.pylonsproject.org/projects/pyramid-cookbook/en/latest/', None),
     'cookiecutter': ('https://cookiecutter.readthedocs.io/en/latest/', None),
-    'deform': ('https://docs.pylonsproject.org/projects/deform/en/latest', None),
+    'deform': ('https://docs.pylonsproject.org/projects/deform/en/latest/', None),
     'jinja2': ('https://docs.pylonsproject.org/projects/pyramid-jinja2/en/latest/', None),
-    'plaster': ('https://docs.pylonsproject.org/projects/plaster/en/latest/', None),
     'pylonswebframework': ('https://docs.pylonsproject.org/projects/pylons-webframework/en/latest/', None),
-    'python': ('https://docs.python.org/3', None),
+    'python': ('https://docs.python.org/3/', None),
     'pytest': ('https://docs.pytest.org/en/latest/', None),
-    'sphinx': ('http://www.sphinx-doc.org/en/latest', None),
-    'sqla': ('http://docs.sqlalchemy.org/en/latest', None),
+    'sqla': ('https://docs.sqlalchemy.org/en/latest/', None),
     'tm': ('https://docs.pylonsproject.org/projects/pyramid-tm/en/latest/', None),
-    'toolbar': ('https://docs.pylonsproject.org/projects/pyramid-debugtoolbar/en/latest', None),
-    'tstring': ('https://docs.pylonsproject.org/projects/translationstring/en/latest', None),
+    'toolbar': ('https://docs.pylonsproject.org/projects/pyramid-debugtoolbar/en/latest/', None),
     'tutorials': ('https://docs.pylonsproject.org/projects/pyramid-tutorials/en/latest/', None),
-    'venusian': ('https://docs.pylonsproject.org/projects/venusian/en/latest', None),
-    'webob': ('https://docs.pylonsproject.org/projects/webob/en/latest/', None),
-    'webtest': ('http://webtest.pythonpaste.org/en/latest', None),
-    'who': ('http://repozewho.readthedocs.io/en/latest', None),
-    'zcml': ('https://docs.pylonsproject.org/projects/pyramid-zcml/en/latest', None),
-    'zcomponent': ('http://zopecomponent.readthedocs.io/en/latest/', None),
-    'zinterface': ('http://zopeinterface.readthedocs.io/en/latest/', None),
+    'venusian': ('https://docs.pylonsproject.org/projects/venusian/en/latest/', None),
+    'zcml': (
+    'https://docs.pylonsproject.org/projects/pyramid-zcml/en/latest/', None),
 }
 
 
@@ -124,9 +116,6 @@ exclude_patterns = ['_themes/README.rst', ]
 # unit titles (such as .. function::).
 add_module_names = False
 
-# Add support for todo items
-todo_include_todos = True
-
 # The name of the Pygments (syntax highlighting) style to use.
 #pygments_style = book and 'bw' or 'tango'
 if book:
@@ -149,6 +138,7 @@ if book:
 #     'whatsnew-1.7': 'index',
 #     'whatsnew-1.8': 'index',
 #     'whatsnew-1.9': 'index',
+#     'whatsnew-1.10': 'index',
 #     'tutorials/gae/index': 'index',
 #     'api/chameleon_text': 'api',
 #     'api/chameleon_zpt': 'api',
@@ -165,6 +155,15 @@ html_theme_options = dict(
     outdated='false',
     )
 
+# Control display of sidebars
+html_sidebars = {'**': [
+    'localtoc.html',
+    'ethicalads.html',
+    'relations.html',
+    'sourcelink.html',
+    'searchbox.html',
+]}
+
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 html_title = 'The Pyramid Web Framework v%s' % release
@@ -173,9 +172,8 @@ html_title = 'The Pyramid Web Framework v%s' % release
 # using the given strftime format.
 html_last_updated_fmt = '%b %d, %Y'
 
-# If true, SmartyPants will be used to convert quotes and dashes to
-# typographically correct entities.
-html_use_smartypants = False # people use cutnpaste in some places
+# Do not use smart quotes.
+smartquotes = False
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'pyramid'
@@ -189,7 +187,10 @@ latex_paper_size = 'letter'
 # The font size ('10pt', '11pt' or '12pt').
 latex_font_size = '10pt'
 
-latex_additional_files = ['_static/latex-note.png', '_static/latex-warning.png']
+latex_additional_files = [
+    '_static/latex-note.png',
+    '_static/latex-warning.png',
+]
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
@@ -219,6 +220,17 @@ latex_domain_indices = False
 _PREAMBLE = r"""
 \usepackage[]{geometry}
 \geometry{bindingoffset=0.45in,textheight=7.25in,hdivide={0.5in,*,0.75in},vdivide={1in,7.25in,1in},papersize={7.5in,9.25in}}
+
+%XeLaTeX packages
+\usepackage{xltxtra}
+\usepackage{fontspec} %Font package
+\usepackage{xunicode}
+
+%Select fonts
+\setmainfont[Mapping=tex-text]{nimbusserif}
+\setsansfont[Mapping=tex-text]{nimbussans}
+\setmonofont{nimbusmono}
+
 \hypersetup{
     colorlinks=true,
     linkcolor=black,
@@ -275,28 +287,22 @@ _PREAMBLE = r"""
 \definecolor{VerbatimColor}{rgb}{1,1,1}
 \definecolor{VerbatimBorderColor}{rgb}{1,1,1}
 
-\makeatletter
-\renewcommand{\py@noticestart@warning}{\py@heavybox}
-\renewcommand{\py@noticeend@warning}{\py@endheavybox}
-\renewcommand{\py@noticestart@note}{\py@heavybox}
-\renewcommand{\py@noticeend@note}{\py@endheavybox}
-\makeatother
-
 % icons in note and warning boxes
 \usepackage{ifthen}
-% Keep a copy of the original notice environment
-\let\origbeginnotice\notice
-\let\origendnotice\endnotice
 
-% Redefine the notice environment so we can add our own code to it
-\renewenvironment{notice}[2]{%
-  \origbeginnotice{#1}{}% equivalent to original \begin{notice}{#1}{#2}
+% Keep a copy of the original sphinxadmonition environment
+\let\origbeginadmon\sphinxadmonition
+\let\origendadmon\endsphinxadmonition
+
+% Redefine the sphinxadmonition environment so we can add our own code to it
+\renewenvironment{sphinxadmonition}[2]{%
+  \origbeginadmon{#1}{}% equivalent to original \begin{sphinxadmonition}{#1}{#2}
   % load graphics
   \ifthenelse{\equal{#1}{warning}}{\includegraphics{latex-warning.png}}{}
   \ifthenelse{\equal{#1}{note}}{\includegraphics{latex-note.png}}{}
   % etc.
-}{%
-  \origendnotice% equivalent to original \end{notice}
+  }{%
+\origendadmon % equivalent to original \end{sphinxadmonition}
 }
 
 % try to prevent code-block boxes from splitting across pages
@@ -317,7 +323,6 @@ _PREAMBLE = r"""
 
 latex_elements = {
     'preamble': _PREAMBLE,
-    'wrapperclass': 'book',
     'date': '',
     'releasename': 'Version',
     'title': r'The Pyramid Web Framework',
@@ -341,17 +346,6 @@ def frontmatter(name, arguments, options, content, lineno,
                 content_offset, block_text, state, state_machine):
     return [nodes.raw(
         '',
-        r"""
-\frontmatter
-% prevent part/chapter/section numbering
-\setcounter{secnumdepth}{-2}
-% suppress headers
-\pagestyle{plain}
-% reset page counter
-\setcounter{page}{1}
-% suppress first toc pagenum
-\addtocontents{toc}{\protect\thispagestyle{empty}}
-""",
         format='latex')]
 
 
@@ -359,26 +353,14 @@ def mainmatter(name, arguments, options, content, lineno,
                content_offset, block_text, state, state_machine):
     return [nodes.raw(
         '',
-        r"""
-\mainmatter
-% allow part/chapter/section numbering
-\setcounter{secnumdepth}{2}
-% get headers back
-\pagestyle{fancy}
-\fancyhf{}
-\renewcommand{\headrulewidth}{0.5pt}
-\renewcommand{\footrulewidth}{0pt}
-\fancyfoot[C]{\thepage}
-\fancyhead[RO]{\rightmark}
-\fancyhead[LE]{\leftmark}
-""",
         format='latex')]
 
 
 def backmatter(name, arguments, options, content, lineno,
               content_offset, block_text, state, state_machine):
-    return [nodes.raw('', '\\backmatter\n\\setcounter{secnumdepth}{-1}\n',
-                      format='latex')]
+    return [nodes.raw(
+        '',
+        format='latex')]
 
 
 def app_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
@@ -456,3 +438,11 @@ epub_exclude_files = ['_static/opensearch.xml', '_static/doctools.js',
 epub_tocdepth = 3
 
 # For a list of all settings, visit http://sphinx-doc.org/config.html
+
+# -- Options for linkcheck builder -------------------------------------------
+
+# List of items to ignore when running linkcheck
+linkcheck_ignore = [
+    r'http://localhost:\d+',
+    r'http://localhost',
+]

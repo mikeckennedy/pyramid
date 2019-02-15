@@ -1,0 +1,13 @@
+[run]
+source =
+    pyramid
+    tests
+
+[paths]
+source =
+    src/pyramid
+    */site-packages/pyramid
+
+[report]
+show_missing = true
+precision = 2
