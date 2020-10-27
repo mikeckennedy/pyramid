@@ -1,27 +1,24 @@
 from zope.interface import implementer
 
+from pyramid.config.actions import action_method
 from pyramid.interfaces import (
     IDefaultRootFactory,
     IExecutionPolicy,
+    IRequestExtensions,
     IRequestFactory,
     IResponseFactory,
-    IRequestExtensions,
     IRootFactory,
     ISessionFactory,
 )
-
 from pyramid.router import default_execution_policy
 from pyramid.traversal import DefaultRootFactory
-
-from pyramid.util import get_callable_name, InstancePropertyHelper
-
-from pyramid.config.actions import action_method
+from pyramid.util import InstancePropertyHelper, get_callable_name
 
 
-class FactoriesConfiguratorMixin(object):
+class FactoriesConfiguratorMixin:
     @action_method
     def set_root_factory(self, factory):
-        """ Add a :term:`root factory` to the current configuration
+        """Add a :term:`root factory` to the current configuration
         state.  If the ``factory`` argument is ``None`` a default root
         factory will be registered.
 
@@ -79,7 +76,7 @@ class FactoriesConfiguratorMixin(object):
 
     @action_method
     def set_request_factory(self, factory):
-        """ The object passed as ``factory`` should be an object (or a
+        """The object passed as ``factory`` should be an object (or a
         :term:`dotted Python name` which refers to an object) which
         will be used by the :app:`Pyramid` router to create all
         request objects.  This factory object must have the same
@@ -113,7 +110,7 @@ class FactoriesConfiguratorMixin(object):
 
     @action_method
     def set_response_factory(self, factory):
-        """ The object passed as ``factory`` should be an object (or a
+        """The object passed as ``factory`` should be an object (or a
         :term:`dotted Python name` which refers to an object) which
         will be used by the :app:`Pyramid` as the default response
         objects. The factory should conform to the
@@ -143,7 +140,7 @@ class FactoriesConfiguratorMixin(object):
     def add_request_method(
         self, callable=None, name=None, property=False, reify=False
     ):
-        """ Add a property or method to the request object.
+        """Add a property or method to the request object.
 
         When adding a method to the request, ``callable`` may be any
         function that receives the request object as the first
@@ -260,7 +257,7 @@ class FactoriesConfiguratorMixin(object):
 
 
 @implementer(IRequestExtensions)
-class _RequestExtensions(object):
+class _RequestExtensions:
     def __init__(self):
         self.descriptors = {}
         self.methods = {}

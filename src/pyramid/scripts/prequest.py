@@ -1,12 +1,11 @@
-import base64
 import argparse
+import base64
 import sys
 import textwrap
 from urllib.parse import unquote
 
 from pyramid.request import Request
-from pyramid.scripts.common import get_config_loader
-from pyramid.scripts.common import parse_vars
+from pyramid.scripts.common import get_config_loader, parse_vars
 
 
 def main(argv=sys.argv, quiet=False):
@@ -14,11 +13,11 @@ def main(argv=sys.argv, quiet=False):
     return command.run()
 
 
-class PRequestCommand(object):
+class PRequestCommand:
     description = """\
     Submit a HTTP request to a web application.
 
-    This command makes an artifical request to a web application that uses a
+    This command makes an artificial request to a web application that uses a
     PasteDeploy (.ini) configuration file for the server and application.
 
     Use "prequest config.ini /path" to request "/path".

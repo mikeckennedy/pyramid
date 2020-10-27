@@ -1,4 +1,5 @@
 import unittest
+
 from pyramid import testing
 from pyramid.util import text_
 
@@ -13,8 +14,9 @@ class TestRoute(unittest.TestCase):
         return self._getTargetClass()(*arg)
 
     def test_provides_IRoute(self):
-        from pyramid.interfaces import IRoute
         from zope.interface.verify import verifyObject
+
+        from pyramid.interfaces import IRoute
 
         verifyObject(IRoute, self._makeOne('name', 'pattern'))
 
@@ -74,8 +76,9 @@ class RoutesMapperTests(unittest.TestCase):
         return klass()
 
     def test_provides_IRoutesMapper(self):
-        from pyramid.interfaces import IRoutesMapper
         from zope.interface.verify import verifyObject
+
+        from pyramid.interfaces import IRoutesMapper
 
         verifyObject(IRoutesMapper, self._makeOne())
 
@@ -659,17 +662,17 @@ class TestCompileRouteFunctional(unittest.TestCase):
         self.generates('/foo/:abc_def', {'abc_def': '20'}, '/foo/20')
 
 
-class DummyContext(object):
+class DummyContext:
     """ """
 
 
-class DummyRequest(object):
+class DummyRequest:
     scheme = 'http'
 
     def __init__(self, **kw):
         self.__dict__.update(kw)
 
 
-class DummyRoute(object):
+class DummyRoute:
     def __init__(self, generator):
         self.generate = generator

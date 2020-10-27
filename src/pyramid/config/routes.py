@@ -2,25 +2,22 @@ import contextlib
 from urllib.parse import urlparse
 import warnings
 
+from pyramid.config.actions import action_method
+from pyramid.config.predicates import normalize_accept_offer, predvalseq
+from pyramid.exceptions import ConfigurationError
 from pyramid.interfaces import (
+    PHASE2_CONFIG,
     IRequest,
     IRouteRequest,
     IRoutesMapper,
-    PHASE2_CONFIG,
 )
-
-from pyramid.exceptions import ConfigurationError
 import pyramid.predicates
 from pyramid.request import route_request_iface
 from pyramid.urldispatch import RoutesMapper
-
 from pyramid.util import as_sorted_tuple, is_nonstr_iter
 
-from pyramid.config.actions import action_method
-from pyramid.config.predicates import normalize_accept_offer, predvalseq
 
-
-class RoutesConfiguratorMixin(object):
+class RoutesConfiguratorMixin:
     @action_method
     def add_route(
         self,
@@ -43,13 +40,10 @@ class RoutesConfiguratorMixin(object):
         inherit_slash=None,
         **predicates
     ):
-        """ Add a :term:`route configuration` to the current
-        configuration state, as well as possibly a :term:`view
-        configuration` to be used to specify a :term:`view callable`
-        that will be invoked when this route matches.  The arguments
-        to this method are divided into *predicate*, *non-predicate*,
-        and *view-related* types.  :term:`Route predicate` arguments
-        narrow the circumstances in which a route will be match a
+        """Add a :term:`route configuration` to the current configuration
+        state.  Arguments to ``add_route`` are divided into *predicate*
+        and *non-predicate* types.  :term:`Route predicate` arguments
+        narrow the circumstances in which a route will match a
         request; non-predicate arguments are informational.
 
         Non-Predicate Arguments
@@ -217,31 +211,32 @@ class RoutesConfiguratorMixin(object):
           dictionary (an HTTP ``GET`` or ``POST`` variable) that has a
           name which matches the supplied value.  If the value
           supplied as the argument has a ``=`` sign in it,
-          e.g. ``request_param="foo=123"``, then the key
-          (``foo``) must both exist in the ``request.params`` dictionary, and
+          e.g. ``request_param="foo=123"``, then both the key
+          (``foo``) must exist in the ``request.params`` dictionary, and
           the value must match the right hand side of the expression (``123``)
           for the route to "match" the current request.  If this predicate
           returns ``False``, route matching continues.
 
         header
 
-          This argument represents an HTTP header name or a header
-          name/value pair.  If the argument contains a ``:`` (colon),
-          it will be considered a name/value pair
-          (e.g. ``User-Agent:Mozilla/.*`` or ``Host:localhost``).  If
-          the value contains a colon, the value portion should be a
-          regular expression.  If the value does not contain a colon,
-          the entire value will be considered to be the header name
-          (e.g. ``If-Modified-Since``).  If the value evaluates to a
-          header name only without a value, the header specified by
-          the name must be present in the request for this predicate
-          to be true.  If the value evaluates to a header name/value
-          pair, the header specified by the name must be present in
-          the request *and* the regular expression specified as the
-          value must match the header value.  Whether or not the value
-          represents a header name or a header name/value pair, the
-          case of the header name is not significant.  If this
-          predicate returns ``False``, route matching continues.
+          This argument can be a string or an iterable of strings for HTTP
+          headers.  The matching is determined as follow:
+
+          - If a string does not contain a ``:`` (colon), it will be
+            considered to be the header name (example ``If-Modified-Since``).
+            In this case, the header specified by the name must be present
+            in the request for this string to match.  Case is not significant.
+
+          - If a string contains a colon, it will be considered a
+            name/value pair (for example ``User-Agent:Mozilla/.*`` or
+            ``Host:localhost``), where the value part is a regular
+            expression.  The header specified by the name must be present
+            in the request *and* the regular expression specified as the
+            value part must match the value of the request header.  Case is
+            not significant for the header name, but it is for the value.
+
+          All strings must be matched for this predicate to return ``True``.
+          If this predicate returns ``False``, route matching continues.
 
         accept
 
@@ -273,6 +268,17 @@ class RoutesConfiguratorMixin(object):
 
               Removed support for media ranges.
 
+        is_authenticated
+
+          This value, if specified, must be either ``True`` or ``False``.
+          If it is specified and ``True``, only a request from an authenticated
+          user, as determined by the :term:`security policy` in use, will
+          satisfy the predicate.
+          If it is specified and ``False``, only a request from a user who is
+          not authenticated will satisfy the predicate.
+
+          .. versionadded:: 2.0
+
         effective_principals
 
           If specified, this value should be a :term:`principal` identifier or
@@ -281,10 +287,13 @@ class RoutesConfiguratorMixin(object):
           indicates that every principal named in the argument list is present
           in the current request, this predicate will return True; otherwise it
           will return False.  For example:
-          ``effective_principals=pyramid.security.Authenticated`` or
+          ``effective_principals=pyramid.authorization.Authenticated`` or
           ``effective_principals=('fred', 'group:admins')``.
 
           .. versionadded:: 1.4a4
+
+          .. deprecated:: 2.0
+              Use ``is_authenticated`` or a custom predicate.
 
         custom_predicates
 
@@ -305,14 +314,13 @@ class RoutesConfiguratorMixin(object):
               :ref:`custom_route_predicates` for more information about
               ``info``.
 
-        predicates
+        \\*\\*predicates
 
-          Pass a key/value pair here to use a third-party predicate
-          registered via
+          Pass extra keyword parameters to use custom predicates registered via
           :meth:`pyramid.config.Configurator.add_route_predicate`.  More than
-          one key/value pair can be used at the same time.  See
+          one custom predicate can be used at the same time.  See
           :ref:`view_and_route_predicates` for more information about
-          third-party predicates.
+          custom predicates.
 
           .. versionadded:: 1.4
 
@@ -324,9 +332,21 @@ class RoutesConfiguratorMixin(object):
                     'Configurator.add_route is deprecated as of Pyramid 1.5. '
                     'Use "config.add_route_predicate" and use the registered '
                     'route predicate as a predicate argument to add_route '
-                    'instead. See "Adding A Third Party View, Route, or '
+                    'instead. See "Adding A Custom View, Route, or '
                     'Subscriber Predicate" in the "Hooks" chapter of the '
                     'documentation for more information.'
+                ),
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
+        if 'effective_principals' in predicates:
+            warnings.warn(
+                (
+                    'The new security policy has deprecated '
+                    'effective_principals. See "Upgrading '
+                    'Authentication/Authorization" in "What\'s New in '
+                    'Pyramid 2.0" of the documentation for more information.'
                 ),
                 DeprecationWarning,
                 stacklevel=3,
@@ -381,7 +401,7 @@ class RoutesConfiguratorMixin(object):
                     scheme = parsed.scheme
                 else:
                     scheme = request.scheme
-                kw['_app_url'] = '{0}://{1}'.format(scheme, parsed.netloc)
+                kw['_app_url'] = '{}://{}'.format(scheme, parsed.netloc)
 
                 if original_pregenerator:
                     elements, kw = original_pregenerator(request, elements, kw)
@@ -497,7 +517,7 @@ class RoutesConfiguratorMixin(object):
     def add_route_predicate(
         self, name, factory, weighs_more_than=None, weighs_less_than=None
     ):
-        """ Adds a route predicate factory.  The view predicate can later be
+        """Adds a route predicate factory.  The view predicate can later be
         named as a keyword argument to
         :meth:`pyramid.config.Configurator.add_route`.
 
@@ -529,6 +549,7 @@ class RoutesConfiguratorMixin(object):
             ('request_param', p.RequestParamPredicate),
             ('header', p.HeaderPredicate),
             ('accept', p.AcceptPredicate),
+            ('is_authenticated', p.IsAuthenticatedPredicate),
             ('effective_principals', p.EffectivePrincipalsPredicate),
             ('custom', p.CustomPredicate),
             ('traverse', p.TraversePredicate),
@@ -536,7 +557,7 @@ class RoutesConfiguratorMixin(object):
             self.add_route_predicate(name, factory)
 
     def get_routes_mapper(self):
-        """ Return the :term:`routes mapper` object associated with
+        """Return the :term:`routes mapper` object associated with
         this configurator's :term:`registry`."""
         mapper = self.registry.queryUtility(IRoutesMapper)
         if mapper is None:

@@ -28,6 +28,7 @@ from sphinx.writers.latex import LaTeXTranslator
 
 from docutils import nodes
 from docutils import utils
+from docutils.parsers.rst import Directive
 
 
 def raw(*arg):
@@ -63,7 +64,6 @@ extensions = [
 intersphinx_mapping = {
     'colander': ('https://docs.pylonsproject.org/projects/colander/en/latest/', None),
     'cookbook': ('https://docs.pylonsproject.org/projects/pyramid-cookbook/en/latest/', None),
-    'cookiecutter': ('https://cookiecutter.readthedocs.io/en/latest/', None),
     'deform': ('https://docs.pylonsproject.org/projects/deform/en/latest/', None),
     'jinja2': ('https://docs.pylonsproject.org/projects/pyramid-jinja2/en/latest/', None),
     'pylonswebframework': ('https://docs.pylonsproject.org/projects/pylons-webframework/en/latest/', None),
@@ -72,8 +72,10 @@ intersphinx_mapping = {
     'sqla': ('https://docs.sqlalchemy.org/en/latest/', None),
     'tm': ('https://docs.pylonsproject.org/projects/pyramid-tm/en/latest/', None),
     'toolbar': ('https://docs.pylonsproject.org/projects/pyramid-debugtoolbar/en/latest/', None),
+    'transaction': ('https://transaction.readthedocs.io/en/latest/', None),
     'tutorials': ('https://docs.pylonsproject.org/projects/pyramid-tutorials/en/latest/', None),
     'venusian': ('https://docs.pylonsproject.org/projects/venusian/en/latest/', None),
+    'webtest': ('https://docs.pylonsproject.org/projects/webtest/en/latest/', None),
     'zcml': (
     'https://docs.pylonsproject.org/projects/pyramid-zcml/en/latest/', None),
 }
@@ -180,6 +182,9 @@ htmlhelp_basename = 'pyramid'
 
 # Options for LaTeX output
 # ------------------------
+
+latex_engine = 'xelatex'
+latex_use_xindy = False
 
 # The paper size ('letter' or 'a4').
 latex_paper_size = 'letter'
@@ -323,7 +328,6 @@ _PREAMBLE = r"""
 
 latex_elements = {
     'preamble': _PREAMBLE,
-    'date': '',
     'releasename': 'Version',
     'title': r'The Pyramid Web Framework',
 #    'pointsize':'12pt', # uncomment for 12pt version
@@ -342,25 +346,25 @@ latex_elements = {
 #subparagraph  5
 
 
-def frontmatter(name, arguments, options, content, lineno,
-                content_offset, block_text, state, state_machine):
-    return [nodes.raw(
-        '',
-        format='latex')]
+class FrontMatter(Directive):
+    def run(self):
+        return [nodes.raw(
+            '',
+            format='latex')]
 
 
-def mainmatter(name, arguments, options, content, lineno,
-               content_offset, block_text, state, state_machine):
-    return [nodes.raw(
-        '',
-        format='latex')]
+class MainMatter(Directive):
+    def run(self):
+        return [nodes.raw(
+            '',
+            format='latex')]
 
 
-def backmatter(name, arguments, options, content, lineno,
-              content_offset, block_text, state, state_machine):
-    return [nodes.raw(
-        '',
-        format='latex')]
+class BackMatter(Directive):
+    def run(self):
+        return [nodes.raw(
+            '',
+            format='latex')]
 
 
 def app_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
@@ -375,9 +379,9 @@ def app_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
 
 def setup(app):
     app.add_role('app', app_role)
-    app.add_directive('frontmatter', frontmatter, 1, (0, 0, 0))
-    app.add_directive('mainmatter', mainmatter, 1, (0, 0, 0))
-    app.add_directive('backmatter', backmatter, 1, (0, 0, 0))
+    app.add_directive('frontmatter', FrontMatter)
+    app.add_directive('mainmatter', MainMatter)
+    app.add_directive('backmatter', BackMatter)
     app.connect('autodoc-process-signature', resig)
 
 
@@ -445,4 +449,5 @@ epub_tocdepth = 3
 linkcheck_ignore = [
     r'http://localhost:\d+',
     r'http://localhost',
+    r'https://webchat.freenode.net/#pyramid',  # JavaScript "anchor"
 ]

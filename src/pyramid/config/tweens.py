@@ -1,21 +1,17 @@
 from zope.interface import implementer
 
-from pyramid.interfaces import ITweens
-
+from pyramid.config.actions import action_method
 from pyramid.exceptions import ConfigurationError
-
-from pyramid.tweens import MAIN, INGRESS, EXCVIEW
-
+from pyramid.interfaces import ITweens
+from pyramid.tweens import EXCVIEW, INGRESS, MAIN
 from pyramid.util import (
+    TopologicalSorter,
     is_nonstr_iter,
     is_string_or_iterable,
-    TopologicalSorter,
 )
 
-from pyramid.config.actions import action_method
 
-
-class TweensConfiguratorMixin(object):
+class TweensConfiguratorMixin:
     def add_tween(self, tween_factory, under=None, over=None):
         """
         .. versionadded:: 1.2
@@ -73,7 +69,7 @@ class TweensConfiguratorMixin(object):
 
         If all options for ``under`` (or ``over``) cannot be found in the
         current configuration, it is an error. If some options are specified
-        purely for compatibilty with other tweens, just add a fallback of
+        purely for compatibility with other tweens, just add a fallback of
         MAIN or INGRESS. For example, ``under=('mypkg.someothertween',
         'mypkg.someothertween2', INGRESS)``.  This constraint will require
         the tween to be located under both the 'mypkg.someothertween' tween,
@@ -166,7 +162,7 @@ class TweensConfiguratorMixin(object):
 
 
 @implementer(ITweens)
-class Tweens(object):
+class Tweens:
     def __init__(self):
         self.sorter = TopologicalSorter(
             default_before=None,

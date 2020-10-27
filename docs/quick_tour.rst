@@ -95,7 +95,7 @@ explanation:
 As shown in this example, the :term:`configurator` plays a central role in
 Pyramid development. Building an application from loosely-coupled parts via
 :doc:`../narr/configuration` is a central idea in Pyramid, one that we will
-revisit regurlarly in this *Quick Tour*.
+revisit regularly in this *Quick Tour*.
 
 .. seealso:: See also:
    :ref:`Quick Tutorial Hello World <qtut_hello_world>`,
@@ -337,7 +337,7 @@ passed the view response through the ``pyramid_jinja2`` renderer.
 
 .. seealso:: See also:
     :ref:`Quick Tutorial Jinja2 <qtut_jinja2>`, `Jinja2 homepage
-    <http://jinja.pocoo.org/>`_, and :ref:`pyramid_jinja2 Overview
+    <https://palletsprojects.com/p/jinja/>`_, and :ref:`pyramid_jinja2 Overview
     <jinja2:overview>`.
 
 
@@ -478,12 +478,11 @@ more to offer:
 
 - One route leading to multiple views, based on information in the request or
   data such as ``request_param``, ``request_method``, ``accept``, ``header``,
-  ``xhr``, ``containment``, and ``custom_predicates``
+  ``xhr``, ``containment``, and custom predicates.
 
 .. seealso:: See also:
-    :ref:`Quick Tutorial View Classes <qtut_view_classes>`, :ref:`Quick
-    Tutorial More View Classes <qtut_more_view_classes>`, and
-    :ref:`class_as_view`.
+    :ref:`View Classes <qtut_view_classes>` and :ref:`More View Classes <qtut_more_view_classes>`
+    in the Quick Tutorial, :ref:`class_as_view`, and :ref:`view_and_route_predicates`.
 
 
 Quick project startup with cookiecutters
@@ -493,7 +492,8 @@ So far we have done all of our *Quick Tour* as a single Python file. No Python
 packages, no structure. Most Pyramid projects, though, aren't developed this
 way.
 
-To ease the process of getting started, the Pylons Project provides a :term:`cookiecutter` that generates sample Pyramid projects from project templates. This cookiecutter will install Pyramid and its dependencies as well.
+To ease the process of getting started, the Pylons Project provides a :term:`cookiecutter` that generates a sample Pyramid project from project templates.
+This cookiecutter will install Pyramid and its dependencies as well.
 
 First you'll need to install cookiecutter.
 
@@ -675,15 +675,15 @@ the relevant ``.ini`` configuration file.
     :ref:`Quick Tutorial pyramid_debugtoolbar <qtut_debugtoolbar>` and
     :ref:`pyramid_debugtoolbar <toolbar:overview>`
 
-Unit tests and ``pytest``
-=========================
+Unit and functional tests and ``pytest``
+========================================
 
 Yikes! We got this far and we haven't yet discussed tests. This is particularly
 egregious, as Pyramid has had a deep commitment to full test coverage since
 before its release.
 
-Our ``pyramid-cookiecutter-starter`` cookiecutter generated a ``tests.py`` module with
-one unit test and one functional test in it. It also configured ``setup.py`` with test requirements:
+Our ``pyramid-cookiecutter-starter`` cookiecutter generated a ``test_it.py`` module inside the ``tests`` package with two unit tests and two functional tests in it.
+It also configured ``setup.py`` with test requirements:
 ``pytest`` as the test runner, ``WebTest`` for running view tests, and the
 ``pytest-cov`` tool which yells at us for code that isn't tested:
 
@@ -708,33 +708,35 @@ This yields the following output.
 .. code-block:: text
 
     =========================== test session starts ===========================
-    platform darwin -- Python 3.6.0, pytest-3.0.5, py-1.4.32, pluggy-0.4.0
-    rootdir: /Users/stevepiercy/hello_world, inifile: pytest.ini
-    plugins: cov-2.4.0
-    collected 2 items
+    platform darwin -- Python 3.7.3, pytest-5.3.2, py-1.8.1, pluggy-0.13.1
+    rootdir: /<somepath>/hello_world, inifile: pytest.ini, testpaths: hello_world, tests
+    plugins: cov-2.8.1
+    collected 4 items
 
-    hello_world/tests.py ..
+    tests/test_it.py ....                                                [100%]
 
-    ------------- coverage: platform darwin, python 3.6.0-final-0 -------------
-    Name                                      Stmts   Miss  Cover   Missing
-    -----------------------------------------------------------------------
-    hello_world/__init__.py                       8      0   100%
-    hello_world/views.py                          3      0   100%
-    -----------------------------------------------------------------------
-    TOTAL                                        11      0   100%
+    ---------- coverage: platform darwin, python 3.7.3-final-0 -----------
+    Name                            Stmts   Miss  Cover   Missing
+    -------------------------------------------------------------
+    hello_world/__init__.py             7      0   100%
+    hello_world/routes.py               3      0   100%
+    hello_world/views/__init__.py       0      0   100%
+    hello_world/views/default.py        3      0   100%
+    hello_world/views/notfound.py       4      0   100%
+    -------------------------------------------------------------
+    TOTAL                              17      0   100%
 
-
-    ========================= 2 passed in 1.37 seconds =========================
+    ======================== 4 passed in 0.65 seconds =========================
 
 Our tests passed, and its coverage is complete. What did our test look like?
 
-.. literalinclude:: quick_tour/package/hello_world/tests.py
+.. literalinclude:: quick_tour/package/tests/test_it.py
     :language: python
     :linenos:
 
-Pyramid supplies helpers for test writing, which we use in the test setup and
-teardown. Our first test imports the view, makes a dummy request, and sees if the
-view returns what we expected. Our second test verifies that the response body from a request to the web root contains what we expected.
+Pyramid supplies helpers for test writing, which we use in the test setup and teardown.
+Our view tests import the view, make a dummy request, and sees if the view returns what we expected.
+Our functional tests verify that the response body from a request to the web root contains what we expected and that the expected response code for making a request to ``/badurl`` results in ``404``.
 
 .. seealso:: See also:
     :ref:`Quick Tutorial Unit Testing <qtut_unit_testing>`, :ref:`Quick
@@ -823,7 +825,7 @@ Now make a "factory" and pass it to the :term:`configurator`'s
     :emphasize-lines: 2-3
 
 Pyramid's :term:`request` object now has a ``session`` attribute that we can
-use in our view code in ``views.py``:
+use in our view code in ``views/default.py``:
 
 .. literalinclude:: quick_tour/sessions/hello_world/views/default.py
     :language: python
@@ -894,9 +896,22 @@ We then run through the following commands as before.
     # Reset our environment variable for a new virtual environment.
     export VENV=~/sqla_demo/env
 
-We now have a working sample SQLAlchemy application with all dependencies
-installed. The sample project provides a console script to initialize a SQLite
-database with tables. Let's run it, then start the application:
+We now have a working sample SQLAlchemy application with all dependencies installed.
+The sample project provides a method to generate a database migration from existing models and upgrade the database schema using Alembic.
+Let's generate the first revision.
+
+.. code-block:: bash
+
+    $VENV/bin/alembic -c development.ini revision --autogenerate -m "init"
+
+Now let's upgrade the database schema.
+
+.. code-block:: bash
+
+    $VENV/bin/alembic -c development.ini upgrade head
+
+The sample project also provides a console script to load data into the SQLite database.
+Let's run it, then start the application:
 
 .. code-block:: bash
 

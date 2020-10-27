@@ -1,9 +1,10 @@
 import os
 import unittest
+
 from . import dummy
 
 
-class DummyIntrospector(object):
+class DummyIntrospector:
     def __init__(self):
         self.relations = {}
         self.introspectables = {}
@@ -117,6 +118,7 @@ class TestPRoutesCommand(unittest.TestCase):
 
     def test_single_route_no_views_registered(self):
         from zope.interface import Interface
+
         from pyramid.interfaces import IRouteRequest
 
         registry = self._makeRegistry()
@@ -142,9 +144,8 @@ class TestPRoutesCommand(unittest.TestCase):
 
     def test_single_route_one_view_registered(self):
         from zope.interface import Interface
-        from pyramid.interfaces import IRouteRequest
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IView
+
+        from pyramid.interfaces import IRouteRequest, IView, IViewClassifier
 
         registry = self._makeRegistry()
 
@@ -175,9 +176,8 @@ class TestPRoutesCommand(unittest.TestCase):
 
     def test_one_route_with_long_name_one_view_registered(self):
         from zope.interface import Interface
-        from pyramid.interfaces import IRouteRequest
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IView
+
+        from pyramid.interfaces import IRouteRequest, IView, IViewClassifier
 
         registry = self._makeRegistry()
 
@@ -248,9 +248,8 @@ class TestPRoutesCommand(unittest.TestCase):
 
     def test_single_route_one_view_registered_with_factory(self):
         from zope.interface import Interface
-        from pyramid.interfaces import IRouteRequest
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IView
+
+        from pyramid.interfaces import IRouteRequest, IView, IViewClassifier
 
         registry = self._makeRegistry()
 
@@ -285,9 +284,12 @@ class TestPRoutesCommand(unittest.TestCase):
 
     def test_single_route_multiview_registered(self):
         from zope.interface import Interface
-        from pyramid.interfaces import IRouteRequest
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IMultiView
+
+        from pyramid.interfaces import (
+            IMultiView,
+            IRouteRequest,
+            IViewClassifier,
+        )
 
         registry = self._makeRegistry()
 
@@ -525,8 +527,8 @@ class TestPRoutesCommand(unittest.TestCase):
         self.assertEqual(compare_to, expected)
 
     def test_route_is_get_view_request_method_not_post(self):
-        from pyramid.renderers import null_renderer as nr
         from pyramid.config import not_
+        from pyramid.renderers import null_renderer as nr
 
         def view1(context, request):  # pragma: no cover
             return 'view1'
@@ -557,8 +559,8 @@ class TestPRoutesCommand(unittest.TestCase):
         self.assertEqual(compare_to, expected)
 
     def test_view_request_method_not_post(self):
-        from pyramid.renderers import null_renderer as nr
         from pyramid.config import not_
+        from pyramid.renderers import null_renderer as nr
 
         def view1(context, request):  # pragma: no cover
             return 'view1'
@@ -589,8 +591,8 @@ class TestPRoutesCommand(unittest.TestCase):
         self.assertEqual(compare_to, expected)
 
     def test_view_glob(self):
-        from pyramid.renderers import null_renderer as nr
         from pyramid.config import not_
+        from pyramid.renderers import null_renderer as nr
 
         def view1(context, request):  # pragma: no cover
             return 'view1'
@@ -634,8 +636,8 @@ class TestPRoutesCommand(unittest.TestCase):
         self.assertEqual(compare_to, expected)
 
     def test_good_format(self):
-        from pyramid.renderers import null_renderer as nr
         from pyramid.config import not_
+        from pyramid.renderers import null_renderer as nr
 
         def view1(context, request):  # pragma: no cover
             return 'view1'
@@ -665,8 +667,8 @@ class TestPRoutesCommand(unittest.TestCase):
         self.assertEqual(L[0].split(), ['Method', 'Name'])
 
     def test_bad_format(self):
-        from pyramid.renderers import null_renderer as nr
         from pyramid.config import not_
+        from pyramid.renderers import null_renderer as nr
 
         def view1(context, request):  # pragma: no cover
             return 'view1'
@@ -687,7 +689,7 @@ class TestPRoutesCommand(unittest.TestCase):
         command.out = L.append
         command.bootstrap = dummy.DummyBootstrap(registry=config.registry)
         expected = (
-            "You provided invalid formats ['predicates'], "
+            "You provided invalid formats ['predicates']. "
             "Available formats are ['name', 'pattern', 'view', 'method']"
         )
         result = command.run()
@@ -695,8 +697,8 @@ class TestPRoutesCommand(unittest.TestCase):
         self.assertEqual(L[0], expected)
 
     def test_config_format_ini_newlines(self):
-        from pyramid.renderers import null_renderer as nr
         from pyramid.config import not_
+        from pyramid.renderers import null_renderer as nr
 
         def view1(context, request):  # pragma: no cover
             return 'view1'
@@ -729,8 +731,8 @@ class TestPRoutesCommand(unittest.TestCase):
         self.assertEqual(L[0].split(), ['Method', 'Name'])
 
     def test_config_format_ini_spaces(self):
-        from pyramid.renderers import null_renderer as nr
         from pyramid.config import not_
+        from pyramid.renderers import null_renderer as nr
 
         def view1(context, request):  # pragma: no cover
             return 'view1'
@@ -763,8 +765,8 @@ class TestPRoutesCommand(unittest.TestCase):
         self.assertEqual(L[0].split(), ['Method', 'Name'])
 
     def test_config_format_ini_commas(self):
-        from pyramid.renderers import null_renderer as nr
         from pyramid.config import not_
+        from pyramid.renderers import null_renderer as nr
 
         def view1(context, request):  # pragma: no cover
             return 'view1'

@@ -1,10 +1,9 @@
 import mimetypes
 from os.path import getmtime, getsize
-
 import venusian
-
 from webob import Response as _Response
 from zope.interface import implementer
+
 from pyramid.interfaces import IResponse, IResponseFactory
 
 _BLOCK_SIZE = 4096 * 64  # 256K
@@ -48,7 +47,7 @@ class FileResponse(Response):
     ):
         if content_type is None:
             content_type, content_encoding = _guess_type(path)
-        super(FileResponse, self).__init__(
+        super().__init__(
             conditional_response=True,
             content_type=content_type,
             content_encoding=content_encoding,
@@ -70,8 +69,8 @@ class FileResponse(Response):
             self.cache_expires = cache_max_age
 
 
-class FileIter(object):
-    """ A fixed-block-size iterator for use as a WSGI app_iter.
+class FileIter:
+    """A fixed-block-size iterator for use as a WSGI app_iter.
 
     ``file`` is a Python file pointer (or at least an object with a ``read``
     method that takes a size hint).
@@ -96,8 +95,8 @@ class FileIter(object):
         self.file.close()
 
 
-class response_adapter(object):
-    """ Decorator activated via a :term:`scan` which treats the function
+class response_adapter:
+    """Decorator activated via a :term:`scan` which treats the function
     being decorated as a :term:`response adapter` for the set of types or
     interfaces passed as ``*types_or_ifaces`` to the decorator constructor.
 
@@ -184,7 +183,7 @@ class response_adapter(object):
 
 
 def _get_response_factory(registry):
-    """ Obtain a :class: `pyramid.response.Response` using the
+    """Obtain a :class: `pyramid.response.Response` using the
     `pyramid.interfaces.IResponseFactory`.
     """
     response_factory = registry.queryUtility(

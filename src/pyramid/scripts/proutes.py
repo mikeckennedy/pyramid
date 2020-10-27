@@ -1,20 +1,16 @@
-import fnmatch
 import argparse
+import fnmatch
+import re
 import sys
 import textwrap
-import re
-
 from zope.interface import Interface
 
-from pyramid.paster import bootstrap
-from pyramid.interfaces import IRouteRequest
 from pyramid.config import not_
-
-from pyramid.scripts.common import get_config_loader
-from pyramid.scripts.common import parse_vars
+from pyramid.interfaces import IRouteRequest
+from pyramid.paster import bootstrap
+from pyramid.scripts.common import get_config_loader, parse_vars
 from pyramid.static import static_view
 from pyramid.view import _find_views
-
 
 PAD = 3
 ANY_KEY = '*'
@@ -86,7 +82,7 @@ def _get_request_methods(route_request_methods, view_request_methods):
     if has_methods and not request_methods:
         request_methods = '<route mismatch>'
     elif request_methods:
-        if excludes and request_methods == set([ANY_KEY]):
+        if excludes and request_methods == {ANY_KEY}:
             for exclude in excludes:
                 request_methods.add('!%s' % exclude)
 
@@ -215,7 +211,7 @@ def get_route_data(route, registry):
     return final_routes
 
 
-class PRoutesCommand(object):
+class PRoutesCommand:
     description = """\
     Print all URL dispatch routes used by a Pyramid application in the
     order in which they are evaluated.  Each route includes the name of the
@@ -268,9 +264,11 @@ class PRoutesCommand(object):
         'config_vars',
         nargs='*',
         default=(),
-        help="Variables required by the config file. For example, "
-        "`http_port=%%(http_port)s` would expect `http_port=8080` to be "
-        "passed here.",
+        help=(
+            "Variables required by the config file. For example, "
+            "`http_port=%%(http_port)s` would expect `http_port=8080` to be "
+            "passed here."
+        ),
     )
 
     def __init__(self, argv, quiet=False):
@@ -285,7 +283,7 @@ class PRoutesCommand(object):
             if fmt not in self.available_formats:
                 invalid_formats.append(fmt)
 
-        msg = 'You provided invalid formats %s, ' 'Available formats are %s'
+        msg = 'You provided invalid formats %s. Available formats are %s'
 
         if invalid_formats:
             msg = msg % (invalid_formats, self.available_formats)

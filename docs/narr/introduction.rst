@@ -35,7 +35,7 @@ Reliability
   :app:`Pyramid` is developed conservatively and tested exhaustively. Our motto is: "If it ain't tested, it's broke".
 
 Openness
-  As with Python, the :app:`Pyramid` software is distributed under a `permissive open source license <http://repoze.org/license.html>`_.
+  As with Python, the :app:`Pyramid` software is distributed under a `permissive open source license <https://web.archive.org/web/20190401024809/http://repoze.org/license.html>`_.
 
 .. _why_pyramid:
 
@@ -47,12 +47,12 @@ In a world filled with web frameworks, why should you choose :app:`Pyramid`\ ?
 Modern
 ~~~~~~
 
-:app:`Pyramid` is fully compatible with Python 3. If you develop a :app:`Pyramid` application today, you can rest assured that you'll be able to use the most modern features of your favorite language. And in the years to come, you'll continue to bed working on a framework that is up-to-date and forward-looking.
+:app:`Pyramid` is fully compatible with Python 3. If you develop a :app:`Pyramid` application today, you can rest assured that you'll be able to use the most modern features of your favorite language. And in the years to come, you'll continue to be working on a framework that is up-to-date and forward-looking.
 
 Tested
 ~~~~~~
 
-Untested code is broken by design. The :app:`Pyramid` community has a strong testing culture and our framework reflects that. Every release of :app:`Pyramid` has 100% statement coverage (as measured by `coverage <https://coverage.readthedocs.io/en/latest/>`_) and 95% decision/condition coverage. (as measured by `instrumental <https://instrumental.readthedocs.io/en/latest/intro.html>`_) It is automatically tested using `Travis <https://travis-ci.org/Pylons/pyramid>`_ and `Jenkins <http://jenkins.pylonsproject.org/job/pyramid/>`_ on supported versions of Python after each commit to its GitHub repository. `Official Pyramid add-ons <https://trypyramid.com/extending-pyramid.html>`_ are held to a similar testing standard.
+Untested code is broken by design. The :app:`Pyramid` community has a strong testing culture and our framework reflects that. Every release of :app:`Pyramid` has 100% statement coverage (as measured by `coverage <https://coverage.readthedocs.io/en/latest/>`_) and 95% decision/condition coverage. (as measured by `instrumental <https://instrumental.readthedocs.io/en/latest/intro.html>`_) It is automatically tested using `Travis <https://travis-ci.org/Pylons/pyramid>`_ and Jenkins on supported versions of Python after each commit to its GitHub repository. `Official Pyramid add-ons <https://trypyramid.com/extending-pyramid.html>`_ are held to a similar testing standard.
 
 We still find bugs in :app:`Pyramid`, but we've noticed we find a lot fewer of them while working on projects with a solid testing regime.
 
@@ -70,7 +70,7 @@ You can get help quickly with :app:`Pyramid`. It's our goal that no :app:`Pyrami
 
 .. seealso::
 
-    See also our `#pyramid IRC channel <https://webchat.freenode.net/?channels=pyramid>`_, our `pylons-discuss mailing list <https://groups.google.com/forum/#!forum/pylons-discuss>`_, and :ref:`support-and-development`.
+    See also our `#pyramid IRC channel <https://webchat.freenode.net/#pyramid>`_, our `pylons-discuss mailing list <https://groups.google.com/forum/#!forum/pylons-discuss>`_, and :ref:`support-and-development`.
 
 .. _what_makes_pyramid_unique:
 
@@ -245,7 +245,7 @@ When you use a :term:`renderer` with your view callable, you are freed from need
 
 .. index::
    pair: renderer; explicitly calling
-   pair: view renderer; explictly calling
+   pair: view renderer; explicitly calling
 
 .. _example_render_to_response_call:
 

@@ -12,11 +12,10 @@ from pyramid.exceptions import (
 )
 from pyramid.interfaces import IActionInfo
 from pyramid.registry import undefer
-from pyramid.util import is_nonstr_iter
-from pyramid.util import reraise
+from pyramid.util import is_nonstr_iter, reraise
 
 
-class ActionConfiguratorMixin(object):
+class ActionConfiguratorMixin:
     @property
     def action_info(self):
         info = self.info  # usually a ZCML action (ParserInfo) if self.info
@@ -38,7 +37,7 @@ class ActionConfiguratorMixin(object):
         introspectables=(),
         **extra
     ):
-        """ Register an action which will be executed when
+        """Register an action which will be executed when
         :meth:`pyramid.config.Configurator.commit` is called (or executed
         immediately if ``autocommit`` is ``True``).
 
@@ -156,7 +155,7 @@ class ActionConfiguratorMixin(object):
 
 
 # this class is licensed under the ZPL (stolen from Zope)
-class ActionState(object):
+class ActionState:
     def __init__(self):
         # NB "actions" is an API, dep'd upon by pyramid_zcml's load_zcml func
         self.actions = []
@@ -168,7 +167,7 @@ class ActionState(object):
 
         Return True if processing is needed and False otherwise. If
         the callable needs to be processed, it will be marked as
-        processed, assuming that the caller will procces the callable if
+        processed, assuming that the caller will process the callable if
         it needs to be processed.
         """
         if spec in self._seen_files:
@@ -188,8 +187,8 @@ class ActionState(object):
         introspectables=(),
         **extra
     ):
-        """Add an action with the given discriminator, callable and arguments
-        """
+        """Add an action with the given discriminator, callable, and
+        arguments"""
         if kw is None:
             kw = {}
         action = extra
@@ -331,7 +330,7 @@ class ActionState(object):
                 self.actions = []
 
 
-class ConflictResolverState(object):
+class ConflictResolverState:
     def __init__(self):
         # keep a set of resolved discriminators to test against to ensure
         # that a new action does not conflict with something already executed
@@ -399,8 +398,8 @@ def resolveConflicts(actions, state=None):
         # error out if we went backward in order
         if state.min_order is not None and order < state.min_order:
             r = [
-                'Actions were added to order={0} after execution had moved '
-                'on to order={1}. Conflicting actions: '.format(
+                'Actions were added to order={} after execution had moved '
+                'on to order={}. Conflicting actions: '.format(
                     order, state.min_order
                 )
             ]
@@ -528,7 +527,7 @@ def expand_action_tuple(
 
 
 @implementer(IActionInfo)
-class ActionInfo(object):
+class ActionInfo:
     def __init__(self, file, line, function, src):
         self.file = file
         self.line = line
@@ -542,7 +541,7 @@ class ActionInfo(object):
 
 
 def action_method(wrapped):
-    """ Wrapper to provide the right conflict info report data when a method
+    """Wrapper to provide the right conflict info report data when a method
     that calls Configurator.action calls another that does the same.  Not a
     documented API but used by some external systems."""
 

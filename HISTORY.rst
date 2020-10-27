@@ -123,7 +123,7 @@ Bug Fixes
 Deprecations
 ------------
 
-- The ``pyramid.intefaces.ISession`` interface will move to require
+- The ``pyramid.interfaces.ISession`` interface will move to require
   JSON-serializable objects in Pyramid 2.0. See
   "Upcoming Changes to ISession in Pyramid 2.0" in the "Sessions" chapter
   of the documentation for more information about this change.
@@ -550,10 +550,10 @@ Features
   other settings. See https://github.com/Pylons/pyramid/pull/2823
 
 - ``pserve --reload`` now uses the
-  `hupper <http://docs.pylonsproject.org/projects/hupper/en/latest/>`
+  `hupper <https://docs.pylonsproject.org/projects/hupper/en/latest/>`_
   library to monitor file changes. This comes with many improvements:
 
-  - If the `watchdog <http://pythonhosted.org/watchdog/>`_ package is
+  - If the `watchdog <https://pythonhosted.org/watchdog/>`_ package is
     installed then monitoring will be done using inotify instead of
     cpu and disk-intensive polling.
 
@@ -686,7 +686,7 @@ Documentation Changes
   https://github.com/Pylons/pyramid/pull/2838
 
 - Add `pyramid_nacl_session
-  <http://docs.pylonsproject.org/projects/pyramid-nacl-session/en/latest/>`_
+  <https://docs.pylonsproject.org/projects/pyramid-nacl-session/en/latest/>`_
   to session factories. See https://github.com/Pylons/pyramid/issues/2791
 
 - Update ``HACKING.txt`` from stale branch that was never merged to master.
@@ -1000,7 +1000,7 @@ Bug Fixes
 
 - Ensure that ``IAssetDescriptor.abspath`` always returns an absolute path.
   There were cases depending on the process CWD that a relative path would
-  be returned. See https://github.com/Pylons/pyramid/issues/2188
+  be returned. See https://github.com/Pylons/pyramid/pull/2188
 
 1.6b2 (2015-10-15)
 ==================
@@ -1066,7 +1066,7 @@ Bug Fixes
 
 - ``pshell`` will now preserve the capitalization of variables in the
   ``[pshell]`` section of the INI file. This makes exposing classes to the
-  shell a little more straightfoward.
+  shell a little more straightforward.
   See https://github.com/Pylons/pyramid/pull/1883
 
 - Fixed usage of ``pserve --monitor-restart --daemon`` which would fail in
@@ -1204,7 +1204,7 @@ Features
   override_with='/abs/path/')``. The ``myapp:static`` asset spec is completely
   made up and does not need to exist - it is used for generating urls
   via ``request.static_url('myapp:static/foo.png')``.
-  See https://github.com/Pylons/pyramid/issues/1252
+  See https://github.com/Pylons/pyramid/pull/1252
 
 - Added ``pyramid.config.Configurator.set_response_factory`` and the
   ``response_factory`` keyword argument to the ``Configurator`` for defining
@@ -1218,7 +1218,7 @@ Features
 - ``pserve`` can now take a ``-b`` or ``--browser`` option to open the server
   URL in a web browser. See https://github.com/Pylons/pyramid/pull/1533
 
-- Overall improvments for the ``proutes`` command. Added ``--format`` and
+- Overall improvements for the ``proutes`` command. Added ``--format`` and
   ``--glob`` arguments to the command, introduced the ``method``
   column for displaying available request methods, and improved the ``view``
   output by showing the module instead of just ``__repr__``.
@@ -1523,7 +1523,7 @@ Bug Fixes
 
 - Remove unused ``renderer`` argument from ``Configurator.add_route``.
 
-- Allow the ``BasicAuthenticationPolicy`` to work with non-ascii usernames
+- Allow the ``BasicAuthenticationPolicy`` to work with non-ASCII usernames
   and passwords. The charset is not passed as part of the header and different
   browsers alternate between UTF-8 and Latin-1, so the policy now attempts
   to decode with UTF-8 first, and will fallback to Latin-1.
@@ -1774,7 +1774,7 @@ Backwards Incompatibilities
   since Pyramid 1.1.  Use methods of ``request.environ`` (a real dictionary)
   instead.
 
-- Removed ancient backwards compatibily hack in
+- Removed ancient backwards compatibility hack in
   ``pyramid.traversal.DefaultRootFactory`` which populated the ``__dict__`` of
   the factory with the matchdict values for compatibility with BFG 0.9.
 
@@ -2432,7 +2432,7 @@ Features
   whole-path match.  It's useful when you want to always potentially show a
   view when some object is traversed to, but you can't be sure about what kind
   of object it will be, so you can't use the ``context`` predicate.  The
-  individual path elements inbetween slash characters or in tuple elements
+  individual path elements in between slash characters or in tuple elements
   should be the Unicode representation of the name of the resource and should
   not be encoded in any way.
 
@@ -2489,7 +2489,7 @@ Bug Fixes
   it back to an asset spec. Normally occurs with inherited templates or
   included components.
   https://github.com/Pylons/pyramid/issues/606
-  https://github.com/Pylons/pyramid/issues/607
+  https://github.com/Pylons/pyramid/pull/607
 
 - In Mako Templates lookup, check for absolute uri (using mako directories)
   when mixing up inheritance with asset specs.
@@ -2501,7 +2501,7 @@ Bug Fixes
   https://github.com/Pylons/pyramid/pull/620
 
 - Forward-port from 1.3 branch: when registering multiple views with an
-  ``accept`` predicate in a Pyramid application runing under Python 3, you
+  ``accept`` predicate in a Pyramid application running under Python 3, you
   might have received a ``TypeError: unorderable types: function() <
   function()`` exception.
 
@@ -2530,7 +2530,7 @@ Features
      @view_config(abc=1)
 
   Similar features exist for ``add_route``, and ``add_subscriber``.  See
-  "Adding A Third Party View, Route, or Subscriber Predicate" in the Hooks
+  "Adding A Custom View, Route, or Subscriber Predicate" in the Hooks
   chapter for more information.
 
   Note that changes made to support the above feature now means that only
@@ -2980,7 +2980,7 @@ Features
   argument, which can be a string, a callable, or a list consisting of
   strings and/or callables.  This feature allows submodules, subpackages, and
   global objects from being scanned.  See
-  http://readthedocs.org/docs/venusian/en/latest/#ignore-scan-argument for
+  https://venusian.readthedocs.io/en/latest/#ignore-scan-argument for
   more information about how to use the ``ignore`` argument to ``scan``.
 
 - Better error messages when a view callable returns a value that cannot be
@@ -3138,7 +3138,7 @@ Features
 
 - Responses generated by Pyramid's ``static_view`` now use
   a ``wsgi.file_wrapper`` (see
-  http://www.python.org/dev/peps/pep-0333/#optional-platform-specific-file-handling)
+  https://www.python.org/dev/peps/pep-0333/#optional-platform-specific-file-handling)
   when one is provided by the web server.
 
 Bug Fixes
@@ -3292,7 +3292,7 @@ Documentation
 
 - Removed the "Running Pyramid on Google App Engine" tutorial from the main
   docs.  It survives on in the Cookbook
-  (http://docs.pylonsproject.org/projects/pyramid_cookbook/en/latest/deployment/gae.html).
+  (https://docs.pylonsproject.org/projects/pyramid_cookbook/en/latest/deployment/gae.html).
   Rationale: it provides the correct info for the Python 2.5 version of GAE
   only, and this version of Pyramid does not support Python 2.5.
 
@@ -3873,7 +3873,7 @@ Backwards Incompatibilities
     config.add_view('my.pkg.someview', route_name='foo')
 
   This won't effect "normal" users, only people who have legacy BFG codebases
-  that used an autommitting configurator and possibly tests that use the
+  that used an autocommitting configurator and possibly tests that use the
   configurator API (the configurator returned by ``pyramid.testing.setUp`` is
   an autocommitting configurator).  The right way to get around this is to
   use a non-autocommitting configurator (the default), which does not have
@@ -3944,7 +3944,7 @@ Scaffolds
   package at all; configuration in the ``production.ini`` file which used to
   require its ``error_catcher`` middleware has been removed.  Configuring
   error catching / email sending is now the domain of the ``pyramid_exclog``
-  package (see http://docs.pylonsproject.org/projects/pyramid_exclog/en/latest/).
+  package (see https://docs.pylonsproject.org/projects/pyramid_exclog/en/latest/).
 
 Bug Fixes
 ---------
@@ -4400,7 +4400,7 @@ Documentation
 
 - The term "template" used to refer to both "paster templates" and "rendered
   templates" (templates created by a rendering engine.  i.e. Mako, Chameleon,
-  Jinja, etc.).  "Paster templates" will now be refered to as "scaffolds",
+  Jinja, etc.).  "Paster templates" will now be referred to as "scaffolds",
   whereas the name for "rendered templates" will remain as "templates."
 
 - The ``wiki`` (ZODB+Traversal) tutorial was updated slightly.
@@ -4561,7 +4561,7 @@ Bug Fixes
   ``/{foo:\d{1,2}}`` would fail to match ``/1`` or ``/11``. One level of
   inner squiggly brackets is now recognized so that the prior two patterns
   given as examples now work. See also
-  https://github.com/Pylons/pyramid/issues/#issue/123.
+  https://github.com/Pylons/pyramid/issues/123.
 
 - Don't send port numbers along with domain information in cookies set by
   AuthTktCookieHelper (see https://github.com/Pylons/pyramid/issues/131).
@@ -4576,11 +4576,11 @@ Bug Fixes
 
 - Don't quote ``:@&+$,`` symbols in ``*elements`` passed to
   ``pyramid.url.route_url`` or ``pyramid.url.resource_url`` (see
-  https://github.com/Pylons/pyramid/issues#issue/141).
+  https://github.com/Pylons/pyramid/pull/141).
 
 - Include SCRIPT_NAME in redirects issued by
   ``pyramid.view.append_slash_notfound_view`` (see
-  https://github.com/Pylons/pyramid/issues#issue/149).
+  https://github.com/Pylons/pyramid/issues/149).
 
 - Static views registered with ``config.add_static_view`` which also included
   a ``permission`` keyword argument would not work as expected, because
@@ -4802,7 +4802,7 @@ Documentation
 
 - Moved "Using ZODB With ZEO" and "Using repoze.catalog Within Pyramid"
   tutorials out of core documentation and into the Pyramid Tutorials site
-  (http://docs.pylonsproject.org/projects/pyramid_tutorials/en/latest/).
+  (https://docs.pylonsproject.org/projects/pyramid_tutorials/en/latest/).
 
 - Changed "Cleaning up After a Request" section in the URL Dispatch chapter
   to use ``request.add_finished_callback`` instead of jamming an object with
@@ -4878,19 +4878,19 @@ Bug Fixes
   ``{{project}}`` variable, causing applications created with uppercase
   letters e.g. ``paster create -t pyramid_routesalchemy Dibbus`` to fail to
   start when ``paster serve development.ini`` was used against the result.
-  See https://github.com/Pylons/pyramid/issues/#issue/107
+  See https://github.com/Pylons/pyramid/issues/107
 
 - The ``render_view`` method of ``pyramid.renderers.RendererHelper`` passed
   an incorrect value into the renderer for ``renderer_info``.  It now passes
   an instance of ``RendererHelper`` instead of a dictionary, which is
   consistent with other usages.  See
-  https://github.com/Pylons/pyramid/issues#issue/106
+  https://github.com/Pylons/pyramid/issues/106
 
 - A bug existed in the ``pyramid.authentication.AuthTktCookieHelper`` which
   would break any usage of an AuthTktAuthenticationPolicy when one was
   configured to reissue its tokens (``reissue_time`` < ``timeout`` /
   ``max_age``). Symptom: ``ValueError: ('Invalid token %r', '')``.  See
-  https://github.com/Pylons/pyramid/issues#issue/108.
+  https://github.com/Pylons/pyramid/issues/108.
 
 1.0b1 (2011-01-21)
 ==================
@@ -4908,7 +4908,7 @@ Features
   sets a cookie with a wildcard domain will be turned off.
 
 - Add a ``MANIFEST.in`` file to each paster template. See
-  https://github.com/Pylons/pyramid/issues#issue/95
+  https://github.com/Pylons/pyramid/issues/95
 
 Bug Fixes
 ---------
@@ -4973,7 +4973,7 @@ Backwards Incompatibilities
   react to ``403 Forbidden``.
 
 - The default value for the ``cookie_on_exception`` parameter to
-  ``pyramid.session.UnencyrptedCookieSessionFactory`` is now ``True``.  This
+  ``pyramid.session.UnencryptedCookieSessionFactory`` is now ``True``.  This
   means that when view code causes an exception to be raised, and the session
   has been mutated, a cookie will be sent back in the response.  Previously
   its default value was ``False``.
@@ -4986,7 +4986,7 @@ Paster Templates
   ``repoze.tm2`` transaction manager in ``development.ini``.  This prevents a
   transaction from being committed when the response status code is within
   the 400 or 500 ranges.  See also
-  http://docs.repoze.org/tm2/#using-a-commit-veto.
+  https://repozetm2.readthedocs.io/en/latest/index.html#using-a-commit-veto.
 
 1.0a10 (2011-01-18)
 ===================
@@ -5004,7 +5004,7 @@ Backwards Incompatibilities
   Pyramid core.  Handlers are now a feature of the ``pyramid_handlers``
   package, which can be downloaded from PyPI.  Documentation for the package
   should be available via
-  http://docs.pylonsproject.org/projects/pyramid_handlers/en/latest/,
+  https://docs.pylonsproject.org/projects/pyramid_handlers/en/latest/,
   which describes how
   to add a configuration statement to your ``main`` block to reobtain this
   method.  You will also need to add an ``install_requires`` dependency upon
@@ -5014,7 +5014,7 @@ Backwards Incompatibilities
   Pyramid core.  Loading ZCML is now a feature of the ``pyramid_zcml``
   package, which can be downloaded from PyPI.  Documentation for the package
   should be available via
-  http://docs.pylonsproject.org/projects/pyramid_zcml/en/latest/,
+  https://docs.pylonsproject.org/projects/pyramid_zcml/en/latest/,
   which describes how
   to add a configuration statement to your ``main`` block to reobtain this
   method.  You will also need to add an ``install_requires`` dependency upon
@@ -5212,7 +5212,7 @@ Documentation
 
 - The "Resource Location and View Lookup" chapter has been replaced with a
   variant of Rob Miller's "Much Ado About Traversal" (originally published at
-  http://blog.nonsequitarian.org/2010/much-ado-about-traversal/).
+  https://web.archive.org/web/20150321110754/http://blog.nonsequitarian.org/2010/much-ado-about-traversal/).
 
 - Many minor wording tweaks and refactorings (merged Casey Duncan's docs
   fork, in which he is working on general editing).
@@ -5427,7 +5427,7 @@ Terminology Changes
 Bug Fixes
 ---------
 
-- Make it possible to succesfully run all tests via ``nosetests`` command
+- Make it possible to successfully run all tests via ``nosetests`` command
   directly (rather than indirectly via ``python setup.py nosetests``).
 
 - When a configuration conflict is encountered during scanning, the conflict
@@ -5534,7 +5534,7 @@ Features
 
 - The ``pyramid.testing.setUp`` function now accepts an ``autocommit``
   keyword argument, which defaults to ``True``.  If it is passed ``False``,
-  the Config object returned by ``setUp`` will be a non-autocommiting Config
+  the Config object returned by ``setUp`` will be a non-autocommitting Config
   object.
 
 - Add logging configuration to all paster templates.
@@ -5554,7 +5554,7 @@ Features
 
 - New boolean Mako settings variable ``mako.strict_undefined``.  See `Mako
   Context Variables
-  <http://www.makotemplates.org/docs/runtime.html#context-variables>`_ for
+  <https://docs.makotemplates.org/en/latest/runtime.html#context-variables>`_ for
   its meaning.
 
 Dependencies

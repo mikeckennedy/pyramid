@@ -1,4 +1,5 @@
 from webob import Response
+
 from pyramid.httpexceptions import HTTPForbidden
 from pyramid.util import bytes_
 
@@ -22,7 +23,7 @@ def includeme(config):
 
     authn_policy = AuthTktAuthenticationPolicy('seekr1t', hashalg='sha512')
     authz_policy = ACLAuthorizationPolicy()
-    config._set_authentication_policy(authn_policy)
-    config._set_authorization_policy(authz_policy)
+    config.set_authentication_policy(authn_policy)
+    config.set_authorization_policy(authz_policy)
     config.add_view(x_view, name='x', permission='private')
     config.add_view(forbidden_view, context=HTTPForbidden)

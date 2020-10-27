@@ -1,39 +1,27 @@
+from contextlib import contextmanager
 import copy
 import os
-from contextlib import contextmanager
-
 from webob.acceptparse import create_accept_header
-
-from zope.interface import implementer, alsoProvides
-
-from pyramid.interfaces import IRequest, ISession
+from zope.interface import alsoProvides, implementer
 
 from pyramid.config import Configurator
 from pyramid.decorator import reify
-from pyramid.path import caller_package
-from pyramid.response import _get_response_factory
-from pyramid.registry import Registry
-
-from pyramid.security import (
-    Authenticated,
-    Everyone,
-    AuthenticationAPIMixin,
-    AuthorizationAPIMixin,
-)
-
-from pyramid.threadlocal import get_current_registry, manager
-
 from pyramid.i18n import LocalizerRequestMixin
+from pyramid.interfaces import IRequest, ISession
+from pyramid.path import caller_package
+from pyramid.registry import Registry
 from pyramid.request import CallbackMethodsMixin
+from pyramid.response import _get_response_factory
+from pyramid.security import AuthenticationAPIMixin, SecurityAPIMixin
+from pyramid.threadlocal import get_current_registry, manager
 from pyramid.url import URLMethodsMixin
-from pyramid.util import InstancePropertyMixin, PYPY, text_
+from pyramid.util import PYPY, InstancePropertyMixin
 from pyramid.view import ViewMethodsMixin
-
 
 _marker = object()
 
 
-class DummyRootFactory(object):
+class DummyRootFactory:
     __parent__ = None
     __name__ = None
 
@@ -42,19 +30,19 @@ class DummyRootFactory(object):
             self.__dict__.update(request['bfg.routes.matchdict'])
 
 
-class DummySecurityPolicy(object):
-    """ A standin for both an IAuthentication and IAuthorization policy """
+class DummySecurityPolicy:
+    """ A standin for a :term:`security policy`."""
 
     def __init__(
         self,
         userid=None,
-        groupids=(),
+        identity=None,
         permissive=True,
         remember_result=None,
         forget_result=None,
     ):
         self.userid = userid
-        self.groupids = groupids
+        self.identity = identity
         self.permissive = permissive
         if remember_result is None:
             remember_result = []
@@ -63,39 +51,25 @@ class DummySecurityPolicy(object):
         self.remember_result = remember_result
         self.forget_result = forget_result
 
+    def authenticated_identity(self, request):
+        return self.identity
+
     def authenticated_userid(self, request):
         return self.userid
 
-    def unauthenticated_userid(self, request):
-        return self.userid
-
-    def effective_principals(self, request):
-        effective_principals = [Everyone]
-        if self.userid:
-            effective_principals.append(Authenticated)
-            effective_principals.append(self.userid)
-            effective_principals.extend(self.groupids)
-        return effective_principals
+    def permits(self, request, context, permission):
+        return self.permissive
 
     def remember(self, request, userid, **kw):
         self.remembered = userid
         return self.remember_result
 
-    def forget(self, request):
+    def forget(self, request, **kw):
         self.forgotten = True
         return self.forget_result
 
-    def permits(self, context, principals, permission):
-        return self.permissive
 
-    def principals_allowed_by_permission(self, context, permission):
-        if self.permissive:
-            return self.effective_principals(None)
-        else:
-            return []
-
-
-class DummyTemplateRenderer(object):
+class DummyTemplateRenderer:
     """
     An instance of this class is returned from
     :meth:`pyramid.config.Configurator.testing_add_renderer`.  It has a
@@ -140,7 +114,7 @@ class DummyTemplateRenderer(object):
         return val
 
     def assert_(self, **kw):
-        """ Accept an arbitrary set of assertion key/value pairs.  For
+        """Accept an arbitrary set of assertion key/value pairs.  For
         each assertion key/value pair assert that the renderer
         (eg. :func:`pyramid.renderers.render_to_response`)
         received the key with a value that equals the asserted
@@ -171,14 +145,14 @@ class DummyResource:
     def __init__(
         self, __name__=None, __parent__=None, __provides__=None, **kw
     ):
-        """ The resource's ``__name__`` attribute will be set to the
+        """The resource's ``__name__`` attribute will be set to the
         value of the ``__name__`` argument, and the resource's
         ``__parent__`` attribute will be set to the value of the
         ``__parent__`` argument.  If ``__provides__`` is specified, it
         should be an interface object or tuple of interface objects
         that will be attached to the resulting resource via
         :func:`zope.interface.alsoProvides`. Any extra keywords passed
-        in the ``kw`` argumnent will be set as direct attributes of
+        in the ``kw`` argument will be set as direct attributes of
         the resource object.
 
         .. note:: For backwards compatibility purposes, this class can also
@@ -194,7 +168,7 @@ class DummyResource:
         self.subs = {}
 
     def __setitem__(self, name, val):
-        """ When the ``__setitem__`` method is called, the object
+        """When the ``__setitem__`` method is called, the object
         passed in as ``val`` will be decorated with a ``__parent__``
         attribute pointing at the dummy resource and a ``__name__``
         attribute that is the value of ``name``.  The value will then
@@ -229,10 +203,8 @@ class DummyResource:
 
     __iter__ = keys
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
-
-    __bool__ = __nonzero__
 
     def __len__(self):
         return len(self.subs)
@@ -241,7 +213,7 @@ class DummyResource:
         return name in self.subs
 
     def clone(self, __name__=_marker, __parent__=_marker, **kw):
-        """ Create a clone of the resource object.  If ``__name__`` or
+        """Create a clone of the resource object.  If ``__name__`` or
         ``__parent__`` arguments are passed, use these values to
         override the existing ``__name__`` or ``__parent__`` of the
         resource.  If any extra keyword args are passed in via the ``kw``
@@ -286,7 +258,7 @@ class DummySession(dict):
         return storage
 
     def new_csrf_token(self):
-        token = text_('0123456789012345678901234567890123456789')
+        token = '0123456789012345678901234567890123456789'
         self['_csrft_'] = token
         return token
 
@@ -303,11 +275,11 @@ class DummyRequest(
     CallbackMethodsMixin,
     InstancePropertyMixin,
     LocalizerRequestMixin,
+    SecurityAPIMixin,
     AuthenticationAPIMixin,
-    AuthorizationAPIMixin,
     ViewMethodsMixin,
 ):
-    """ A DummyRequest object (incompletely) imitates a :term:`request` object.
+    """A DummyRequest object (incompletely) imitates a :term:`request` object.
 
     The ``params``, ``environ``, ``headers``, ``path``, and
     ``cookies`` arguments correspond to their :term:`WebOb`
@@ -581,8 +553,8 @@ def cleanUp(*arg, **kw):
     return setUp(*arg, **kw)
 
 
-class DummyRendererFactory(object):
-    """ Registered by
+class DummyRendererFactory:
+    """Registered by
     :meth:`pyramid.config.Configurator.testing_add_renderer` as
     a dummy renderer factory.  The indecision about what to use as a
     key (a spec vs. a relative name) is caused by test suites in the
@@ -618,7 +590,7 @@ class DummyRendererFactory(object):
         return renderer
 
 
-class MockTemplate(object):
+class MockTemplate:
     def __init__(self, response):
         self._received = {}
         self.response = response

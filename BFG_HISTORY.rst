@@ -390,7 +390,7 @@ Bug Fixes
 - The route pattern registered internally for a local "static view"
   (either via the ``static`` ZCML directive or via the
   ``add_static_view`` method of the configurator) was incorrect.  It
-  was regsistered for e.g. ``static*traverse``, while it should have
+  was registered for e.g. ``static*traverse``, while it should have
   been registered for ``static/*traverse``.  Symptom: two static views
   could not reliably be added to a system when they both shared the
   same path prefix (e.g. ``/static`` and ``/static2``).
@@ -450,7 +450,7 @@ Features
   constructor argument set to the value passed to ``with_package``.
   This feature will make it easier for future BFG versions to allow
   dotted names as arguments in places where currently only object
-  references are allowed (the work to allow dotted names isntead of
+  references are allowed (the work to allow dotted names instead of
   object references everywhere has not yet been done, however).
 
 - The new ``repoze.bfg.configuration.Configurator.maybe_dotted``
@@ -479,7 +479,7 @@ Backwards Incompatibilities
   The ``request`` argument is still a keyword argument, however.
 
 - The functions in ``repoze.bfg.renderers`` named ``render`` and
-  ``render_to_response`` now accept an additonal keyword argument
+  ``render_to_response`` now accept an additional keyword argument
   named ``package``.
 
 - The ``get_renderer`` API in ``repoze.bfg.renderers`` now accepts a
@@ -516,7 +516,7 @@ Internal
 
 - Use ``imp.get_suffixes`` indirection in
   ``repoze.bfg.path.package_name`` instead of hardcoded ``.py``
-  ``.pyc`` and ``.pyo`` to use for comparison when attemtping to
+  ``.pyc`` and ``.pyo`` to use for comparison when attempting to
   decide if a directory is a package.
 
 - Make tests runnable again under Jython (although they do not all
@@ -574,7 +574,7 @@ Features
   will be the exception object).
 
 Documentation
---------------
+-------------
 
 - Expanded the "Cleaning Up After a Request" section of the URL
   Dispatch narrative chapter.
@@ -642,7 +642,7 @@ Backwards Incompatibilities
   depended upon may no longer happen.
 
 Documentation
---------------
+-------------
 
 - Added description of the ``repoze.bfg.events.subscriber`` decorator
   to the Events narrative chapter.
@@ -917,7 +917,7 @@ Documentation
   the exceptions chapter of the API documentation.
 
 Backwards Incompatibilities
-----------------------------
+---------------------------
 
 - in previous releases, when a URL could not be decoded from UTF-8
   during traversal, a ``TypeError`` was raised.  Now the error which
@@ -1004,8 +1004,8 @@ Documentation
   via a group rather than via a direct username.
 
 - Redirect requests for tutorial sources to
-  http://docs.repoze.org/bfgwiki-1.3 and
-  http://docs.repoze.org/bfgwiki2-1.3/ respectively.
+  https://docs.pylonsproject.org/projects/pyramid/en/latest/tutorials/wiki/index.html and
+  https://docs.pylonsproject.org/projects/pyramid/en/latest/tutorials/wiki2/index.html respectively.
 
 - A section named ``Custom Route Predicates`` was added to the URL
   Dispatch narrative chapter.
@@ -1140,8 +1140,8 @@ Features
 
   This feature was kindly contributed by Andrey Popp.
 
-- Use "Venusian" (`http://docs.repoze.org/venusian
-  <http://docs.repoze.org/venusian>`_) to perform ``bfg_view``
+- Use "Venusian" (`https://docs.pylonsproject.org/projects/venusian/en/latest/
+  <https://docs.pylonsproject.org/projects/venusian/en/latest/>`_) to perform ``bfg_view``
   decorator scanning rather than relying on a BFG-internal decorator
   scanner.  (Truth be told, Venusian is really just a generalization
   of the BFG-internal decorator scanner).
@@ -1207,7 +1207,7 @@ Internal
 --------
 
 - View registrations and lookups are now done with three "requires"
-  arguments instead of two to accomodate orthogonality of exception
+  arguments instead of two to accommodate orthogonality of exception
   views.
 
 - The ``repoze.bfg.interfaces.IForbiddenView`` and
@@ -1525,10 +1525,10 @@ Documentation Licensing
 - Loosen the documentation licensing to allow derivative works: it is
   now offered under the `Creative Commons
   Attribution-Noncommercial-Share Alike 3.0 United States License
-  <http://creativecommons.org/licenses/by-nc-sa/3.0/us/>`_.  This is
+  <https://creativecommons.org/licenses/by-nc-sa/3.0/us/>`_.  This is
   only a documentation licensing change; the ``repoze.bfg`` software
   continues to be offered under the Repoze Public License at
-  http://repoze.org/license.html (BSD-like).
+  https://web.archive.org/web/20190401024809/http://repoze.org/license.html (BSD-like).
 
 1.2a9 (2009-12-27)
 ==================
@@ -1540,10 +1540,10 @@ Documentation Licensing
   within the ``docs`` directory) in this release is now offered under
   the Creative Commons Attribution-Noncommercial-No Derivative Works
   3.0 United States License as described by
-  http://creativecommons.org/licenses/by-nc-nd/3.0/us/ .  This is only
+  https://creativecommons.org/licenses/by-nc-nd/3.0/us/ .  This is only
   a licensing change for the documentation; the ``repoze.bfg``
   software continues to be offered under the Repoze Public License
-  at http://repoze.org/license.html (BSD-like).
+  at https://web.archive.org/web/20190401024809/http://repoze.org/license.html (BSD-like).
 
 Documentation
 -------------
@@ -1670,8 +1670,8 @@ Internal
 - Remove the ``repoze.bfg.testing.registerTraverser`` function.  This
   function was never an API.
 
-Documenation
-------------
+Documentation
+-------------
 
 - Doc-deprecated most helper functions in the ``repoze.bfg.testing``
   module.  These helper functions likely won't be removed any time
@@ -1892,9 +1892,9 @@ Features
   of a package nor the use of non-imperative configuration is required
   to create a simple ``repoze.bfg`` application any longer.
 
-  Imperative configuration makes ``repoze.bfg`` competetive with
-  "microframeworks" such as `Bottle <http://bottle.paws.de/>`_ and
-  `Tornado <http://www.tornadoweb.org/>`_.  ``repoze.bfg`` has a good
+  Imperative configuration makes ``repoze.bfg`` competitive with
+  "microframeworks" such as `Bottle <https://bottlepy.org/docs/dev/>`_ and
+  `Tornado <https://www.tornadoweb.org/en/stable/>`_.  ``repoze.bfg`` has a good
   deal of functionality that most microframeworks lack, so this is
   hopefully a "best of both worlds" feature.
 
@@ -2131,8 +2131,8 @@ Internals
   current ``repoze.bfg`` registry.  They fall back to obtaining the
   registry from the threadlocal API.
 
-Backwards Incompatibilites
---------------------------
+Backwards Incompatibilities
+---------------------------
 
 - Unit tests which use ``zope.testing.cleanup.cleanUp`` for the
   purpose of isolating tests from one another may now begin to fail
@@ -2323,7 +2323,7 @@ Deprecations
   the paster templates, code samples, and documentation now make
   reference to ``settings`` rather than ``options``.  This
   change/deprecation was mainly made for purposes of clarity and
-  symmetry with the ``get_settings()`` API and dicussions of
+  symmetry with the ``get_settings()`` API and discussions of
   "settings" in various places in the docs: we want to use the same
   name to refer to the same thing everywhere.
 
@@ -2866,7 +2866,7 @@ Features
   e.g. ``repoze.bfg.url.route_url`` in unit tests.
 
 - The ``notfound`` and ``forbidden`` ZCML directives now accept the
-  following addtional attributes: ``attr``, ``renderer``, and
+  following additional attributes: ``attr``, ``renderer``, and
   ``wrapper``.  These have the same meaning as they do in the context
   of a ZCML ``view`` directive.
 
@@ -2976,7 +2976,7 @@ Documentation
   ``repoze.bfg`` application.
 
 - Added a tutorial which explains how to run a ``repoze.bfg``
-  application under `mod_wsgi <http://code.google.com/p/modwsgi/>`_.
+  application under `mod_wsgi <https://modwsgi.readthedocs.io/en/develop/>`_.
   See "Running a repoze.bfg Application under mod_wsgi" in the
   tutorials section of the documentation.
 
@@ -3214,7 +3214,7 @@ Features
   ``view_permission``.  Any attribute which starts with ``view_`` can
   now be spelled without the ``view_`` prefix, so ``view_for`` can be
   spelled as ``for`` now, etc.  Both forms are documented in the
-  urldispatch narraitve documentation chapter.
+  urldispatch narrative documentation chapter.
 
 - The ``request_param`` ZCML view directive attribute (and its
   ``bfg_view`` decorator cousin) can now specify both a key and a
@@ -3406,7 +3406,7 @@ Backwards Incompatibilities
 - Added a workaround for a bug in Python 2.6, 2.6.1, and 2.6.2 having
   to do with a recursion error in the mimetypes module when trying to
   serve static files from Paste's FileApp:
-  http://bugs.python.org/issue5853.  Symptom: File
+  https://bugs.python.org/issue5853.  Symptom: File
   "/usr/lib/python2.6/mimetypes.py", line 244, in guess_type return
   guess_type(url, strict) RuntimeError: maximum recursion depth
   exceeded.  Thanks to Armin Ronacher for identifying the symptom and
@@ -3498,7 +3498,7 @@ Deprecations
   ``remoteuserauthenticationpolicy`` and
   ``authtktauthenticationpolicy``) and the `aclauthorizationpolicy``
   authorization policy directive as described in the changes to the
-  "Security" narrative documenation chapter and the wiki tutorials.
+  "Security" narrative documentation chapter and the wiki tutorials.
 
 Features
 --------
@@ -3800,7 +3800,7 @@ Backwards Incompatibilities
   authentication policies named ``RepozeWho1AuthenticationPolicy``,
   ``RemoteUserAuthenticationPolicy``, and
   ``AuthTktAuthenticationPolicy`` now must accept two positional
-  arguments: the orginal argument accepted by each (userid or
+  arguments: the original argument accepted by each (userid or
   identity) plus a second argument, which will be the current request.
   Apologies, this is required to service finding groups when there is
   no "global" database connection.
@@ -3894,7 +3894,7 @@ Features
   defined ``route`` statement.  When it is specified, the view will
   only be called when that route matches during a request.
 
-- It is now possible to perfom traversal *after* a route has matched.
+- It is now possible to perform traversal *after* a route has matched.
   Use the pattern ``*traverse`` in a ``<route>`` ``path`` attribute
   within ZCML, and the path remainder which it matches will be used as
   a traversal path.
@@ -4610,8 +4610,7 @@ Bug Fixes
   To resolve this issue, the urldispatch module was fixed, and a fork
   of the Routes trunk was put into the "dev" index named
   ``Routes-1.11dev-chrism-home``.  The source for the fork exists at
-  `http://bitbucket.org/chrism/routes-home/
-  <http://bitbucket.org/chrism/routes-home/>`_ (broken link);
+  ``http://bitbucket.org/chrism/routes-home/`` (broken link);
   its contents have been merged into the Routes trunk
   (what will be Routes 1.11).
 
@@ -4752,8 +4751,7 @@ Incompatibilities related to making ``repoze.bfg`` "C-free":
   opposed to pure Python) and the ``repoze.bfg`` core is "C-free" as
   of this release. You may get Genshi-style Chameleon support back by
   installing the ``repoze.bfg.chameleon_genshi`` package availalable
-  from http://svn.repoze.org/repoze.bfg.chameleon_genshi (also
-  available in the index at http://dist.repoze.org/bfg/0.8/simple).
+  from https://pypi.org/project/repoze.bfg.chameleon_genshi/.
   All existing code that depended on the ``chameleon_genshi`` module
   prior to this release of ``repoze.bfg`` should work without change
   after this addon is installed.
@@ -4763,8 +4761,10 @@ Incompatibilities related to making ``repoze.bfg`` "C-free":
   which is implemented in C, and the ``repoze.bfg`` core is "C-free"
   as of this release.  You bay get XSL templating back by installing
   the ``repoze.bfg.xslt`` package available from
-  http://svn.repoze.org/repoze.bfg.xslt/ (also available in the index
-  at http://dist.repoze.org/bfg/0.8/simple).  All existing code that
+  ``http://svn.repoze.org/repoze.bfg.xslt/`` (broken link)
+  (also available in the index
+  at ``http://dist.repoze.org/bfg/0.8/simple)`` (broken link).
+  All existing code that
   depended upon the ``xslt`` module prior to this release of
   ``repoze.bfg`` should work without modification after this addon is
   installed.
@@ -4796,10 +4796,10 @@ Index-Related
 -------------
 
 - The canonical package index location for ``repoze.bfg`` has changed.
-  The "old" index (http://dist.repoze.org/lemonade/dev/simple) has
-  been superseded by a new index location
-  (`http://dist.repoze.org/bfg/current/simple
-  <http://dist.repoze.org/bfg/current/simple>`_).  The installation
+  The "old" index (``http://dist.repoze.org/lemonade/dev/simple``) (broken link)
+  has been superseded by a new index location
+  ``http://dist.repoze.org/bfg/current/simple`` (broken link).
+  The installation
   documentation has been updated as well as the ``setup.cfg`` file in
   this package.  The "lemonade" index still exists, but it is not
   guaranteed to have the latest BFG software in it, nor will it be
@@ -4927,7 +4927,7 @@ Backwards Incompatibilities
   default ``ModelGraphTraverser``. To use this feature, you will need
   to install the ``repoze.bfg.traversalwrapper`` package (an add-on
   package, available at
-  http://svn.repoze.org/repoze.bfg.traversalwrapper) Then change your
+  https://pypi.org/project/repoze.bfg.traversalwrapper/) Then change your
   application's ``configure.zcml`` to include the following stanza:
 
     <adapter
@@ -5077,7 +5077,7 @@ Backwards Incompatibilities
   e.g. ``/foo /bar``.  Now it returns a string, where each segment is
   a UTF-8 encoded and URL-quoted element e.g. ``/foo%20/bar``.  This
   change was (as discussed briefly on the repoze-dev maillist)
-  necessary to accomodate model objects which themselves have
+  necessary to accommodate model objects which themselves have
   ``__name__`` attributes that contain the ``/`` character.
 
   For people that have no models that have high-order Unicode
@@ -5356,7 +5356,7 @@ Features
 - URL-dispatch has been overhauled: it is no longer necessary to
   manually create a RoutesMapper in your application's entry point
   callable in order to use URL-dispatch (aka `Routes
-  <http://routes.groovie.org>`_).  A new ``route`` directive has been
+  <https://routes.readthedocs.io/en/latest/>`_).  A new ``route`` directive has been
   added to the available list of ZCML directives.  Each ``route``
   directive inserted into your application's ``configure.zcml``
   establishes a Routes mapper connection.  If any ``route``
@@ -5498,7 +5498,7 @@ Features
   requests (and this is indeed the default).  All requests implement
   ``IRequest``. The HTTP-verb-matching idea was pioneered by
   `repoze.bfg.restrequest
-  <http://pypi.python.org/pypi/repoze.bfg.restrequest/1.0.1>`_ . That
+  <https://pypi.org/project/repoze.bfg.restrequest/1.0.1/>`_ . That
   package is no longer required, but still functions fine.
 
 Bug Fixes
@@ -5606,8 +5606,8 @@ Features
   keyword argument named ``query``.  The value of this argument
   will be used to compose a query string, which will be attached to
   the generated URL before it is returned.  See the API docs (in
-  the docs directory or `on the web
-  <http://static.repoze.org/bfgdocs>`_) for more information.
+  the docs directory or on the web
+  ``http://static.repoze.org/bfgdocs``) (broken URL) for more information.
 
 0.6 (2008-12-26)
 ================
@@ -5618,7 +5618,7 @@ Backwards Incompatibilities
 - Rather than prepare the "stock" implementations of the ZCML directives
   from the ``zope.configuration`` package for use under ``repoze.bfg``,
   ``repoze.bfg`` now makes available the implementations of directives
-  from the ``repoze.zcml`` package (see http://static.repoze.org/zcmldocs).
+  from the ``repoze.zcml`` package (see https://pypi.org/project/repoze.zcml/).
   As a result, the ``repoze.bfg`` package now depends on the
   ``repoze.zcml`` package, and no longer depends directly on the
   ``zope.component``, ``zope.configuration``, ``zope.interface``, or
@@ -5642,7 +5642,7 @@ Backwards Incompatibilities
   package="zope.component" file="meta.zcml">``) and include the
   ``zope.security`` package as an ``install_requires`` dependency or 2)
   change the ZCML in their applications to use the declarations from
-  `repoze.zcml <http://static.repoze.org/zcmldocs/>`_ instead of the stock
+  `repoze.zcml <https://pypi.org/project/repoze.zcml/>`_ instead of the stock
   declarations.  ``repoze.zcml`` only makes available the ``adapter``,
   ``subscriber`` and ``utility`` directives.
 
@@ -5720,7 +5720,7 @@ Backwards Incompatibilities
   will contain UTF-8 encoded path segments as necessary, so any URL
   generated by BFG itself will be decodeable by the traverser.  If another
   application generates URLs to a BFG application, to be resolved
-  successully, it should generate the URL with UTF-8 encoded path segments
+  successfully, it should generate the URL with UTF-8 encoded path segments
   to be successfully resolved.  The decoder is not at all magical: if a
   non-UTF-8-decodeable path segment (e.g. one encoded using UTF-16 or some
   other insanity) is passed in the URL, BFG will raise a ``TypeError`` with
@@ -5774,7 +5774,7 @@ Features
   ``testing.registerDummyRenderer`` is used, it instead registers a dummy
   implementation using ``ITemplateRenderer`` interface, which is checked
   for when the built-in templating facilities do rendering.  This change
-  also allows developers to make explcit named utility registrations in
+  also allows developers to make explicit named utility registrations in
   the ZCML registry against ``ITemplateRenderer``; these will be found
   before any on-disk template is looked up.
 

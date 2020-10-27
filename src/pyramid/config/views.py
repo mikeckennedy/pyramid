@@ -1,19 +1,36 @@
 import functools
 import inspect
-import posixpath
 import operator
 import os
-import warnings
-
+import posixpath
 from urllib.parse import quote, urljoin, urlparse, urlunparse
+import warnings
 from webob.acceptparse import Accept
 from zope.interface import Interface, implementedBy, implementer
 from zope.interface.interfaces import IInterface
 
+from pyramid import renderers
+from pyramid.asset import resolve_asset_spec
+from pyramid.config.actions import action_method
+from pyramid.config.predicates import (
+    DEFAULT_PHASH,
+    MAX_ORDER,
+    normalize_accept_offer,
+    predvalseq,
+    sort_accept_offers,
+)
+from pyramid.decorator import reify
+from pyramid.exceptions import ConfigurationError, PredicateMismatch
+from pyramid.httpexceptions import (
+    HTTPForbidden,
+    HTTPNotFound,
+    default_exceptionresponse_view,
+)
 from pyramid.interfaces import (
+    PHASE1_CONFIG,
     IAcceptOrder,
-    IExceptionViewClassifier,
     IException,
+    IExceptionViewClassifier,
     IMultiView,
     IPackageOverrides,
     IRendererFactory,
@@ -24,62 +41,31 @@ from pyramid.interfaces import (
     IStaticURLInfo,
     IView,
     IViewClassifier,
-    IViewDerivers,
     IViewDeriverInfo,
+    IViewDerivers,
     IViewMapperFactory,
-    PHASE1_CONFIG,
 )
-
-from pyramid import renderers
-
-from pyramid.asset import resolve_asset_spec
-
-from pyramid.decorator import reify
-
-from pyramid.exceptions import ConfigurationError, PredicateMismatch
-
-from pyramid.httpexceptions import (
-    HTTPForbidden,
-    HTTPNotFound,
-    default_exceptionresponse_view,
-)
-
+import pyramid.predicates
 from pyramid.registry import Deferred
-
 from pyramid.security import NO_PERMISSION_REQUIRED
 from pyramid.static import static_view
-
 from pyramid.url import parse_url_overrides
-
-from pyramid.view import AppendSlashNotFoundViewFactory
-
 from pyramid.util import (
+    WIN,
+    TopologicalSorter,
     as_sorted_tuple,
     is_nonstr_iter,
-    TopologicalSorter,
-    WIN,
 )
-
-import pyramid.predicates
+from pyramid.view import AppendSlashNotFoundViewFactory
 import pyramid.viewderivers
-
 from pyramid.viewderivers import (
     INGRESS,
     VIEW,
-    preserve_view_attrs,
-    view_description,
-    requestonly,
     DefaultViewMapper,
+    preserve_view_attrs,
+    requestonly,
+    view_description,
     wraps_view,
-)
-
-from pyramid.config.actions import action_method
-from pyramid.config.predicates import (
-    DEFAULT_PHASH,
-    MAX_ORDER,
-    normalize_accept_offer,
-    predvalseq,
-    sort_accept_offers,
 )
 
 DefaultViewMapper = DefaultViewMapper  # bw-compat
@@ -89,7 +75,7 @@ view_description = view_description  # bw-compat
 
 
 @implementer(IMultiView)
-class MultiView(object):
+class MultiView:
     def __init__(self, name):
         self.name = name
         self.media_views = {}
@@ -210,7 +196,7 @@ def predicated_view(view, info):
         return view(context, request)
 
     def checker(context, request):
-        return all((predicate(context, request) for predicate in preds))
+        return all(predicate(context, request) for predicate in preds)
 
     predicate_wrapper.__predicated__ = checker
     predicate_wrapper.__predicates__ = preds
@@ -218,7 +204,7 @@ def predicated_view(view, info):
 
 
 def viewdefaults(wrapped):
-    """ Decorator for add_view-like methods which takes into account
+    """Decorator for add_view-like methods which takes into account
     __view_defaults__ attached to view it is passed.  Not a documented API but
     used by some external systems."""
 
@@ -249,7 +235,7 @@ def combine_decorators(*decorators):
     return decorated
 
 
-class ViewsConfiguratorMixin(object):
+class ViewsConfiguratorMixin:
     @viewdefaults
     @action_method
     def add_view(
@@ -276,12 +262,11 @@ class ViewsConfiguratorMixin(object):
         mapper=None,
         http_cache=None,
         match_param=None,
-        check_csrf=None,
         require_csrf=None,
         exception_only=False,
         **view_options
     ):
-        """ Add a :term:`view configuration` to the current
+        """Add a :term:`view configuration` to the current
         configuration state.  Arguments to ``add_view`` are broken
         down below into *predicate* arguments and *non-predicate*
         arguments.  Predicate arguments narrow the circumstances in
@@ -685,22 +670,24 @@ class ViewsConfiguratorMixin(object):
 
         header
 
-          This value represents an HTTP header name or a header
-          name/value pair.  If the value contains a ``:`` (colon), it
-          will be considered a name/value pair
-          (e.g. ``User-Agent:Mozilla/.*`` or ``Host:localhost``).  The
-          value portion should be a regular expression.  If the value
-          does not contain a colon, the entire value will be
-          considered to be the header name
-          (e.g. ``If-Modified-Since``).  If the value evaluates to a
-          header name only without a value, the header specified by
-          the name must be present in the request for this predicate
-          to be true.  If the value evaluates to a header name/value
-          pair, the header specified by the name must be present in
-          the request *and* the regular expression specified as the
-          value must match the header value.  Whether or not the value
-          represents a header name or a header name/value pair, the
-          case of the header name is not significant.
+          This argument can be a string or an iterable of strings for HTTP
+          headers.  The matching is determined as follow:
+
+          - If a string does not contain a ``:`` (colon), it will be
+            considered to be a header name (example ``If-Modified-Since``).
+            In this case, the header specified by the name must be present
+            in the request for this string to match.  Case is not significant.
+
+          - If a string contains a colon, it will be considered a
+            name/value pair (for example ``User-Agent:Mozilla/.*`` or
+            ``Host:localhost``), where the value part is a regular
+            expression.  The header specified by the name must be present
+            in the request *and* the regular expression specified as the
+            value part must match the value of the request header.  Case is
+            not significant for the header name, but it is for the value.
+
+          All strings must be matched for this predicate to return ``True``.
+          If this predicate returns ``False``, view matching continues.
 
         path_info
 
@@ -708,38 +695,6 @@ class ViewsConfiguratorMixin(object):
           be tested against the ``PATH_INFO`` WSGI environment
           variable.  If the regex matches, this predicate will be
           ``True``.
-
-        check_csrf
-
-          .. deprecated:: 1.7
-             Use the ``require_csrf`` option or see :ref:`auto_csrf_checking`
-             instead to have :class:`pyramid.exceptions.BadCSRFToken`
-             exceptions raised.
-
-          If specified, this value should be one of ``None``, ``True``,
-          ``False``, or a string representing the 'check name'.  If the value
-          is ``True`` or a string, CSRF checking will be performed.  If the
-          value is ``False`` or ``None``, CSRF checking will not be performed.
-
-          If the value provided is a string, that string will be used as the
-          'check name'.  If the value provided is ``True``, ``csrf_token`` will
-          be used as the check name.
-
-          If CSRF checking is performed, the checked value will be the value of
-          ``request.params[check_name]``. This value will be compared against
-          the value of ``policy.get_csrf_token()`` (where ``policy`` is an
-          implementation of :meth:`pyramid.interfaces.ICSRFStoragePolicy`), and
-          the check will pass if these two values are the same. If the check
-          passes, the associated view will be permitted to execute. If the
-          check fails, the associated view will not be permitted to execute.
-
-          .. versionadded:: 1.4a2
-
-          .. versionchanged:: 1.9
-            This feature requires either a :term:`session factory` to have been
-            configured, or a :term:`CSRF storage policy` other than the default
-            to be in use.
-
 
         physical_path
 
@@ -751,11 +706,22 @@ class ViewsConfiguratorMixin(object):
           It's useful when you want to always potentially show a view when some
           object is traversed to, but you can't be sure about what kind of
           object it will be, so you can't use the ``context`` predicate.  The
-          individual path elements inbetween slash characters or in tuple
+          individual path elements in between slash characters or in tuple
           elements should be the Unicode representation of the name of the
           resource and should not be encoded in any way.
 
           .. versionadded:: 1.4a3
+
+        is_authenticated
+
+          This value, if specified, must be either ``True`` or ``False``.
+          If it is specified and ``True``, only a request from an authenticated
+          user, as determined by the :term:`security policy` in use, will
+          satisfy the predicate.
+          If it is specified and ``False``, only a request from a user who is
+          not authenticated will satisfy the predicate.
+
+          .. versionadded:: 2.0
 
         effective_principals
 
@@ -765,36 +731,36 @@ class ViewsConfiguratorMixin(object):
           indicates that every principal named in the argument list is present
           in the current request, this predicate will return True; otherwise it
           will return False.  For example:
-          ``effective_principals=pyramid.security.Authenticated`` or
+          ``effective_principals=pyramid.authorization.Authenticated`` or
           ``effective_principals=('fred', 'group:admins')``.
 
           .. versionadded:: 1.4a4
+
+          .. deprecated:: 2.0
+              Use ``is_authenticated`` or a custom predicate.
 
         custom_predicates
 
             .. deprecated:: 1.5
                 This value should be a sequence of references to custom
-                predicate callables.  Use custom predicates when no set of
-                predefined predicates do what you need.  Custom predicates
-                can be combined with predefined predicates as necessary.
-                Each custom predicate callable should accept two arguments:
+                predicate callables.  Each custom predicate callable
+                should accept two arguments:
                 ``context`` and ``request`` and should return either
                 ``True`` or ``False`` after doing arbitrary evaluation of
-                the context and/or the request.  The ``predicates`` argument
-                to this method and the ability to register third-party view
-                predicates via
+                the context and/or the request.  The ability to register
+                custom view predicates via
                 :meth:`pyramid.config.Configurator.add_view_predicate`
                 obsoletes this argument, but it is kept around for backwards
                 compatibility.
 
-        view_options
+        \\*\\*view_options
 
-          Pass a key/value pair here to use a third-party predicate or set a
-          value for a view deriver. See
+          Pass extra keyword parameters to use custom predicates
+          or set a value for a view deriver. See
           :meth:`pyramid.config.Configurator.add_view_predicate` and
           :meth:`pyramid.config.Configurator.add_view_deriver`. See
           :ref:`view_and_route_predicates` for more information about
-          third-party predicates and :ref:`view_derivers` for information
+          custom predicates and :ref:`view_derivers` for information
           about view derivers.
 
           .. versionadded: 1.4a1
@@ -804,6 +770,10 @@ class ViewsConfiguratorMixin(object):
              Support setting view deriver options. Previously, only custom
              view predicate values could be supplied.
 
+          .. versionchanged:: 2.0
+
+             Removed support for the ``check_csrf`` predicate.
+
         """
         if custom_predicates:
             warnings.warn(
@@ -812,7 +782,7 @@ class ViewsConfiguratorMixin(object):
                     'Configurator.add_view is deprecated as of Pyramid 1.5. '
                     'Use "config.add_view_predicate" and use the registered '
                     'view predicate as a predicate argument to add_view '
-                    'instead. See "Adding A Third Party View, Route, or '
+                    'instead. See "Adding A Custom View, Route, or '
                     'Subscriber Predicate" in the "Hooks" chapter of the '
                     'documentation for more information.'
                 ),
@@ -820,14 +790,13 @@ class ViewsConfiguratorMixin(object):
                 stacklevel=4,
             )
 
-        if check_csrf is not None:
+        if 'effective_principals' in view_options:
             warnings.warn(
                 (
-                    'The "check_csrf" argument to Configurator.add_view is '
-                    'deprecated as of Pyramid 1.7. Use the "require_csrf" '
-                    'option instead or see "Checking CSRF Tokens '
-                    'Automatically" in the "Sessions" chapter of the '
-                    'documentation for more information.'
+                    'The new security policy has deprecated '
+                    'effective_principals. See "Upgrading '
+                    'Authentication/Authorization" in "What\'s New in '
+                    'Pyramid 2.0" of the documentation for more information.'
                 ),
                 DeprecationWarning,
                 stacklevel=4,
@@ -859,7 +828,7 @@ class ViewsConfiguratorMixin(object):
 
             else:
                 raise ConfigurationError(
-                    '"view" was not specified and ' 'no "renderer" specified'
+                    '"view" was not specified and no "renderer" specified'
                 )
 
         if request_type is not None:
@@ -903,7 +872,6 @@ class ViewsConfiguratorMixin(object):
                 containment=containment,
                 request_type=request_type,
                 match_param=match_param,
-                check_csrf=check_csrf,
                 custom=predvalseq(custom_predicates),
             )
         )
@@ -963,7 +931,6 @@ class ViewsConfiguratorMixin(object):
                 header=header,
                 path_info=path_info,
                 match_param=match_param,
-                check_csrf=check_csrf,
                 http_cache=http_cache,
                 require_csrf=require_csrf,
                 callable=view,
@@ -1249,8 +1216,8 @@ class ViewsConfiguratorMixin(object):
             ('containment', p.ContainmentPredicate),
             ('request_type', p.RequestTypePredicate),
             ('match_param', p.MatchParamPredicate),
-            ('check_csrf', p.CheckCSRFTokenPredicate),
             ('physical_path', p.PhysicalPathPredicate),
+            ('is_authenticated', p.IsAuthenticatedPredicate),
             ('effective_principals', p.EffectivePrincipalsPredicate),
             ('custom', p.CustomPredicate),
         ):
@@ -1551,7 +1518,7 @@ class ViewsConfiguratorMixin(object):
         a :term:`renderer` to convert the user-supplied view result to
         a :term:`response` object.  If a ``renderer`` argument is not
         supplied, the user-supplied view must itself return a
-        :term:`response` object.  """
+        :term:`response` object."""
         return self._derive_view(view, attr=attr, renderer=renderer)
 
     # b/w compat
@@ -1646,7 +1613,7 @@ class ViewsConfiguratorMixin(object):
         match_param=None,
         **view_options
     ):
-        """ Add a forbidden view to the current configuration state.  The
+        """Add a forbidden view to the current configuration state.  The
         view will be called when Pyramid or application code raises a
         :exc:`pyramid.httpexceptions.HTTPForbidden` exception and the set of
         circumstances implied by the predicates provided are matched.  The
@@ -1747,7 +1714,7 @@ class ViewsConfiguratorMixin(object):
         append_slash=False,
         **view_options
     ):
-        """ Add a default :term:`Not Found View` to the current configuration
+        """Add a default :term:`Not Found View` to the current configuration
         state. The view will be called when Pyramid or application code raises
         an :exc:`pyramid.httpexceptions.HTTPNotFound` exception (e.g., when a
         view cannot be found for the request).  The simplest example is:
@@ -1885,7 +1852,7 @@ class ViewsConfiguratorMixin(object):
         # force all other arguments to be specified as key=value
         **view_options
     ):
-        """ Add an :term:`exception view` for the specified ``exception`` to
+        """Add an :term:`exception view` for the specified ``exception`` to
         the current configuration state. The view will be called when Pyramid
         or application code raises the given exception.
 
@@ -1971,7 +1938,7 @@ class ViewsConfiguratorMixin(object):
 
     @action_method
     def add_static_view(self, name, path, **kw):
-        """ Add a view used to render static assets such as images
+        """Add a view used to render static assets such as images
         and CSS files.
 
         The ``name`` argument is a string representing an
@@ -1987,6 +1954,16 @@ class ViewsConfiguratorMixin(object):
         Note that this argument has no effect when the ``name`` is a *url
         prefix*.  By default, this argument is ``None``, meaning that no
         particular Expires or Cache-Control headers are set in the response.
+
+        The ``content_encodings`` keyword argument is a list of alternative
+        file encodings supported in the ``Accept-Encoding`` HTTP Header.
+        Alternative files are found using file extensions defined in
+        :attr:`mimetypes.encodings_map`. An encoded asset will be returned
+        with the ``Content-Encoding`` header set to the selected encoding.
+        If the asset contains alternative encodings then the
+        ``Accept-Encoding`` value will be added to the response's ``Vary``
+        header. By default, the list is empty and no alternatives will be
+        supported.
 
         The ``permission`` keyword argument is used to specify the
         :term:`permission` required by a user to execute the static view.  By
@@ -2064,6 +2041,11 @@ class ViewsConfiguratorMixin(object):
            static_url('mypackage:images/logo.png', request)
 
         See :ref:`static_assets_section` for more information.
+
+        .. versionchanged:: 2.0
+
+           Added the ``content_encodings`` argument.
+
         """
         spec = self._make_spec(path)
         info = self._get_static_info()
@@ -2089,6 +2071,8 @@ class ViewsConfiguratorMixin(object):
         ``pathspec`` as defined in the
         :class:`~pyramid.interfaces.ICacheBuster` interface.
         Default: ``False``.
+
+        .. versionadded:: 1.6
 
         """
         spec = self._make_spec(path)
@@ -2156,7 +2140,7 @@ def runtime_exc_view(view, excview):
 
 
 @implementer(IViewDeriverInfo)
-class ViewDeriverInfo(object):
+class ViewDeriverInfo:
     def __init__(
         self, view, registry, package, predicates, exception_only, options
     ):
@@ -2173,7 +2157,7 @@ class ViewDeriverInfo(object):
 
 
 @implementer(IStaticURLInfo)
-class StaticURLInfo(object):
+class StaticURLInfo:
     def __init__(self):
         self.registrations = []
         self.cache_busters = []
@@ -2236,10 +2220,15 @@ class StaticURLInfo(object):
             # it's a view name
             url = None
             cache_max_age = extra.pop('cache_max_age', None)
+            content_encodings = extra.pop('content_encodings', [])
 
             # create a view
             view = static_view(
-                spec, cache_max_age=cache_max_age, use_subpath=True
+                spec,
+                cache_max_age=cache_max_age,
+                use_subpath=True,
+                reload=config.registry.settings['pyramid.reload_assets'],
+                content_encodings=content_encodings,
             )
 
             # Mutate extra to allow factory, etc to be passed through here.
@@ -2346,7 +2335,7 @@ class StaticURLInfo(object):
         rawspec = None
 
         if pkg_name is not None:
-            pathspec = '{0}:{1}{2}'.format(pkg_name, pkg_subpath, subpath)
+            pathspec = '{}:{}{}'.format(pkg_name, pkg_subpath, subpath)
             overrides = registry.queryUtility(IPackageOverrides, name=pkg_name)
             if overrides is not None:
                 resource_name = posixpath.join(pkg_subpath, subpath)
@@ -2354,7 +2343,7 @@ class StaticURLInfo(object):
                 for source, filtered_path in sources:
                     rawspec = source.get_path(filtered_path)
                     if hasattr(source, 'pkg_name'):
-                        rawspec = '{0}:{1}'.format(source.pkg_name, rawspec)
+                        rawspec = '{}:{}'.format(source.pkg_name, rawspec)
                     break
 
         else:

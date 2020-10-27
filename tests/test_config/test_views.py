@@ -1,16 +1,18 @@
 import os
 import unittest
+import warnings
 from zope.interface import implementer
 
 from pyramid import testing
-from pyramid.exceptions import ConfigurationError
-from pyramid.exceptions import ConfigurationExecutionError
-from pyramid.exceptions import ConfigurationConflictError
-from pyramid.interfaces import IResponse, IRequest, IMultiView
+from pyramid.exceptions import (
+    ConfigurationConflictError,
+    ConfigurationError,
+    ConfigurationExecutionError,
+)
+from pyramid.interfaces import IMultiView, IRequest, IResponse
 from pyramid.util import text_
 
-from . import IDummy
-from . import dummy_view
+from . import IDummy, dummy_view
 
 
 class TestViewsConfigurationMixin(unittest.TestCase):
@@ -30,10 +32,13 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         name='',
     ):
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IExceptionViewClassifier
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
 
         if exc_iface:
             classifier = IExceptionViewClassifier
@@ -111,9 +116,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         )
 
     def test_add_view_with_request_type(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import directlyProvides
+
         from pyramid.interfaces import IRequest
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         config = self._makeOne(autocommit=True)
@@ -294,6 +300,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_view_with_http_cache(self):
         import datetime
+
         from pyramid.response import Response
 
         response = Response('OK')
@@ -413,8 +420,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(request.__view__.__class__, view)
 
     def test_add_view_context_as_class(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
+
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
 
@@ -462,8 +470,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_view_for_as_class(self):
         # ``for_`` is older spelling for ``context``
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
+
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
 
@@ -503,11 +512,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper, view)
 
     def test_add_view_register_secured_view(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import ISecuredView
-        from pyramid.interfaces import IViewClassifier
+
+        from pyramid.interfaces import IRequest, ISecuredView, IViewClassifier
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         view.__call_permissive__ = view
@@ -522,11 +530,14 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper, view)
 
     def test_add_view_exception_register_secured_view(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IExceptionViewClassifier
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IRequest,
+            IView,
+        )
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         view.__call_permissive__ = view
@@ -543,13 +554,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper, view)
 
     def test_add_view_same_phash_overrides_existing_single_view(self):
-        from pyramid.renderers import null_renderer
         from hashlib import md5
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IMultiView
+
+        from pyramid.interfaces import (
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         phash = md5()
         phash.update(b'xhr = True')
@@ -571,13 +585,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK')
 
     def test_add_view_exc_same_phash_overrides_existing_single_view(self):
-        from pyramid.renderers import null_renderer
         from hashlib import md5
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IExceptionViewClassifier
-        from pyramid.interfaces import IMultiView
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            IView,
+        )
+        from pyramid.renderers import null_renderer
 
         phash = md5()
         phash.update(b'xhr = True')
@@ -609,12 +626,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK')
 
     def test_add_view_default_phash_overrides_no_phash(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IMultiView
+
+        from pyramid.interfaces import (
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'NOT OK'
         config = self._makeOne(autocommit=True)
@@ -633,12 +653,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK')
 
     def test_add_view_exc_default_phash_overrides_no_phash(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IExceptionViewClassifier
-        from pyramid.interfaces import IMultiView
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            IView,
+        )
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'NOT OK'
         config = self._makeOne(autocommit=True)
@@ -664,13 +687,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK')
 
     def test_add_view_default_phash_overrides_default_phash(self):
-        from pyramid.config.predicates import DEFAULT_PHASH
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IMultiView
+
+        from pyramid.config.predicates import DEFAULT_PHASH
+        from pyramid.interfaces import (
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'NOT OK'
         view.__phash__ = DEFAULT_PHASH
@@ -690,13 +716,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK')
 
     def test_add_view_exc_default_phash_overrides_default_phash(self):
-        from pyramid.config.predicates import DEFAULT_PHASH
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IExceptionViewClassifier
-        from pyramid.interfaces import IMultiView
+
+        from pyramid.config.predicates import DEFAULT_PHASH
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            IView,
+        )
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'NOT OK'
         view.__phash__ = DEFAULT_PHASH
@@ -723,12 +752,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK')
 
     def test_add_view_multiview_replaces_existing_view(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IMultiView
+
+        from pyramid.interfaces import (
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         view.__phash__ = 'abc'
@@ -742,13 +774,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, None), 'OK')
 
     def test_add_view_exc_multiview_replaces_existing_view(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IExceptionViewClassifier
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IMultiView
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         view.__phash__ = 'abc'
@@ -775,12 +810,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, None), 'OK')
 
     def test_add_view_multiview_replaces_existing_securedview(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import ISecuredView
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
+
+        from pyramid.interfaces import (
+            IMultiView,
+            IRequest,
+            ISecuredView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         view.__phash__ = 'abc'
@@ -794,13 +832,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, None), 'OK')
 
     def test_add_view_exc_multiview_replaces_existing_securedview(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import ISecuredView
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IExceptionViewClassifier
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            ISecuredView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         view.__phash__ = 'abc'
@@ -827,12 +868,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, None), 'OK')
 
     def test_add_view_with_accept_multiview_replaces_existing_view(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
+
+        from pyramid.interfaces import (
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         def view(context, request):
             return 'OK'
@@ -903,13 +947,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK3')
 
     def test_add_view_exc_with_accept_multiview_replaces_existing_view(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IExceptionViewClassifier
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         def view(context, request):
             return 'OK'
@@ -948,12 +995,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK2')
 
     def test_add_view_multiview_replaces_existing_view_with___accept__(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
+
+        from pyramid.interfaces import (
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         def view(context, request):
             return 'OK'
@@ -978,13 +1028,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK')
 
     def test_add_view_exc_mulview_replaces_existing_view_with___accept__(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IExceptionViewClassifier
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         def view(context, request):
             return 'OK'
@@ -1022,11 +1075,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, request), 'OK')
 
     def test_add_view_multiview_replaces_multiview(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
+
+        from pyramid.interfaces import IMultiView, IRequest, IViewClassifier
+        from pyramid.renderers import null_renderer
 
         view = DummyMultiView()
         config = self._makeOne(autocommit=True)
@@ -1043,12 +1095,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, None), 'OK1')
 
     def test_add_view_exc_multiview_replaces_multiviews(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IExceptionViewClassifier
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         hot_view = DummyMultiView()
         exc_view = DummyMultiView()
@@ -1088,12 +1143,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(exc_wrapper(None, None), 'OK1')
 
     def test_add_view_exc_multiview_replaces_only_exc_multiview(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IExceptionViewClassifier
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         hot_view = DummyMultiView()
         exc_view = DummyMultiView()
@@ -1134,12 +1192,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(exc_wrapper(None, None), 'OK1')
 
     def test_add_view_multiview_context_superclass_then_subclass(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
+
+        from pyramid.interfaces import (
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         class ISuper(Interface):
             pass
@@ -1166,13 +1227,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper(None, None), 'OK2')
 
     def test_add_view_multiview_exception_superclass_then_subclass(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IExceptionViewClassifier
+
+        from pyramid.interfaces import (
+            IExceptionViewClassifier,
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
+        from pyramid.renderers import null_renderer
 
         class Super(Exception):
             pass
@@ -1210,8 +1274,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(wrapper_exc_view(None, None), 'OK2')
 
     def test_add_view_multiview_call_ordering(self):
-        from pyramid.renderers import null_renderer as nr
         from zope.interface import directlyProvides
+
+        from pyramid.renderers import null_renderer as nr
 
         def view1(context, request):
             return 'view1'
@@ -1320,13 +1385,13 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         from pyramid.renderers import null_renderer as nr
         from pyramid.router import Router
 
-        class OtherBase(object):
+        class OtherBase:
             pass
 
-        class Int1(object):
+        class Int1:
             pass
 
-        class Int2(object):
+        class Int2:
             pass
 
         class Resource(OtherBase, Int1, Int2):
@@ -1368,13 +1433,13 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         from pyramid.renderers import null_renderer as nr
         from pyramid.router import Router
 
-        class OtherBase(object):
+        class OtherBase:
             pass
 
-        class Int1(object):
+        class Int1:
             pass
 
-        class Int2(object):
+        class Int2:
             pass
 
         class Resource(OtherBase, Int1, Int2):
@@ -1421,8 +1486,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(response, 'hello')
 
     def test_add_view_multiview___discriminator__(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
+
+        from pyramid.renderers import null_renderer
 
         class IFoo(Interface):
             pass
@@ -1431,20 +1497,22 @@ class TestViewsConfigurationMixin(unittest.TestCase):
             pass
 
         @implementer(IFoo)
-        class Foo(object):
+        class Foo:
             pass
 
         @implementer(IBar)
-        class Bar(object):
+        class Bar:
             pass
 
         foo = Foo()
         bar = Bar()
 
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IMultiView
+        from pyramid.interfaces import (
+            IMultiView,
+            IRequest,
+            IView,
+            IViewClassifier,
+        )
 
         view = lambda *arg: 'OK'
         view.__phash__ = 'abc'
@@ -1463,10 +1531,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         )
 
     def test_add_view_with_template_renderer(self):
-        from tests import test_config
         from pyramid.interfaces import ISettings
+        from tests import test_config
 
-        class view(object):
+        class view:
             def __init__(self, context, request):
                 self.request = request
                 self.context = context
@@ -1492,7 +1560,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(result.settings, settings)
 
     def test_add_view_with_default_renderer(self):
-        class view(object):
+        class view:
             def __init__(self, context, request):
                 self.request = request
                 self.context = context
@@ -1502,7 +1570,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
         config = self._makeOne(autocommit=True)
 
-        class moo(object):
+        class moo:
             def __init__(self, *arg, **kw):
                 pass
 
@@ -1517,8 +1585,8 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(result.body, b'moo')
 
     def test_add_view_with_template_renderer_no_callable(self):
-        from tests import test_config
         from pyramid.interfaces import ISettings
+        from tests import test_config
 
         config = self._makeOne(autocommit=True)
         renderer = self._registerRenderer(config)
@@ -1538,8 +1606,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(result.settings, settings)
 
     def test_add_view_with_request_type_as_iface(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import directlyProvides
+
+        from pyramid.renderers import null_renderer
 
         def view(context, request):
             return 'OK'
@@ -1581,8 +1650,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertRaises(ConfigurationExecutionError, config.commit)
 
     def test_add_view_with_route_name_exception(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
+
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         config = self._makeOne(autocommit=True)
@@ -1740,6 +1810,46 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         request.is_xhr = False
         self._assertNotFound(wrapper, None, request)
 
+    def test_add_view_with_is_authenticated_true_matches(self):
+        from pyramid.renderers import null_renderer as nr
+
+        view = lambda *arg: 'OK'
+        config = self._makeOne(autocommit=True)
+        config.add_view(view=view, is_authenticated=True, renderer=nr)
+        wrapper = self._getViewCallable(config)
+        request = self._makeRequest(config)
+        request.is_authenticated = True
+        self.assertEqual(wrapper(None, request), 'OK')
+
+    def test_add_view_with_is_authenticated_true_no_match(self):
+        view = lambda *arg: 'OK'
+        config = self._makeOne(autocommit=True)
+        config.add_view(view=view, is_authenticated=True)
+        wrapper = self._getViewCallable(config)
+        request = self._makeRequest(config)
+        request.is_authenticated = False
+        self._assertNotFound(wrapper, None, request)
+
+    def test_add_view_with_is_authenticated_false_matches(self):
+        from pyramid.renderers import null_renderer as nr
+
+        view = lambda *arg: 'OK'
+        config = self._makeOne(autocommit=True)
+        config.add_view(view=view, is_authenticated=False, renderer=nr)
+        wrapper = self._getViewCallable(config)
+        request = self._makeRequest(config)
+        request.is_authenticated = False
+        self.assertEqual(wrapper(None, request), 'OK')
+
+    def test_add_view_with_is_authenticated_false_no_match(self):
+        view = lambda *arg: 'OK'
+        config = self._makeOne(autocommit=True)
+        config.add_view(view=view, is_authenticated=False)
+        wrapper = self._getViewCallable(config)
+        request = self._makeRequest(config)
+        request.is_authenticated = True
+        self._assertNotFound(wrapper, None, request)
+
     def test_add_view_with_header_badregex(self):
         view = lambda *arg: 'OK'
         config = self._makeOne()
@@ -1825,8 +1935,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         )
 
     def test_add_view_with_containment_true(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import directlyProvides
+
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         config = self._makeOne(autocommit=True)
@@ -1845,8 +1956,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self._assertNotFound(wrapper, context, None)
 
     def test_add_view_with_containment_dottedname(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import directlyProvides
+
+        from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
         config = self._makeOne(autocommit=True)
@@ -1886,26 +1998,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         request.upath_info = text_('/')
         self._assertNotFound(wrapper, None, request)
 
-    def test_add_view_with_check_csrf_predicates_match(self):
-        import warnings
-        from pyramid.renderers import null_renderer
-
-        view = lambda *arg: 'OK'
-        config = self._makeOne(autocommit=True)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.filterwarnings('always')
-            config.add_view(view=view, check_csrf=True, renderer=null_renderer)
-            self.assertEqual(len(w), 1)
-        wrapper = self._getViewCallable(config)
-        request = self._makeRequest(config)
-        request.method = "POST"
-        request.session = DummySession({'csrf_token': 'foo'})
-        request.POST = {'csrf_token': 'foo'}
-        request.headers = {}
-        self.assertEqual(wrapper(None, request), 'OK')
-
     def test_add_view_with_custom_predicates_match(self):
         import warnings
+
         from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
@@ -1951,6 +2046,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_view_custom_predicate_bests_standard_predicate(self):
         import warnings
+
         from pyramid.renderers import null_renderer
 
         view = lambda *arg: 'OK'
@@ -2058,23 +2154,15 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         view1 = lambda *arg: 'OK'
         outerself = self
 
-        class DummyPolicy(object):
-            def effective_principals(self, r):
+        class DummyPolicy:
+            def permits(self, r, context, permission):
                 outerself.assertEqual(r, request)
-                return ['abc']
-
-            def permits(self, context, principals, permission):
                 outerself.assertEqual(context, None)
-                outerself.assertEqual(principals, ['abc'])
                 outerself.assertEqual(permission, 'view')
                 return True
 
         policy = DummyPolicy()
-        config = self._makeOne(
-            authorization_policy=policy,
-            authentication_policy=policy,
-            autocommit=True,
-        )
+        config = self._makeOne(security_policy=policy, autocommit=True)
         config.add_view(view=view1, permission='view', renderer=null_renderer)
         view = self._getViewCallable(config)
         request = self._makeRequest(config)
@@ -2086,23 +2174,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         view1 = lambda *arg: 'OK'
         outerself = self
 
-        class DummyPolicy(object):
-            def effective_principals(self, r):
+        class DummyPolicy:
+            def permits(self, r, context, permission):
                 outerself.assertEqual(r, request)
-                return ['abc']
-
-            def permits(self, context, principals, permission):
                 outerself.assertEqual(context, None)
-                outerself.assertEqual(principals, ['abc'])
                 outerself.assertEqual(permission, 'view')
                 return True
 
         policy = DummyPolicy()
         config = self._makeOne(
-            authorization_policy=policy,
-            authentication_policy=policy,
-            default_permission='view',
-            autocommit=True,
+            security_policy=policy, default_permission='view', autocommit=True
         )
         config.add_view(view=view1, renderer=null_renderer)
         view = self._getViewCallable(config)
@@ -2114,7 +2195,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
         view1 = lambda *arg: 'OK'
 
-        class DummyPolicy(object):
+        class DummyPolicy:
             pass  # wont be called
 
         policy = DummyPolicy()
@@ -2131,7 +2212,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
     def test_add_view_with_mapper(self):
         from pyramid.renderers import null_renderer
 
-        class Mapper(object):
+        class Mapper:
             def __init__(self, **kw):
                 self.__class__.kw = kw
 
@@ -2149,11 +2230,12 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(Mapper.kw['mapper'], Mapper)
 
     def test_add_view_with_view_defaults(self):
-        from pyramid.renderers import null_renderer
-        from pyramid.exceptions import PredicateMismatch
         from zope.interface import directlyProvides
 
-        class view(object):
+        from pyramid.exceptions import PredicateMismatch
+        from pyramid.renderers import null_renderer
+
+        class view:
             __view_defaults__ = {'containment': 'tests.test_config.IDummy'}
 
             def __init__(self, request):
@@ -2174,9 +2256,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertRaises(PredicateMismatch, wrapper, context, request)
 
     def test_add_view_with_view_defaults_viewname_is_dottedname_kwarg(self):
-        from pyramid.renderers import null_renderer
-        from pyramid.exceptions import PredicateMismatch
         from zope.interface import directlyProvides
+
+        from pyramid.exceptions import PredicateMismatch
+        from pyramid.renderers import null_renderer
 
         config = self._makeOne(autocommit=True)
         config.add_view(
@@ -2193,9 +2276,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertRaises(PredicateMismatch, wrapper, context, request)
 
     def test_add_view_with_view_defaults_viewname_is_dottedname_nonkwarg(self):
-        from pyramid.renderers import null_renderer
-        from pyramid.exceptions import PredicateMismatch
         from zope.interface import directlyProvides
+
+        from pyramid.exceptions import PredicateMismatch
+        from pyramid.renderers import null_renderer
 
         config = self._makeOne(autocommit=True)
         config.add_view(
@@ -2214,10 +2298,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
     def test_add_view_with_view_config_and_view_defaults_doesnt_conflict(self):
         from pyramid.renderers import null_renderer
 
-        class view(object):
+        class view:
             __view_defaults__ = {'containment': 'tests.test_config.IDummy'}
 
-        class view2(object):
+        class view2:
             __view_defaults__ = {'containment': 'tests.test_config.IFactory'}
 
         config = self._makeOne(autocommit=False)
@@ -2228,10 +2312,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
     def test_add_view_with_view_config_and_view_defaults_conflicts(self):
         from pyramid.renderers import null_renderer
 
-        class view(object):
+        class view:
             __view_defaults__ = {'containment': 'tests.test_config.IDummy'}
 
-        class view2(object):
+        class view2:
             __view_defaults__ = {'containment': 'tests.test_config.IDummy'}
 
         config = self._makeOne(autocommit=False)
@@ -2240,12 +2324,12 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertRaises(ConfigurationConflictError, config.commit)
 
     def test_add_view_class_method_no_attr(self):
-        from pyramid.renderers import null_renderer
         from pyramid.exceptions import ConfigurationError
+        from pyramid.renderers import null_renderer
 
         config = self._makeOne(autocommit=True)
 
-        class DummyViewClass(object):
+        class DummyViewClass:
             def run(self):  # pragma: no cover
                 pass
 
@@ -2256,6 +2340,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_view_exception_only_no_regular_view(self):
         from zope.interface import implementedBy
+
         from pyramid.renderers import null_renderer
 
         view1 = lambda *arg: 'OK'
@@ -2273,6 +2358,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_view_exception_only(self):
         from zope.interface import implementedBy
+
         from pyramid.renderers import null_renderer
 
         view1 = lambda *arg: 'OK'
@@ -2292,7 +2378,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         view = lambda *arg: 'OK'
         config = self._makeOne(autocommit=True)
 
-        class NotAnException(object):
+        class NotAnException:
             pass
 
         self.assertRaises(
@@ -2305,6 +2391,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_exception_view(self):
         from zope.interface import implementedBy
+
         from pyramid.renderers import null_renderer
 
         view1 = lambda *arg: 'OK'
@@ -2319,6 +2406,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_exception_view_with_subclass(self):
         from zope.interface import implementedBy
+
         from pyramid.renderers import null_renderer
 
         view1 = lambda *arg: 'OK'
@@ -2379,12 +2467,12 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         )
 
     def test_add_exception_view_with_view_defaults(self):
-        from pyramid.renderers import null_renderer
-        from pyramid.exceptions import PredicateMismatch
-        from zope.interface import directlyProvides
-        from zope.interface import implementedBy
+        from zope.interface import directlyProvides, implementedBy
 
-        class view(object):
+        from pyramid.exceptions import PredicateMismatch
+        from pyramid.renderers import null_renderer
+
+        class view:
             __view_defaults__ = {'containment': 'tests.test_config.IDummy'}
 
             def __init__(self, request):
@@ -2432,7 +2520,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
     def test_derive_view_with_default_renderer_no_explicit_renderer(self):
         config = self._makeOne()
 
-        class moo(object):
+        class moo:
             def __init__(self, view):
                 pass
 
@@ -2450,10 +2538,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(result(None, None).body, b'moo')
 
     def test_derive_view_with_default_renderer_with_explicit_renderer(self):
-        class moo(object):
+        class moo:
             pass
 
-        class foo(object):
+        class foo:
             def __init__(self, view):
                 pass
 
@@ -2473,10 +2561,10 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(result(None, request).body, b'foo')
 
     def test_add_static_view_here_no_utility_registered(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import Interface
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
+
+        from pyramid.interfaces import IView, IViewClassifier
+        from pyramid.renderers import null_renderer
 
         config = self._makeOne(autocommit=True)
         config.add_static_view('static', 'files', renderer=null_renderer)
@@ -2517,6 +2605,7 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_static_view_absolute(self):
         import os
+
         from pyramid.interfaces import IStaticURLInfo
 
         info = DummyStaticURLInfo()
@@ -2528,10 +2617,11 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(info.added, [(config, 'static', static_path, {})])
 
     def test_add_forbidden_view(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
+
         from pyramid.httpexceptions import HTTPForbidden
+        from pyramid.interfaces import IRequest
+        from pyramid.renderers import null_renderer
 
         config = self._makeOne(autocommit=True)
         view = lambda *arg: 'OK'
@@ -2547,8 +2637,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_forbidden_view_no_view_argument(self):
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
+
         from pyramid.httpexceptions import HTTPForbidden
+        from pyramid.interfaces import IRequest
 
         config = self._makeOne(autocommit=True)
         config.setup_registry()
@@ -2602,14 +2693,14 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         )
 
     def test_add_forbidden_view_with_view_defaults(self):
-        from pyramid.interfaces import IRequest
-        from pyramid.renderers import null_renderer
+        from zope.interface import directlyProvides, implementedBy
+
         from pyramid.exceptions import PredicateMismatch
         from pyramid.httpexceptions import HTTPForbidden
-        from zope.interface import directlyProvides
-        from zope.interface import implementedBy
+        from pyramid.interfaces import IRequest
+        from pyramid.renderers import null_renderer
 
-        class view(object):
+        class view:
             __view_defaults__ = {'containment': 'tests.test_config.IDummy'}
 
             def __init__(self, request):
@@ -2634,10 +2725,11 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertRaises(PredicateMismatch, wrapper, context, request)
 
     def test_add_notfound_view(self):
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
+
         from pyramid.httpexceptions import HTTPNotFound
+        from pyramid.interfaces import IRequest
+        from pyramid.renderers import null_renderer
 
         config = self._makeOne(autocommit=True)
         view = lambda *arg: arg
@@ -2653,8 +2745,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_notfound_view_no_view_argument(self):
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
+
         from pyramid.httpexceptions import HTTPNotFound
+        from pyramid.interfaces import IRequest
 
         config = self._makeOne(autocommit=True)
         config.setup_registry()
@@ -2708,11 +2801,12 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         )
 
     def test_add_notfound_view_append_slash(self):
-        from pyramid.response import Response
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
+
+        from pyramid.httpexceptions import HTTPNotFound, HTTPTemporaryRedirect
         from pyramid.interfaces import IRequest
-        from pyramid.httpexceptions import HTTPTemporaryRedirect, HTTPNotFound
+        from pyramid.renderers import null_renderer
+        from pyramid.response import Response
 
         config = self._makeOne(autocommit=True)
         config.add_route('foo', '/foo/')
@@ -2737,11 +2831,12 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(result.location, '/scriptname/foo/?a=1&b=2')
 
     def test_add_notfound_view_append_slash_custom_response(self):
-        from pyramid.response import Response
-        from pyramid.renderers import null_renderer
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
+
         from pyramid.httpexceptions import HTTPMovedPermanently, HTTPNotFound
+        from pyramid.interfaces import IRequest
+        from pyramid.renderers import null_renderer
+        from pyramid.response import Response
 
         config = self._makeOne(autocommit=True)
         config.add_route('foo', '/foo/')
@@ -2766,14 +2861,14 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(result.location, '/scriptname/foo/?a=1&b=2')
 
     def test_add_notfound_view_with_view_defaults(self):
-        from pyramid.interfaces import IRequest
-        from pyramid.renderers import null_renderer
+        from zope.interface import directlyProvides, implementedBy
+
         from pyramid.exceptions import PredicateMismatch
         from pyramid.httpexceptions import HTTPNotFound
-        from zope.interface import directlyProvides
-        from zope.interface import implementedBy
+        from pyramid.interfaces import IRequest
+        from pyramid.renderers import null_renderer
 
-        class view(object):
+        class view:
             __view_defaults__ = {'containment': 'tests.test_config.IDummy'}
 
             def __init__(self, request):
@@ -2799,8 +2894,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_notfound_view_with_renderer(self):
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
+
         from pyramid.httpexceptions import HTTPNotFound
+        from pyramid.interfaces import IRequest
 
         config = self._makeOne(autocommit=True)
         view = lambda *arg: {}
@@ -2817,8 +2913,9 @@ class TestViewsConfigurationMixin(unittest.TestCase):
 
     def test_add_forbidden_view_with_renderer(self):
         from zope.interface import implementedBy
-        from pyramid.interfaces import IRequest
+
         from pyramid.httpexceptions import HTTPForbidden
+        from pyramid.interfaces import IRequest
 
         config = self._makeOne(autocommit=True)
         view = lambda *arg: {}
@@ -2853,8 +2950,8 @@ class TestViewsConfigurationMixin(unittest.TestCase):
         self.assertEqual(result, test_config)
 
     def test_add_normal_and_exception_view_intr_derived_callable(self):
-        from pyramid.renderers import null_renderer
         from pyramid.exceptions import BadCSRFToken
+        from pyramid.renderers import null_renderer
 
         config = self._makeOne(autocommit=True)
         introspector = DummyIntrospector()
@@ -2958,6 +3055,16 @@ class TestViewsConfigurationMixin(unittest.TestCase):
             weighs_more_than='text/plain;charset=utf8',
         )
 
+    def test_effective_principals_deprecated(self):
+        config = self._makeOne(autocommit=True)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', DeprecationWarning)
+            config.add_view(lambda: None, effective_principals=['any'])
+            self.assertIn(
+                'deprecated effective_principals', str(w[-1].message)
+            )
+
 
 class Test_runtime_exc_view(unittest.TestCase):
     def _makeOne(self, view1, view2):
@@ -3041,7 +3148,7 @@ class Test_requestonly(unittest.TestCase):
         self.assertTrue(self._callFUT(aview))
 
     def test_otherattr(self):
-        class AView(object):
+        class AView:
             def __init__(self, request, a=1, b=2):  # pragma: no cover
                 pass
 
@@ -3095,12 +3202,14 @@ class TestMultiView(unittest.TestCase):
 
     def test_class_implements_ISecuredView(self):
         from zope.interface.verify import verifyClass
+
         from pyramid.interfaces import ISecuredView
 
         verifyClass(ISecuredView, self._getTargetClass())
 
     def test_instance_implements_ISecuredView(self):
         from zope.interface.verify import verifyObject
+
         from pyramid.interfaces import ISecuredView
 
         verifyObject(ISecuredView, self._makeOne())
@@ -3120,7 +3229,7 @@ class TestMultiView(unittest.TestCase):
         )
         mv.add('view5', 100, accept='text/xml')
         self.assertEqual(mv.media_views['text/xml'], [(100, 'view5', None)])
-        self.assertEqual(set(mv.accepts), set(['text/xml', 'text/html']))
+        self.assertEqual(set(mv.accepts), {'text/xml', 'text/html'})
         self.assertEqual(mv.views, [(99, 'view2', None), (100, 'view', None)])
 
     def test_add_with_phash(self):
@@ -3486,7 +3595,7 @@ class TestDefaultViewMapper(unittest.TestCase):
         self.assertRaises(TypeError, result, None, request)
 
     def test_view_as_newstyle_class_context_and_request(self):
-        class view(object):
+        class view:
             def __init__(self, context, request):
                 pass
 
@@ -3500,7 +3609,7 @@ class TestDefaultViewMapper(unittest.TestCase):
         self.assertEqual(result(None, request), 'OK')
 
     def test_view_as_newstyle_class_context_and_request_with_attr(self):
-        class view(object):
+        class view:
             def __init__(self, context, request):
                 pass
 
@@ -3514,7 +3623,7 @@ class TestDefaultViewMapper(unittest.TestCase):
         self.assertEqual(result(None, request), 'OK')
 
     def test_view_as_newstyle_class_requestonly(self):
-        class view(object):
+        class view:
             def __init__(self, request):
                 pass
 
@@ -3528,7 +3637,7 @@ class TestDefaultViewMapper(unittest.TestCase):
         self.assertEqual(result(None, request), 'OK')
 
     def test_view_as_newstyle_class_requestonly_with_attr(self):
-        class view(object):
+        class view:
             def __init__(self, request):
                 pass
 
@@ -3753,14 +3862,16 @@ class TestStaticURLInfo(unittest.TestCase):
         return request
 
     def test_verifyClass(self):
-        from pyramid.interfaces import IStaticURLInfo
         from zope.interface.verify import verifyClass
+
+        from pyramid.interfaces import IStaticURLInfo
 
         verifyClass(IStaticURLInfo, self._getTargetClass())
 
     def test_verifyObject(self):
-        from pyramid.interfaces import IStaticURLInfo
         from zope.interface.verify import verifyObject
+
+        from pyramid.interfaces import IStaticURLInfo
 
         verifyObject(IStaticURLInfo, self._makeOne())
 
@@ -4197,14 +4308,16 @@ class DummyRegistry:
     utility = None
 
     def __init__(self):
-        self.settings = {}
+        self.settings = {
+            'pyramid.reload_assets': False,
+        }
 
     def queryUtility(self, type_or_iface, name=None, default=None):
         return self.utility or default
 
 
 @implementer(IResponse)
-class DummyResponse(object):
+class DummyResponse:
     content_type = None
     default_content_type = None
     body = None
@@ -4229,7 +4342,7 @@ class DummyContext:
     pass
 
 
-class DummyAccept(object):
+class DummyAccept:
     def __init__(self, *matches, **kw):
         self.matches = list(matches)
         self.contains = kw.pop('contains', False)
@@ -4279,7 +4392,7 @@ class DummyMultiView:
         """ """
 
 
-class DummyCacheBuster(object):
+class DummyCacheBuster:
     def __init__(self, token):
         self.token = token
 
@@ -4312,7 +4425,7 @@ class DummyStaticURLInfo:
         self.added.append((config, name, spec, kw))
 
 
-class DummyViewDefaultsClass(object):
+class DummyViewDefaultsClass:
     __view_defaults__ = {'containment': 'tests.test_config.IDummy'}
 
     def __init__(self, request):
@@ -4322,7 +4435,7 @@ class DummyViewDefaultsClass(object):
         return 'OK'
 
 
-class DummyPredicate(object):
+class DummyPredicate:
     def __init__(self, val, config):
         self.val = val
 
@@ -4332,7 +4445,7 @@ class DummyPredicate(object):
     phash = text
 
 
-class DummyIntrospector(object):
+class DummyIntrospector:
     def __init__(self, getval=None):
         self.related = []
         self.introspectables = []

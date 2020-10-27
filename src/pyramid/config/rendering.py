@@ -1,7 +1,6 @@
-from pyramid.interfaces import IRendererFactory, PHASE1_CONFIG
-
 from pyramid import renderers
 from pyramid.config.actions import action_method
+from pyramid.interfaces import PHASE1_CONFIG, IRendererFactory
 
 DEFAULT_RENDERERS = (
     ('json', renderers.json_renderer_factory),
@@ -9,7 +8,7 @@ DEFAULT_RENDERERS = (
 )
 
 
-class RenderingConfiguratorMixin(object):
+class RenderingConfiguratorMixin:
     def add_default_renderers(self):
         for name, renderer in DEFAULT_RENDERERS:
             self.add_renderer(name, renderer)

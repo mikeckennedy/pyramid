@@ -1,12 +1,10 @@
-from pyramid.interfaces import ILocaleNegotiator, ITranslationDirectories
-
+from pyramid.config.actions import action_method
 from pyramid.exceptions import ConfigurationError
+from pyramid.interfaces import ILocaleNegotiator, ITranslationDirectories
 from pyramid.path import AssetResolver
 
-from pyramid.config.actions import action_method
 
-
-class I18NConfiguratorMixin(object):
+class I18NConfiguratorMixin:
     @action_method
     def set_locale_negotiator(self, negotiator):
         """
@@ -47,7 +45,7 @@ class I18NConfiguratorMixin(object):
 
     @action_method
     def add_translation_dirs(self, *specs, **kw):
-        """ Add one or more :term:`translation directory` paths to the
+        """Add one or more :term:`translation directory` paths to the
         current configuration state.  The ``specs`` argument is a
         sequence that may contain absolute directory paths
         (e.g. ``/usr/share/locale``) or :term:`asset specification`

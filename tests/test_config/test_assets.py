@@ -1,5 +1,6 @@
 import os.path
 import unittest
+
 from pyramid.testing import cleanUp
 
 # we use this folder
@@ -535,24 +536,28 @@ class TestPackageOverrides(unittest.TestCase):
 
     def test_class_conforms_to_IPackageOverrides(self):
         from zope.interface.verify import verifyClass
+
         from pyramid.interfaces import IPackageOverrides
 
         verifyClass(IPackageOverrides, self._getTargetClass())
 
     def test_instance_conforms_to_IPackageOverrides(self):
         from zope.interface.verify import verifyObject
+
         from pyramid.interfaces import IPackageOverrides
 
         verifyObject(IPackageOverrides, self._makeOne())
 
     def test_class_conforms_to_IPEP302Loader(self):
         from zope.interface.verify import verifyClass
+
         from pyramid.interfaces import IPEP302Loader
 
         verifyClass(IPEP302Loader, self._getTargetClass())
 
     def test_instance_conforms_to_IPEP302Loader(self):
         from zope.interface.verify import verifyObject
+
         from pyramid.interfaces import IPEP302Loader
 
         verifyObject(IPEP302Loader, self._makeOne())
@@ -819,7 +824,7 @@ class TestPackageOverrides(unittest.TestCase):
         self.assertEqual(loader._got_source, 'whatever')
 
 
-class AssetSourceIntegrationTests(object):
+class AssetSourceIntegrationTests:
     def test_get_filename(self):
         source = self._makeOne('')
         self.assertEqual(

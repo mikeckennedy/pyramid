@@ -2,18 +2,16 @@ from hashlib import md5
 from webob.acceptparse import Accept
 
 from pyramid.exceptions import ConfigurationError
-from pyramid.interfaces import IPredicateList, PHASE1_CONFIG
+from pyramid.interfaces import PHASE1_CONFIG, IPredicateList
 from pyramid.predicates import Notted
 from pyramid.registry import predvalseq
-from pyramid.util import TopologicalSorter
-from pyramid.util import is_nonstr_iter, bytes_
-
+from pyramid.util import TopologicalSorter, bytes_, is_nonstr_iter
 
 MAX_ORDER = 1 << 30
 DEFAULT_PHASH = md5().hexdigest()
 
 
-class PredicateConfiguratorMixin(object):
+class PredicateConfiguratorMixin:
     def get_predlist(self, name):
         predlist = self.registry.queryUtility(IPredicateList, name=name)
         if predlist is None:
@@ -54,7 +52,7 @@ class PredicateConfiguratorMixin(object):
         )  # must be registered early
 
 
-class not_(object):
+class not_:
     """
 
     You can invert the meaning of any predicate value by wrapping it in a call
@@ -98,7 +96,15 @@ class not_(object):
 # over = before
 
 
-class PredicateList(object):
+class PredicateInfo:
+    def __init__(self, package, registry, settings, maybe_dotted):
+        self.package = package
+        self.registry = registry
+        self.settings = settings
+        self.maybe_dotted = maybe_dotted
+
+
+class PredicateList:
     def __init__(self):
         self.sorter = TopologicalSorter()
         self.last_added = None
@@ -134,6 +140,12 @@ class PredicateList(object):
         phash = md5()
         weights = []
         preds = []
+        info = PredicateInfo(
+            package=config.package,
+            registry=config.registry,
+            settings=config.get_settings(),
+            maybe_dotted=config.maybe_dotted,
+        )
         for n, (name, predicate_factory) in enumerate(ordered):
             vals = kw.pop(name, None)
             if vals is None:  # XXX should this be a sentinel other than None?
@@ -146,7 +158,7 @@ class PredicateList(object):
                 if isinstance(val, not_):
                     realval = val.value
                     notted = True
-                pred = predicate_factory(realval, config)
+                pred = predicate_factory(realval, info)
                 if notted:
                     pred = Notted(pred)
                 hashes = pred.phash()
@@ -193,7 +205,8 @@ class PredicateList(object):
         score = 0
         for bit in weights:
             score = score | bit
-        order = (MAX_ORDER - score) / (len(preds) + 1)
+        order = (MAX_ORDER - score) // (len(preds) + 1)
+
         return order, preds, phash.hexdigest()
 
 

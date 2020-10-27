@@ -1,7 +1,6 @@
 import unittest
 
-from pyramid.exceptions import ConfigurationExecutionError
-from pyramid.exceptions import ConfigurationError
+from pyramid.exceptions import ConfigurationError, ConfigurationExecutionError
 
 
 class ConfiguratorSecurityMethodsTests(unittest.TestCase):
@@ -10,6 +9,27 @@ class ConfiguratorSecurityMethodsTests(unittest.TestCase):
 
         config = Configurator(*arg, **kw)
         return config
+
+    def test_set_security_policy(self):
+        from pyramid.interfaces import ISecurityPolicy
+
+        config = self._makeOne()
+        policy = object()
+        config.set_security_policy(policy)
+        config.commit()
+        self.assertEqual(config.registry.getUtility(ISecurityPolicy), policy)
+
+    def test_set_authentication_policy_with_security_policy(self):
+        from pyramid.interfaces import IAuthorizationPolicy, ISecurityPolicy
+
+        config = self._makeOne()
+        security_policy = object()
+        authn_policy = object()
+        authz_policy = object()
+        config.registry.registerUtility(security_policy, ISecurityPolicy)
+        config.registry.registerUtility(authz_policy, IAuthorizationPolicy)
+        config.set_authentication_policy(authn_policy)
+        self.assertRaises(ConfigurationError, config.commit)
 
     def test_set_authentication_policy_no_authz_policy(self):
         config = self._makeOne()
@@ -25,8 +45,12 @@ class ConfiguratorSecurityMethodsTests(unittest.TestCase):
         )
 
     def test_set_authentication_policy_with_authz_policy(self):
-        from pyramid.interfaces import IAuthenticationPolicy
-        from pyramid.interfaces import IAuthorizationPolicy
+        from pyramid.interfaces import (
+            IAuthenticationPolicy,
+            IAuthorizationPolicy,
+            ISecurityPolicy,
+        )
+        from pyramid.security import LegacySecurityPolicy
 
         config = self._makeOne()
         authn_policy = object()
@@ -37,10 +61,17 @@ class ConfiguratorSecurityMethodsTests(unittest.TestCase):
         self.assertEqual(
             config.registry.getUtility(IAuthenticationPolicy), authn_policy
         )
+        self.assertIsInstance(
+            config.registry.getUtility(ISecurityPolicy), LegacySecurityPolicy
+        )
 
     def test_set_authentication_policy_with_authz_policy_autocommit(self):
-        from pyramid.interfaces import IAuthenticationPolicy
-        from pyramid.interfaces import IAuthorizationPolicy
+        from pyramid.interfaces import (
+            IAuthenticationPolicy,
+            IAuthorizationPolicy,
+            ISecurityPolicy,
+        )
+        from pyramid.security import LegacySecurityPolicy
 
         config = self._makeOne(autocommit=True)
         authn_policy = object()
@@ -50,6 +81,9 @@ class ConfiguratorSecurityMethodsTests(unittest.TestCase):
         config.commit()
         self.assertEqual(
             config.registry.getUtility(IAuthenticationPolicy), authn_policy
+        )
+        self.assertIsInstance(
+            config.registry.getUtility(ISecurityPolicy), LegacySecurityPolicy
         )
 
     def test_set_authorization_policy_no_authn_policy(self):
@@ -69,8 +103,10 @@ class ConfiguratorSecurityMethodsTests(unittest.TestCase):
         )
 
     def test_set_authorization_policy_with_authn_policy(self):
-        from pyramid.interfaces import IAuthorizationPolicy
-        from pyramid.interfaces import IAuthenticationPolicy
+        from pyramid.interfaces import (
+            IAuthenticationPolicy,
+            IAuthorizationPolicy,
+        )
 
         config = self._makeOne()
         authn_policy = object()
@@ -83,8 +119,10 @@ class ConfiguratorSecurityMethodsTests(unittest.TestCase):
         )
 
     def test_set_authorization_policy_with_authn_policy_autocommit(self):
-        from pyramid.interfaces import IAuthorizationPolicy
-        from pyramid.interfaces import IAuthenticationPolicy
+        from pyramid.interfaces import (
+            IAuthenticationPolicy,
+            IAuthorizationPolicy,
+        )
 
         config = self._makeOne(autocommit=True)
         authn_policy = object()
@@ -126,6 +164,8 @@ class ConfiguratorSecurityMethodsTests(unittest.TestCase):
             list(sorted(result.safe_methods)),
             ['GET', 'HEAD', 'OPTIONS', 'TRACE'],
         )
+        self.assertTrue(result.check_origin)
+        self.assertFalse(result.allow_no_origin)
         self.assertTrue(result.callback is None)
 
     def test_changing_set_default_csrf_options(self):
@@ -141,6 +181,8 @@ class ConfiguratorSecurityMethodsTests(unittest.TestCase):
             token='DUMMY',
             header=None,
             safe_methods=('PUT',),
+            check_origin=False,
+            allow_no_origin=False,
             callback=callback,
         )
         result = config.registry.getUtility(IDefaultCSRFOptions)
@@ -148,4 +190,6 @@ class ConfiguratorSecurityMethodsTests(unittest.TestCase):
         self.assertEqual(result.token, 'DUMMY')
         self.assertEqual(result.header, None)
         self.assertEqual(list(sorted(result.safe_methods)), ['PUT'])
+        self.assertFalse(result.check_origin)
+        self.assertFalse(result.allow_no_origin)
         self.assertTrue(result.callback is callback)

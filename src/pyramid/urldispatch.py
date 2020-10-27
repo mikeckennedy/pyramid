@@ -1,19 +1,16 @@
 import re
 from zope.interface import implementer
 
-from pyramid.interfaces import IRoutesMapper, IRoute
-
 from pyramid.exceptions import URLDecodeError
-
-from pyramid.traversal import quote_path_segment, split_path_info, PATH_SAFE
-
+from pyramid.interfaces import IRoute, IRoutesMapper
+from pyramid.traversal import PATH_SAFE, quote_path_segment, split_path_info
 from pyramid.util import is_nonstr_iter, text_
 
 _marker = object()
 
 
 @implementer(IRoute)
-class Route(object):
+class Route:
     def __init__(
         self, name, pattern, factory=None, predicates=(), pregenerator=None
     ):
@@ -27,7 +24,7 @@ class Route(object):
 
 
 @implementer(IRoutesMapper)
-class RoutesMapper(object):
+class RoutesMapper:
     def __init__(self):
         self.routelist = []
         self.static_routes = []
@@ -88,7 +85,7 @@ class RoutesMapper(object):
             if match is not None:
                 preds = route.predicates
                 info = {'match': match, 'route': route}
-                if preds and not all((p(info, request) for p in preds)):
+                if preds and not all(p(info, request) for p in preds):
                     continue
                 return info
 

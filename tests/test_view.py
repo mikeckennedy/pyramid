@@ -1,14 +1,12 @@
-import unittest
-from zope.interface import Interface
-from zope.interface import implementer
 import sys
+import unittest
+from zope.interface import Interface, implementer
 
 from pyramid import testing
-from pyramid.interfaces import IRequest
-from pyramid.interfaces import IResponse
+from pyramid.interfaces import IRequest, IResponse
 
 
-class BaseTest(object):
+class BaseTest:
     def setUp(self):
         self.config = testing.setUp()
 
@@ -36,8 +34,8 @@ class BaseTest(object):
         return environ
 
     def _makeRequest(self, **environ):
-        from pyramid.request import Request
         from pyramid.registry import Registry
+        from pyramid.request import Request
 
         environ = self._makeEnviron(**environ)
         request = Request(environ)
@@ -100,7 +98,7 @@ class Test_notfound_view_config(BaseTest, unittest.TestCase):
         decorator.venusian = venusian
         decorator.venusian.info.scope = 'class'
 
-        class view(object):
+        class view:
             pass
 
         wrapped = decorator(view)
@@ -172,7 +170,7 @@ class Test_forbidden_view_config(BaseTest, unittest.TestCase):
         decorator.venusian = venusian
         decorator.venusian.info.scope = 'class'
 
-        class view(object):
+        class view:
             pass
 
         wrapped = decorator(view)
@@ -257,7 +255,7 @@ class Test_exception_view_config(BaseTest, unittest.TestCase):
         decorator.venusian = venusian
         decorator.venusian.info.scope = 'class'
 
-        class view(object):
+        class view:
             pass
 
         wrapped = decorator(view)
@@ -414,8 +412,8 @@ class RenderViewToIterableTests(BaseTest, unittest.TestCase):
         self.assertEqual(iterable, [b'anotherview'])
 
     def test_verify_output_bytestring(self):
-        from pyramid.request import Request
         from pyramid.config import Configurator
+        from pyramid.request import Request
         from pyramid.view import render_view
 
         config = Configurator(settings={})
@@ -507,7 +505,25 @@ class TestViewConfigDecorator(unittest.TestCase):
 
     def test_create_defaults(self):
         decorator = self._makeOne()
-        self.assertEqual(decorator.__dict__, {})
+        self.assertEqual(list(decorator.__dict__.keys()), ['_info'])
+
+    def test_create_info(self):
+        target = self._getTargetClass()
+        decorator = target()
+        info = decorator._info
+        self.assertEqual(info[2], 'test_create_info')
+        self.assertEqual(info[3], 'decorator = target()')
+
+    def test_create_info_depth(self):
+        target = self._getTargetClass()
+
+        def make():
+            return target(_depth=1)
+
+        decorator = make()
+        info = decorator._info
+        self.assertEqual(info[2], 'test_create_info_depth')
+        self.assertEqual(info[3], 'decorator = make()')
 
     def test_create_context_trumps_for(self):
         decorator = self._makeOne(context='123', for_='456')
@@ -560,7 +576,6 @@ class TestViewConfigDecorator(unittest.TestCase):
         self.assertEqual(len(settings[0]), 3)
         self.assertEqual(settings[0]['venusian'], venusian)
         self.assertEqual(settings[0]['view'], None)  # comes from call_venusian
-        self.assertEqual(settings[0]['_info'], 'codeinfo')
 
     def test_call_class(self):
         decorator = self._makeOne()
@@ -568,7 +583,7 @@ class TestViewConfigDecorator(unittest.TestCase):
         decorator.venusian = venusian
         decorator.venusian.info.scope = 'class'
 
-        class foo(object):
+        class foo:
             pass
 
         wrapped = decorator(foo)
@@ -580,7 +595,6 @@ class TestViewConfigDecorator(unittest.TestCase):
         self.assertEqual(settings[0]['venusian'], venusian)
         self.assertEqual(settings[0]['view'], None)  # comes from call_venusian
         self.assertEqual(settings[0]['attr'], 'foo')
-        self.assertEqual(settings[0]['_info'], 'codeinfo')
 
     def test_call_class_attr_already_set(self):
         decorator = self._makeOne(attr='abc')
@@ -588,7 +602,7 @@ class TestViewConfigDecorator(unittest.TestCase):
         decorator.venusian = venusian
         decorator.venusian.info.scope = 'class'
 
-        class foo(object):
+        class foo:
             pass
 
         wrapped = decorator(foo)
@@ -600,7 +614,6 @@ class TestViewConfigDecorator(unittest.TestCase):
         self.assertEqual(settings[0]['venusian'], venusian)
         self.assertEqual(settings[0]['view'], None)  # comes from call_venusian
         self.assertEqual(settings[0]['attr'], 'abc')
-        self.assertEqual(settings[0]['_info'], 'codeinfo')
 
     def test_stacking(self):
         decorator1 = self._makeOne(name='1')
@@ -636,7 +649,7 @@ class TestViewConfigDecorator(unittest.TestCase):
         def bar(self):  # pragma: no cover
             pass
 
-        class foo(object):
+        class foo:
             foomethod = decorator(foo)
             barmethod = decorator(bar)
 
@@ -698,11 +711,11 @@ class TestViewConfigDecorator(unittest.TestCase):
         self.assertEqual(config.pkg, tests)
 
     def test_call_with_renderer_IRendererInfo(self):
-        import tests
         from pyramid.interfaces import IRendererInfo
+        import tests
 
         @implementer(IRendererInfo)
-        class DummyRendererHelper(object):
+        class DummyRendererHelper:
             pass
 
         renderer_helper = DummyRendererHelper()
@@ -772,14 +785,14 @@ class Test_append_slash_notfound_view(BaseTest, unittest.TestCase):
     def _registerMapper(self, reg, match=True):
         from pyramid.interfaces import IRoutesMapper
 
-        class DummyRoute(object):
+        class DummyRoute:
             def __init__(self, val):
                 self.val = val
 
             def match(self, path):
                 return self.val
 
-        class DummyMapper(object):
+        class DummyMapper:
             def __init__(self):
                 self.routelist = [DummyRoute(match)]
 
@@ -906,7 +919,7 @@ class Test_view_defaults(unittest.TestCase):
         from pyramid.view import view_defaults
 
         @view_defaults(route_name='abc', renderer='def')
-        class Foo(object):
+        class Foo:
             pass
 
         self.assertEqual(Foo.__view_defaults__['route_name'], 'abc')
@@ -916,7 +929,7 @@ class Test_view_defaults(unittest.TestCase):
         from pyramid.view import view_defaults
 
         @view_defaults(route_name='abc', renderer='def')
-        class Foo(object):
+        class Foo:
             pass
 
         class Bar(Foo):
@@ -929,7 +942,7 @@ class Test_view_defaults(unittest.TestCase):
         from pyramid.view import view_defaults
 
         @view_defaults(route_name='abc', renderer='def')
-        class Foo(object):
+        class Foo:
             pass
 
         @view_defaults(route_name='ghi')
@@ -943,7 +956,7 @@ class Test_view_defaults(unittest.TestCase):
         from pyramid.view import view_defaults
 
         @view_defaults(route_name='abc', renderer='def')
-        class Foo(object):
+        class Foo:
             pass
 
         @view_defaults()
@@ -1211,7 +1224,7 @@ class DummyRequest:
 
 
 @implementer(IResponse)
-class DummyResponse(object):
+class DummyResponse:
     headerlist = ()
     app_iter = ()
     status = '200 OK'
@@ -1228,13 +1241,13 @@ class IContext(Interface):
     pass
 
 
-class DummyVenusianInfo(object):
+class DummyVenusianInfo:
     scope = 'notaclass'
     module = sys.modules['tests']
     codeinfo = 'codeinfo'
 
 
-class DummyVenusian(object):
+class DummyVenusian:
     def __init__(self, info=None):
         if info is None:
             info = DummyVenusianInfo()
@@ -1246,11 +1259,11 @@ class DummyVenusian(object):
         return self.info
 
 
-class DummyRegistry(object):
+class DummyRegistry:
     pass
 
 
-class DummyConfig(object):
+class DummyConfig:
     def __init__(self):
         self.settings = []
         self.registry = DummyRegistry()
@@ -1265,7 +1278,7 @@ class DummyConfig(object):
         return self
 
 
-class DummyVenusianContext(object):
+class DummyVenusianContext:
     def __init__(self):
         self.config = DummyConfig()
 

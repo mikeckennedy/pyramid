@@ -1,5 +1,6 @@
 import os
 import unittest
+
 from .test_scripts.dummy import DummyLoader
 
 here = os.path.dirname(__file__)
@@ -130,7 +131,7 @@ class Test_bootstrap(unittest.TestCase):
         self.app = app = DummyApp()
         self.root = root = Dummy()
 
-        class DummyGetApp(object):
+        class DummyGetApp:
             def __call__(self, *a, **kw):
                 self.a = a
                 self.kw = kw
@@ -138,7 +139,7 @@ class Test_bootstrap(unittest.TestCase):
 
         self.get_app = pyramid.paster.get_app = DummyGetApp()
 
-        class DummyPrepare(object):
+        class DummyPrepare:
             def __call__(self, *a, **kw):
                 self.a = a
                 self.kw = kw
@@ -165,7 +166,7 @@ class Dummy:
     pass
 
 
-class DummyRegistry(object):
+class DummyRegistry:
     settings = {}
 
 

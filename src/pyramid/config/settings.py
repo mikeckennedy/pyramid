@@ -3,7 +3,7 @@ import os
 from pyramid.settings import asbool, aslist
 
 
-class SettingsConfiguratorMixin(object):
+class SettingsConfiguratorMixin:
     def _set_settings(self, mapping):
         if mapping is None:
             mapping = {}
@@ -46,12 +46,12 @@ class SettingsConfiguratorMixin(object):
 
         .. note:: the :attr:`pyramid.registry.Registry.settings` API
            performs the same duty.
-           """
+        """
         return self.registry.settings
 
 
 def Settings(d=None, _environ_=os.environ, **kw):
-    """ Deployment settings.  Update application settings (usually
+    """Deployment settings.  Update application settings (usually
     from PasteDeploy keywords) with framework-specific key/value pairs
     (e.g. find ``PYRAMID_DEBUG_AUTHORIZATION`` in os.environ and jam into
     keyword args)."""
@@ -78,7 +78,7 @@ def Settings(d=None, _environ_=os.environ, **kw):
         value = type_(value)
         d.update({k: value for k in keys})
 
-    def O(settings_key, override_key):  # noqa: E743
+    def O(settings_key, override_key):  # noqa: E743, E741
         for key in expand_key(settings_key):
             d[key] = d[key] or d[override_key]
 

@@ -1,21 +1,15 @@
 import gettext
 import os
-
-from translationstring import (
-    Translator,
-    Pluralizer,
-    TranslationString,  # API
-    TranslationStringFactory,  # API
-)
+from translationstring import Pluralizer, Translator
+from translationstring import TranslationString  # API
+from translationstring import TranslationStringFactory  # API
 
 from pyramid.decorator import reify
-
 from pyramid.interfaces import (
+    ILocaleNegotiator,
     ILocalizer,
     ITranslationDirectories,
-    ILocaleNegotiator,
 )
-
 from pyramid.threadlocal import get_current_registry
 
 TranslationString = TranslationString  # PyFlakes
@@ -24,7 +18,7 @@ TranslationStringFactory = TranslationStringFactory  # PyFlakes
 DEFAULT_PLURAL = lambda n: int(n != 1)
 
 
-class Localizer(object):
+class Localizer:
     """
     An object providing translation and pluralizations related to
     the current request's locale name.  A
@@ -118,7 +112,7 @@ class Localizer(object):
 
 
 def default_locale_negotiator(request):
-    """ The default :term:`locale negotiator`.  Returns a locale name
+    """The default :term:`locale negotiator`.  Returns a locale name
     or ``None``.
 
     - First, the negotiator looks for the ``_LOCALE_`` attribute of
@@ -145,7 +139,7 @@ def default_locale_negotiator(request):
 
 
 def negotiate_locale_name(request):
-    """ Negotiate and return the :term:`locale name` associated with
+    """Negotiate and return the :term:`locale name` associated with
     the current request."""
     try:
         registry = request.registry
@@ -173,7 +167,7 @@ def get_locale_name(request):
 
 
 def make_localizer(current_locale_name, translation_directories):
-    """ Create a :class:`pyramid.i18n.Localizer` object
+    """Create a :class:`pyramid.i18n.Localizer` object
     corresponding to the provided locale name from the
     translations found in the list of translation directories."""
     translations = Translations()
@@ -226,7 +220,7 @@ def get_localizer(request):
     return request.localizer
 
 
-class Translations(gettext.GNUTranslations, object):
+class Translations(gettext.GNUTranslations):
     """An extended translation catalog class (ripped off from Babel) """
 
     DEFAULT_DOMAIN = 'messages'
@@ -269,7 +263,7 @@ class Translations(gettext.GNUTranslations, object):
         if locales is not None:
             if not isinstance(locales, (list, tuple)):
                 locales = [locales]
-            locales = [str(l) for l in locales]
+            locales = [str(locale) for locale in locales]
         if not domain:
             domain = cls.DEFAULT_DOMAIN
         filename = gettext.find(domain, dirname, locales)
@@ -372,7 +366,7 @@ class Translations(gettext.GNUTranslations, object):
         return self._domains.get(domain, self).ngettext(singular, plural, num)
 
 
-class LocalizerRequestMixin(object):
+class LocalizerRequestMixin:
     @reify
     def localizer(self):
         """ Convenience property to return a localizer """

@@ -12,7 +12,6 @@
 #
 ##############################################################################
 from setuptools import find_packages, setup
-from pkg_resources import parse_version
 
 
 def readfile(name):
@@ -26,7 +25,7 @@ CHANGES = readfile('CHANGES.rst')
 VERSION = '2.0.dev0'
 
 install_requires = [
-    'hupper',
+    'hupper >= 1.5',  # ignore_files support
     'plaster',
     'plaster_pastedeploy',
     'setuptools',
@@ -52,13 +51,17 @@ docs_extras = [
     'sphinxcontrib-autoprogram',
 ]
 
-testing_extras = tests_require + ['coverage', 'nose']
+testing_extras = tests_require + [
+    'coverage',
+    'pytest>=5.4.2',  # unittest.TestCase funkyness, see commit 77c1505ab
+    'pytest-cov',
+]
 
-base_version = parse_version(VERSION).base_version
+branch_version = ".".join(VERSION.split(".")[:2])
 
 # black is refusing to make anything under 80 chars so just splitting it up
 docs_fmt = 'https://docs.pylonsproject.org/projects/pyramid/en/{}-branch/'
-docs_url = docs_fmt.format(base_version)
+docs_url = docs_fmt.format(branch_version)
 
 setup(
     name='pyramid',
@@ -70,10 +73,10 @@ setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Framework :: Pyramid",
@@ -87,7 +90,7 @@ setup(
     url="https://trypyramid.com",
     project_urls={
         'Documentation': docs_url,
-        'Changelog': '{}whatsnew-{}.html'.format(docs_url, base_version),
+        'Changelog': '{}whatsnew-{}.html'.format(docs_url, branch_version),
         'Issue Tracker': 'https://github.com/Pylons/pyramid/issues',
     },
     license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
@@ -95,7 +98,7 @@ setup(
     package_dir={'': 'src'},
     include_package_data=True,
     zip_safe=False,
-    python_requires='>=3.4',
+    python_requires='>=3.5',
     install_requires=install_requires,
     extras_require={'testing': testing_extras, 'docs': docs_extras},
     tests_require=tests_require,

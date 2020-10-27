@@ -6,7 +6,7 @@ The Pyramid Web Framework
 
 :app:`Pyramid` is a small, fast, down-to-earth Python web framework.  It is
 developed as part of the `Pylons Project <https://pylonsproject.org>`_.
-It is licensed under a `BSD-like license <http://repoze.org/license.html>`_.
+It is licensed under a `BSD-like license <https://web.archive.org/web/20190401024809/http://repoze.org/license.html>`_.
 
 Here is one of the simplest :app:`Pyramid` applications you can make:
 
@@ -77,7 +77,7 @@ If you've got questions that aren't answered by this documentation, contact the
 `Pylons-discuss maillist
 <https://groups.google.com/forum/#!forum/pylons-discuss>`_ or join the
 `#pyramid IRC channel
-<https://webchat.freenode.net/?channels=pyramid>`_.
+<https://webchat.freenode.net/#pyramid>`_.
 
 Browse and check out tagged and trunk versions of :app:`Pyramid` via the
 `Pyramid GitHub repository <https://github.com/Pylons/pyramid/>`_. To check out
@@ -152,11 +152,9 @@ Comprehensive reference material for every public API exposed by
 :app:`Pyramid`:
 
 .. toctree::
-   :maxdepth: 1
-   :glob:
+   :maxdepth: 2
 
    api/index
-   api/*
 
 
 ``p*`` Scripts Documentation
@@ -165,11 +163,9 @@ Comprehensive reference material for every public API exposed by
 ``p*`` scripts included with :app:`Pyramid`.
 
 .. toctree::
-   :maxdepth: 1
-   :glob:
+   :maxdepth: 2
 
    pscripts/index
-   pscripts/*
 
 
 Change History
@@ -178,6 +174,7 @@ Change History
 .. toctree::
    :maxdepth: 1
 
+   whatsnew-2.0
    whatsnew-1.10
    whatsnew-1.9
    whatsnew-1.8

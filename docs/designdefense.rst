@@ -199,11 +199,11 @@ Under its hood however, the implementation of ``authenticated_userid`` is this:
 
     def authenticated_userid(request):
         """ Return the userid of the currently authenticated user or
-        ``None`` if there is no authentication policy in effect or there
+        ``None`` if there is no security policy in effect or there
         is no currently authenticated user. """
 
         registry = request.registry # the ZCA component registry
-        policy = registry.queryUtility(IAuthenticationPolicy)
+        policy = registry.queryUtility(ISecurityPolicy)
         if policy is None:
             return None
         return policy.authenticated_userid(request)
@@ -264,19 +264,19 @@ instead of the rule.  So instead of:
 .. code-block:: python
     :linenos:
 
-    from pyramid.interfaces import IAuthenticationPolicy
+    from pyramid.interfaces import ISecurityPolicy
     from zope.component import getUtility
-    policy = getUtility(IAuthenticationPolicy)
+    policy = getUtility(ISecurityPolicy)
 
 :app:`Pyramid` code will usually do:
 
 .. code-block:: python
     :linenos:
 
-    from pyramid.interfaces import IAuthenticationPolicy
+    from pyramid.interfaces import ISecurityPolicy
     from pyramid.threadlocal import get_current_registry
     registry = get_current_registry()
-    policy = registry.getUtility(IAuthenticationPolicy)
+    policy = registry.getUtility(ISecurityPolicy)
 
 While the latter is more verbose, it also arguably makes it more obvious what's
 going on.  All of the :app:`Pyramid` core code uses this pattern rather than
@@ -988,7 +988,7 @@ the following:
   traverses by registering one or more adapters.  As a result of being able
   to either replace the larger component entirely or turn knobs on the
   default implementation of the larger component, no one understands when (or
-  whether) they should ever override the larger component entrirely.  This
+  whether) they should ever override the larger component entirely.  This
   results, over time, in a rusting together of the larger "replaceable"
   component and the framework itself because people come to depend on the
   availability of the default component in order just to turn its knobs. The
@@ -1006,12 +1006,12 @@ Microframeworks have smaller Hello World programs
 -------------------------------------------------
 
 Self-described "microframeworks" exist. `Bottle
-<http://bottlepy.org/docs/dev/index.html>`_ and `Flask
-<http://flask.pocoo.org/>`_ are two that are becoming popular. `Bobo
+<https://bottlepy.org/docs/dev/>`_ and `Flask
+<https://palletsprojects.com/p/flask/>`_ are two that are becoming popular. `Bobo
 <https://bobo.readthedocs.io/en/latest/>`_ doesn't describe itself as a
 microframework, but its intended user base is much the same. Many others exist.
 We've even (only as a teaching tool, not as any sort of official project)
-`created one using Pyramid <http://static.repoze.org/casts/videotags.html>`_.
+`created one using Pyramid <https://web.archive.org/web/20190118040819/http://static.repoze.org/casts/videotags.html>`_.
 The videos use BFG, a precursor to Pyramid, but the resulting code is
 `available for Pyramid too <https://github.com/Pylons/groundhog>`_).
 Microframeworks are small frameworks with one common feature: each allows its
@@ -1657,7 +1657,7 @@ Pyramid has over 1200 pages of documentation (printed), covering topics from
 the very basic to the most advanced. *Nothing* is left undocumented, quite
 literally.  It also has an *awesome*, very helpful community.  Visit the
 `#pyramid IRC channel on freenode.net
-<https://webchat.freenode.net/?channels=pyramid>`_ and see.
+<https://webchat.freenode.net/#pyramid>`_ and see.
 
 Hate Zope
 +++++++++

@@ -1,4 +1,5 @@
 from webob import Response
+
 from pyramid.security import NO_PERMISSION_REQUIRED
 from pyramid.view import view_config
 
@@ -19,12 +20,12 @@ def z_view(request):
 
 
 def includeme(config):
-    from pyramid.authorization import ACLAuthorizationPolicy
     from pyramid.authentication import AuthTktAuthenticationPolicy
+    from pyramid.authorization import ACLAuthorizationPolicy
 
     authn_policy = AuthTktAuthenticationPolicy('seekt1t', hashalg='sha512')
     authz_policy = ACLAuthorizationPolicy()
     config.scan('tests.pkgs.defpermbugapp')
-    config._set_authentication_policy(authn_policy)
-    config._set_authorization_policy(authz_policy)
+    config.set_authentication_policy(authn_policy)
+    config.set_authorization_policy(authz_policy)
     config.set_default_permission('private')

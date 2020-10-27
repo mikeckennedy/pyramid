@@ -1,4 +1,5 @@
 import unittest
+
 from . import dummy
 
 
@@ -39,18 +40,16 @@ class TestPViewsCommand(unittest.TestCase):
         self.assertEqual(result, None)
 
     def test__find_view_no_match_multiview_registered(self):
-        from zope.interface import implementer
-        from zope.interface import providedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IMultiView
-        from pyramid.traversal import DefaultRootFactory
+        from zope.interface import implementer, providedBy
+
+        from pyramid.interfaces import IMultiView, IRequest, IViewClassifier
         from pyramid.registry import Registry
+        from pyramid.traversal import DefaultRootFactory
 
         registry = Registry()
 
         @implementer(IMultiView)
-        class View1(object):
+        class View1:
             pass
 
         request = dummy.DummyRequest()
@@ -68,11 +67,10 @@ class TestPViewsCommand(unittest.TestCase):
 
     def test__find_view_traversal(self):
         from zope.interface import providedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IView
-        from pyramid.traversal import DefaultRootFactory
+
+        from pyramid.interfaces import IRequest, IView, IViewClassifier
         from pyramid.registry import Registry
+        from pyramid.traversal import DefaultRootFactory
 
         registry = Registry()
 
@@ -93,18 +91,16 @@ class TestPViewsCommand(unittest.TestCase):
         self.assertEqual(result, view1)
 
     def test__find_view_traversal_multiview(self):
-        from zope.interface import implementer
-        from zope.interface import providedBy
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IMultiView
-        from pyramid.traversal import DefaultRootFactory
+        from zope.interface import implementer, providedBy
+
+        from pyramid.interfaces import IMultiView, IRequest, IViewClassifier
         from pyramid.registry import Registry
+        from pyramid.traversal import DefaultRootFactory
 
         registry = Registry()
 
         @implementer(IMultiView)
-        class View1(object):
+        class View1:
             pass
 
         request = dummy.DummyRequest()
@@ -122,11 +118,9 @@ class TestPViewsCommand(unittest.TestCase):
         self.assertEqual(result, view)
 
     def test__find_view_route_no_multiview(self):
-        from zope.interface import Interface
-        from zope.interface import implementer
-        from pyramid.interfaces import IRouteRequest
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IView
+        from zope.interface import Interface, implementer
+
+        from pyramid.interfaces import IRouteRequest, IView, IViewClassifier
         from pyramid.registry import Registry
 
         registry = Registry()
@@ -146,7 +140,7 @@ class TestPViewsCommand(unittest.TestCase):
         registry.registerUtility(IMyRoute, IRouteRequest, name='a')
 
         @implementer(IMyRoot)
-        class Factory(object):
+        class Factory:
             def __init__(self, request):
                 pass
 
@@ -161,11 +155,9 @@ class TestPViewsCommand(unittest.TestCase):
         self.assertEqual(result, view)
 
     def test__find_view_route_multiview_no_view_registered(self):
-        from zope.interface import Interface
-        from zope.interface import implementer
-        from pyramid.interfaces import IRouteRequest
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IRootFactory
+        from zope.interface import Interface, implementer
+
+        from pyramid.interfaces import IMultiView, IRootFactory, IRouteRequest
         from pyramid.registry import Registry
 
         registry = Registry()
@@ -189,7 +181,7 @@ class TestPViewsCommand(unittest.TestCase):
         registry.registerUtility(IMyRoute2, IRouteRequest, name='b')
 
         @implementer(IMyRoot)
-        class Factory(object):
+        class Factory:
             def __init__(self, request):
                 pass
 
@@ -205,13 +197,15 @@ class TestPViewsCommand(unittest.TestCase):
         self.assertTrue(IMultiView.providedBy(result))
 
     def test__find_view_route_multiview(self):
-        from zope.interface import Interface
-        from zope.interface import implementer
-        from pyramid.interfaces import IRouteRequest
-        from pyramid.interfaces import IViewClassifier
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IMultiView
-        from pyramid.interfaces import IRootFactory
+        from zope.interface import Interface, implementer
+
+        from pyramid.interfaces import (
+            IMultiView,
+            IRootFactory,
+            IRouteRequest,
+            IView,
+            IViewClassifier,
+        )
         from pyramid.registry import Registry
 
         registry = Registry()
@@ -241,7 +235,7 @@ class TestPViewsCommand(unittest.TestCase):
         registry.registerUtility(IMyRoute2, IRouteRequest, name='b')
 
         @implementer(IMyRoot)
-        class Factory(object):
+        class Factory:
             def __init__(self, request):
                 pass
 

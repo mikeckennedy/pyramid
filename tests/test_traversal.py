@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 import unittest
 from urllib.parse import quote
 
 from pyramid.testing import cleanUp
-
 from pyramid.util import text_
 
 
@@ -121,12 +119,14 @@ class ResourceTreeTraverserTests(unittest.TestCase):
 
     def test_class_conforms_to_ITraverser(self):
         from zope.interface.verify import verifyClass
+
         from pyramid.interfaces import ITraverser
 
         verifyClass(ITraverser, self._getTargetClass())
 
     def test_instance_conforms_to_ITraverser(self):
         from zope.interface.verify import verifyObject
+
         from pyramid.interfaces import ITraverser
 
         context = DummyContext()
@@ -496,8 +496,7 @@ class FindInterfaceTests(unittest.TestCase):
         bar.__name__ = 'bar'
         baz.__parent__ = bar
         baz.__name__ = 'baz'
-        from zope.interface import directlyProvides
-        from zope.interface import Interface
+        from zope.interface import Interface, directlyProvides
 
         class IFoo(Interface):
             pass
@@ -507,7 +506,7 @@ class FindInterfaceTests(unittest.TestCase):
         self.assertEqual(result.__name__, 'root')
 
     def test_it_class(self):
-        class DummyRoot(object):
+        class DummyRoot:
             def __init__(self, child):
                 self.child = child
 
@@ -554,8 +553,9 @@ class FindResourceTests(unittest.TestCase):
         from pyramid.threadlocal import get_current_registry
 
         reg = get_current_registry()
-        from pyramid.interfaces import ITraverser
         from zope.interface import Interface
+
+        from pyramid.interfaces import ITraverser
 
         reg.registerAdapter(traverser, (Interface,), ITraverser)
 
@@ -871,7 +871,7 @@ class QuotePathSegmentTests(unittest.TestCase):
         self.assertEqual(result, '12345')
 
     def test_other(self):
-        class Foo(object):
+        class Foo:
             def __str__(self):
                 return 'abc'
 
@@ -890,8 +890,9 @@ class ResourceURLTests(unittest.TestCase):
         return ResourceURL
 
     def test_instance_conforms_to_IResourceURL(self):
-        from pyramid.interfaces import IResourceURL
         from zope.interface.verify import verifyObject
+
+        from pyramid.interfaces import IResourceURL
 
         context = DummyContext()
         request = DummyRequest()
@@ -980,8 +981,9 @@ class TestVirtualRoot(unittest.TestCase):
         from pyramid.threadlocal import get_current_registry
 
         reg = get_current_registry()
-        from pyramid.interfaces import ITraverser
         from zope.interface import Interface
+
+        from pyramid.interfaces import ITraverser
 
         reg.registerAdapter(traverser, (Interface,), ITraverser)
 
@@ -1053,8 +1055,9 @@ class TraverseTests(unittest.TestCase):
         from pyramid.threadlocal import get_current_registry
 
         reg = get_current_registry()
-        from pyramid.interfaces import ITraverser
         from zope.interface import Interface
+
+        from pyramid.interfaces import ITraverser
 
         reg.registerAdapter(traverser, (Interface,), ITraverser)
 
@@ -1189,7 +1192,7 @@ class TestDefaultRootFactory(unittest.TestCase):
         return self._getTargetClass()(environ)
 
     def test_it(self):
-        class DummyRequest(object):
+        class DummyRequest:
             pass
 
         root = self._makeOne(DummyRequest())
@@ -1236,7 +1239,7 @@ class Test__join_path_tuple(unittest.TestCase):
 
 
 def make_traverser(result):
-    class DummyTraverser(object):
+    class DummyTraverser:
         def __init__(self, context):
             self.context = context
             context.wascontext = True
@@ -1248,7 +1251,7 @@ def make_traverser(result):
     return DummyTraverser
 
 
-class DummyContext(object):
+class DummyContext:
     __parent__ = None
 
     def __init__(self, next=None, name=None):
@@ -1270,8 +1273,8 @@ class DummyContext(object):
 class DummyRequest:
 
     application_url = (
-        'http://example.com:5432'
-    )  # app_url never ends with slash
+        'http://example.com:5432'  # app_url never ends with slash
+    )
     matchdict = None
     matched_route = None
 

@@ -1,7 +1,7 @@
 import unittest
 from zope.component import getSiteManager
-from zope.interface import Interface
-from zope.interface import implementer
+from zope.interface import Interface, implementer
+
 from pyramid import testing
 
 
@@ -23,52 +23,21 @@ class TestDummySecurityPolicy(unittest.TestCase):
 
         return DummySecurityPolicy
 
-    def _makeOne(self, userid=None, groupids=(), permissive=True):
+    def _makeOne(self, userid=None, identity=None, permissive=True):
         klass = self._getTargetClass()
-        return klass(userid, groupids, permissive)
+        return klass(userid, identity, permissive)
+
+    def test_authenticated_identity(self):
+        policy = self._makeOne('user', 'identity')
+        self.assertEqual(policy.authenticated_identity(None), 'identity')
 
     def test_authenticated_userid(self):
         policy = self._makeOne('user')
         self.assertEqual(policy.authenticated_userid(None), 'user')
 
-    def test_unauthenticated_userid(self):
-        policy = self._makeOne('user')
-        self.assertEqual(policy.unauthenticated_userid(None), 'user')
-
-    def test_effective_principals_userid(self):
-        policy = self._makeOne('user', ('group1',))
-        from pyramid.security import Everyone
-        from pyramid.security import Authenticated
-
-        self.assertEqual(
-            policy.effective_principals(None),
-            [Everyone, Authenticated, 'user', 'group1'],
-        )
-
-    def test_effective_principals_nouserid(self):
-        policy = self._makeOne()
-        from pyramid.security import Everyone
-
-        self.assertEqual(policy.effective_principals(None), [Everyone])
-
     def test_permits(self):
         policy = self._makeOne()
-        self.assertEqual(policy.permits(None, None, None), True)
-
-    def test_principals_allowed_by_permission(self):
-        policy = self._makeOne('user', ('group1',))
-        from pyramid.security import Everyone
-        from pyramid.security import Authenticated
-
-        result = policy.principals_allowed_by_permission(None, None)
-        self.assertEqual(result, [Everyone, Authenticated, 'user', 'group1'])
-
-    def test_principals_allowed_by_permission_not_permissive(self):
-        policy = self._makeOne('user', ('group1',))
-        policy.permissive = False
-
-        result = policy.principals_allowed_by_permission(None, None)
-        self.assertEqual(result, [])
+        self.assertTrue(policy.permits(None, None, None))
 
     def test_forget(self):
         policy = self._makeOne()
@@ -90,7 +59,7 @@ class TestDummyResource(unittest.TestCase):
         return klass(name, parent, **kw)
 
     def test__setitem__and__getitem__and__delitem__and__contains__and_get(
-        self
+        self,
     ):
         class Dummy:
             pass
@@ -134,10 +103,6 @@ class TestDummyResource(unittest.TestCase):
         self.assertEqual(L(resource.keys()), L(resource.subs.keys()))
         self.assertEqual(len(resource), 2)
 
-    def test_nonzero(self):
-        resource = self._makeOne()
-        self.assertEqual(resource.__nonzero__(), True)
-
     def test_bool(self):
         resource = self._makeOne()
         self.assertEqual(resource.__bool__(), True)
@@ -169,8 +134,8 @@ class TestDummyRequest(unittest.TestCase):
         self.assertEqual(request.environ['PATH_INFO'], '/foo')
 
     def test_defaults(self):
-        from pyramid.threadlocal import get_current_registry
         from pyramid.testing import DummySession
+        from pyramid.threadlocal import get_current_registry
 
         request = self._makeOne()
         self.assertEqual(request.method, 'GET')
@@ -227,7 +192,7 @@ class TestDummyRequest(unittest.TestCase):
         self.assertEqual(request.method, 'POST')
         self.assertEqual(request.POST, POST)
         # N.B.:  Unlike a normal request, passing 'post' should *not* put
-        #        explict POST data into params: doing so masks a possible
+        #        explicit POST data into params: doing so masks a possible
         #        XSS bug in the app.  Tests for apps which don't care about
         #        the distinction should just use 'params'.
         self.assertEqual(request.params, {})
@@ -249,8 +214,8 @@ class TestDummyRequest(unittest.TestCase):
 
     def test_registry_is_config_registry_when_setup_is_called_after_ctor(self):
         # see https://github.com/Pylons/pyramid/issues/165
-        from pyramid.registry import Registry
         from pyramid.config import Configurator
+        from pyramid.registry import Registry
 
         request = self._makeOne()
         try:
@@ -268,8 +233,8 @@ class TestDummyRequest(unittest.TestCase):
 
     def test_del_registry(self):
         # see https://github.com/Pylons/pyramid/issues/165
-        from pyramid.registry import Registry
         from pyramid.config import Configurator
+        from pyramid.registry import Registry
 
         request = self._makeOne()
         request.registry = 'abc'
@@ -284,12 +249,12 @@ class TestDummyRequest(unittest.TestCase):
             config.end()
 
     def test_response_with_responsefactory(self):
-        from pyramid.registry import Registry
         from pyramid.interfaces import IResponseFactory
+        from pyramid.registry import Registry
 
         registry = Registry('this_test')
 
-        class ResponseFactory(object):
+        class ResponseFactory:
             pass
 
         registry.registerUtility(lambda r: ResponseFactory(), IResponseFactory)
@@ -335,7 +300,9 @@ class TestDummyRequest(unittest.TestCase):
 
 
 class TestDummyTemplateRenderer(unittest.TestCase):
-    def _getTargetClass(self,):
+    def _getTargetClass(
+        self,
+    ):
         from pyramid.testing import DummyTemplateRenderer
 
         return DummyTemplateRenderer
@@ -386,9 +353,8 @@ class Test_setUp(unittest.TestCase):
         self.assertEqual(result, hook)
 
     def test_it_defaults(self):
-        from pyramid.threadlocal import manager
-        from pyramid.threadlocal import get_current_registry
         from pyramid.registry import Registry
+        from pyramid.threadlocal import get_current_registry, manager
 
         old = True
         manager.push(old)
@@ -632,6 +598,7 @@ class TestDummySession(unittest.TestCase):
     )  # see https://github.com/Pylons/pyramid/issues/3237
     def test_instance_conforms(self):
         from zope.interface.verify import verifyObject
+
         from pyramid.interfaces import ISession
 
         session = self._makeOne()
@@ -726,7 +693,7 @@ class DummyFactory:
         """ """
 
 
-class DummyRegistry(object):
+class DummyRegistry:
     inited = 0
     __name__ = 'name'
 
@@ -734,7 +701,7 @@ class DummyRegistry(object):
         self.inited = self.inited + 1
 
 
-class DummyRendererInfo(object):
+class DummyRendererInfo:
     def __init__(self, kw):
         self.__dict__.update(kw)
 

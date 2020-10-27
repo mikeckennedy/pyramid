@@ -196,7 +196,7 @@ Non-Predicate Arguments
 ``require_csrf``
 
   CSRF checks will affect any request method that is not defined as a "safe"
-  method by RFC2616. In pratice this means that GET, HEAD, OPTIONS, and TRACE
+  method by RFC2616. In practice this means that GET, HEAD, OPTIONS, and TRACE
   methods will pass untouched and all others methods will require CSRF. This
   option is used in combination with the ``pyramid.require_default_csrf``
   setting to control which request parameters are checked for CSRF tokens.
@@ -317,6 +317,8 @@ Non-Predicate Arguments
 
   .. versionadded:: 1.8
 
+.. _predicate_view_args:
+
 Predicate Arguments
 +++++++++++++++++++
 
@@ -389,7 +391,7 @@ configured view.
   the ``REQUEST_METHOD`` of the :term:`WSGI` environment.
 
 ``request_param``
-  This value can be any string or a sequence of strings.  A view declaration
+  This argument can be any string or a sequence of strings.  A view declaration
   with this argument ensures that the view will only be called when the
   :term:`request` has a key in the ``request.params`` dictionary (an HTTP
   ``GET`` or ``POST`` variable) that has a name which matches the supplied
@@ -404,7 +406,7 @@ configured view.
   consideration of keys and values in the ``request.params`` dictionary.
 
 ``match_param``
-  This param may be either a single string of the format "key=value" or a tuple
+  This argument may be either a single string of the format "key=value" or a tuple
   containing one or more of these strings.
 
   This argument ensures that the view will only be called when the
@@ -446,24 +448,23 @@ configured view.
   associated view callable.
 
 ``header``
-  This value represents an HTTP header name or a header name/value pair.
+  This param matches one or more HTTP header names or header name/value pairs.
+  If specified, this param must be a string or a sequence of strings,
+  each string being a header name or a ``headername:headervalue`` pair.
 
-  If ``header`` is specified, it must be a header name or a
-  ``headername:headervalue`` pair.
+  - Each string specified as a bare header name without a value (for example
+    ``If-Modified-Since``) will match a request if it contains an HTTP header
+    with that same name.  The case of the name is not significant, and the
+    header may have any value in the request.
 
-  If ``header`` is specified without a value (a bare header name only, e.g.,
-  ``If-Modified-Since``), the view will only be invoked if the HTTP header
-  exists with any value in the request.
+  - Each string specified as a name/value pair (that is, if it contains a ``:``
+    (colon), like ``User-Agent:Mozilla/.*``) will match a request only if it
+    contains an HTTP header with the requested name (ignoring case, so
+    ``User-Agent`` or ``user-agent`` would both match), *and* the value of the
+    HTTP header matches the value requested (``Mozilla/.*`` in our example).
+    The value portion is interpreted as a regular expression.
 
-  If ``header`` is specified, and possesses a name/value pair (e.g.,
-  ``User-Agent:Mozilla/.*``), the view will only be invoked if the HTTP header
-  exists *and* the HTTP header matches the value requested.  When the
-  ``headervalue`` contains a ``:`` (colon), it will be considered a name/value
-  pair (e.g., ``User-Agent:Mozilla/.*`` or ``Host:localhost``).  The value
-  portion should be a regular expression.
-
-  Whether or not the value represents a header name or a header name/value
-  pair, the case of the header name is not significant.
+  The view will only be invoked if all strings are matching.
 
   If ``header`` is not specified, the composition, presence, or absence of HTTP
   headers is not taken into consideration when deciding whether or not to
@@ -479,28 +480,6 @@ configured view.
   consideration when deciding whether or not to invoke the associated view
   callable.
 
-``check_csrf``
-  If specified, this value should be one of ``None``, ``True``, ``False``, or a
-  string representing the "check name".  If the value is ``True`` or a string,
-  CSRF checking will be performed.  If the value is ``False`` or ``None``, CSRF
-  checking will not be performed.
-
-  If the value provided is a string, that string will be used as the "check
-  name".  If the value provided is ``True``, ``csrf_token`` will be used as the
-  check name.
-
-  If CSRF checking is performed, the checked value will be the value of
-  ``request.POST[check_name]``.  This value will be compared against the
-  value of ``request.session.get_csrf_token()``, and the check will pass if
-  these two values are the same.  If the check passes, the associated view will
-  be permitted to execute.  If the check fails, the associated view will not be
-  permitted to execute.
-
-  Note that using this feature requires a :term:`session factory` to have been
-  configured.
-
-  .. versionadded:: 1.4a2
-
 ``physical_path``
   If specified, this value should be a string or a tuple representing the
   :term:`physical path` of the context found via traversal for this predicate
@@ -515,34 +494,48 @@ configured view.
 
   .. versionadded:: 1.4a3
 
+``is_authenticated``
+  This value, if specified, must be either ``True`` or ``False``.
+  If it is specified and ``True``, only a request from an authenticated user, as
+  determined by the :term:`security policy` in use, will satisfy the predicate.
+  If it is specified and ``False``, only a request from a user who is not
+  authenticated will satisfy the predicate.
+
+  .. versionadded:: 2.0
+
 ``effective_principals``
   If specified, this value should be a :term:`principal` identifier or a
   sequence of principal identifiers.  If the
   :meth:`pyramid.request.Request.effective_principals` method indicates that
   every principal named in the argument list is present in the current request,
   this predicate will return True; otherwise it will return False.  For
-  example: ``effective_principals=pyramid.security.Authenticated`` or
+  example: ``effective_principals=pyramid.authorization.Authenticated`` or
   ``effective_principals=('fred', 'group:admins')``.
 
   .. versionadded:: 1.4a4
 
+  .. deprecated:: 2.0
+      Use ``is_authenticated`` or a custom predicate.
+
 ``custom_predicates``
   If ``custom_predicates`` is specified, it must be a sequence of references to
-  custom predicate callables.  Use custom predicates when no set of predefined
-  predicates do what you need.  Custom predicates can be combined with
+  custom predicate callables.   Custom predicates can be combined with
   predefined predicates as necessary.  Each custom predicate callable should
   accept two arguments, ``context`` and ``request``, and should return either
   ``True`` or ``False`` after doing arbitrary evaluation of the context
   resource and/or the request.  If all callables return ``True``, the
   associated view callable will be considered viable for a given request.
+  This parameter is kept around for backward compatibility.
 
-  If ``custom_predicates`` is not specified, no custom predicates are used.
+  .. deprecated:: 1.5
+      See section below for new-style custom predicates.
 
-``predicates``
-  Pass a key/value pair here to use a third-party predicate registered via
-  :meth:`pyramid.config.Configurator.add_view_predicate`.  More than one
-  key/value pair can be used at the same time.  See
-  :ref:`view_and_route_predicates` for more information about third-party
+``**predicates``
+  Extra keyword parameters are used to invoke custom predicates, defined
+  in your app or by third-party packages extending Pyramid and registered via
+  :meth:`pyramid.config.Configurator.add_view_predicate`.  Use custom predicates
+  when no set of predefined predicates do what you need.  See
+  :ref:`view_and_route_predicates` for more information about custom
   predicates.
 
   .. versionadded:: 1.4a1

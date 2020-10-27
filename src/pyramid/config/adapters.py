@@ -1,17 +1,13 @@
-from webob import Response as WebobResponse
-
 from functools import update_wrapper
-
+from webob import Response as WebobResponse
 from zope.interface import Interface
 
-from pyramid.interfaces import IResponse, ITraverser, IResourceURL
-
+from pyramid.config.actions import action_method
+from pyramid.interfaces import IResourceURL, IResponse, ITraverser
 from pyramid.util import takes_one_arg
 
-from pyramid.config.actions import action_method
 
-
-class AdaptersConfiguratorMixin(object):
+class AdaptersConfiguratorMixin:
     @action_method
     def add_subscriber(self, subscriber, iface=None, **predicates):
         """Add an event :term:`subscriber` for the event stream
@@ -125,7 +121,7 @@ class AdaptersConfiguratorMixin(object):
             # with all args, the eventonly hack would not have been required.
             # At this point, though, using .subscriptions and manual execution
             # is not possible without badly breaking backwards compatibility.
-            if all((predicate(*arg) for predicate in predicates)):
+            if all(predicate(*arg) for predicate in predicates):
                 return derived_subscriber(*arg)
 
         if hasattr(subscriber, '__name__'):
@@ -165,7 +161,7 @@ class AdaptersConfiguratorMixin(object):
 
     @action_method
     def add_response_adapter(self, adapter, type_or_iface):
-        """ When an object of type (or interface) ``type_or_iface`` is
+        """When an object of type (or interface) ``type_or_iface`` is
         returned from a view callable, Pyramid will use the adapter
         ``adapter`` to convert it into an object which implements the
         :class:`pyramid.interfaces.IResponse` interface.  If ``adapter`` is

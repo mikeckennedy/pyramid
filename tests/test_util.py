@@ -1,6 +1,7 @@
 import sys
 import unittest
-from pyramid.util import text_, bytes_
+
+from pyramid.util import bytes_, text_
 
 
 class Test_InstancePropertyHelper(unittest.TestCase):
@@ -102,25 +103,26 @@ class Test_InstancePropertyHelper(unittest.TestCase):
         )
 
     def test_override_property(self):
-        def worker(obj):  # pragma: no cover
+        def worker(obj):
             pass
 
         foo = Dummy()
         helper = self._getTargetClass()
         helper.set_property(foo, worker, name='x')
-
-        def doit():
-            foo.x = 1
-
-        self.assertRaises(AttributeError, doit)
+        self.assertIsNone(foo.x)
+        foo.x = 1
+        self.assertEqual(foo.x, 1)
+        del foo.x
+        self.assertIsNone(foo.x)
 
     def test_override_reify(self):
-        def worker(obj):  # pragma: no cover
+        def worker(obj):
             pass
 
         foo = Dummy()
         helper = self._getTargetClass()
         helper.set_property(foo, worker, name='x', reify=True)
+        self.assertIsNone(foo.x)
         foo.x = 1
         self.assertEqual(1, foo.x)
         foo.x = 2
@@ -135,7 +137,7 @@ class Test_InstancePropertyHelper(unittest.TestCase):
         self.assertEqual(2, foo.x)
 
     def test_reset_reify(self):
-        """ This is questionable behavior, but may as well get notified
+        """This is questionable behavior, but may as well get notified
         if it changes."""
         foo = Dummy()
         helper = self._getTargetClass()
@@ -300,23 +302,24 @@ class Test_InstancePropertyMixin(unittest.TestCase):
         )
 
     def test_override_property(self):
-        def worker(obj):  # pragma: no cover
+        def worker(obj):
             pass
 
         foo = self._makeOne()
         foo.set_property(worker, name='x')
-
-        def doit():
-            foo.x = 1
-
-        self.assertRaises(AttributeError, doit)
+        self.assertIsNone(foo.x)
+        foo.x = 1
+        self.assertEqual(foo.x, 1)
+        del foo.x
+        self.assertIsNone(foo.x)
 
     def test_override_reify(self):
-        def worker(obj):  # pragma: no cover
+        def worker(obj):
             pass
 
         foo = self._makeOne()
         foo.set_property(worker, name='x', reify=True)
+        self.assertIsNone(foo.x)
         foo.x = 1
         self.assertEqual(1, foo.x)
         foo.x = 2
@@ -330,7 +333,7 @@ class Test_InstancePropertyMixin(unittest.TestCase):
         self.assertEqual(2, foo.x)
 
     def test_reset_reify(self):
-        """ This is questionable behavior, but may as well get notified
+        """This is questionable behavior, but may as well get notified
         if it changes."""
         foo = self._makeOne()
         foo.set_property(lambda _: 1, name='x', reify=True)
@@ -469,7 +472,7 @@ class Test_object_description(unittest.TestCase):
         self.assertEqual(self._callFUT(('a', 'b')), "('a', 'b')")
 
     def test_set(self):
-        self.assertEqual(self._callFUT(set(['a'])), "{'a'}")
+        self.assertEqual(self._callFUT({'a'}), "{'a'}")
 
     def test_list(self):
         self.assertEqual(self._callFUT(['a']), "['a']")
@@ -627,7 +630,7 @@ class TestTopologicalSorter(unittest.TestCase):
         )
 
     def test_sorted_ordering_5(self):
-        from pyramid.util import LAST, FIRST
+        from pyramid.util import FIRST, LAST
 
         sorter = self._makeOne()
         add = sorter.add
@@ -838,7 +841,7 @@ class Test_hide_attrs(unittest.TestCase):
     def _makeDummy(self):
         from pyramid.decorator import reify
 
-        class Dummy(object):
+        class Dummy:
             x = 1
 
             @reify
@@ -893,7 +896,7 @@ def dummyfunc():  # pragma: no cover
     pass
 
 
-class Dummy(object):
+class Dummy:
     pass
 
 
@@ -968,55 +971,55 @@ class Test_takes_one_arg(unittest.TestCase):
         return takes_one_arg(view, attr=attr, argname=argname)
 
     def test_requestonly_newstyle_class_no_init(self):
-        class foo(object):
+        class foo:
             """ """
 
         self.assertFalse(self._callFUT(foo))
 
     def test_requestonly_newstyle_class_init_toomanyargs(self):
-        class foo(object):
+        class foo:
             def __init__(self, context, request):
                 """ """
 
         self.assertFalse(self._callFUT(foo))
 
     def test_requestonly_newstyle_class_init_onearg_named_request(self):
-        class foo(object):
+        class foo:
             def __init__(self, request):
                 """ """
 
         self.assertTrue(self._callFUT(foo))
 
     def test_newstyle_class_init_onearg_named_somethingelse(self):
-        class foo(object):
+        class foo:
             def __init__(self, req):
                 """ """
 
         self.assertTrue(self._callFUT(foo))
 
     def test_newstyle_class_init_defaultargs_firstname_not_request(self):
-        class foo(object):
+        class foo:
             def __init__(self, context, request=None):
                 """ """
 
         self.assertFalse(self._callFUT(foo))
 
     def test_newstyle_class_init_defaultargs_firstname_request(self):
-        class foo(object):
+        class foo:
             def __init__(self, request, foo=1, bar=2):
                 """ """
 
         self.assertTrue(self._callFUT(foo, argname='request'))
 
     def test_newstyle_class_init_firstname_request_with_secondname(self):
-        class foo(object):
+        class foo:
             def __init__(self, request, two):
                 """ """
 
         self.assertFalse(self._callFUT(foo))
 
     def test_newstyle_class_init_noargs(self):
-        class foo(object):
+        class foo:
             def __init__():
                 """ """
 
@@ -1206,7 +1209,7 @@ class TestSimpleSerializer(unittest.TestCase):
 
 
 class TestUnboundMethods(unittest.TestCase):
-    class Dummy(object):
+    class Dummy:
         def run(self):  # pragma: no cover
             return 'OK'
 

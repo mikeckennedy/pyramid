@@ -1,8 +1,8 @@
 from functools import update_wrapper
 
 
-class reify(object):
-    """ Use as a class method decorator.  It operates almost exactly like the
+class reify:
+    """Use as a class method decorator.  It operates almost exactly like the
     Python ``@property`` decorator, but it puts the result of the method it
     decorates into the instance dict after the first call, effectively
     replacing the function it decorates with an instance variable.  It is, in
@@ -13,7 +13,7 @@ class reify(object):
 
         >>> from pyramid.decorator import reify
 
-        >>> class Foo(object):
+        >>> class Foo:
         ...     @reify
         ...     def jammy(self):
         ...         print('jammy called')
@@ -41,5 +41,9 @@ class reify(object):
         if inst is None:
             return self
         val = self.wrapped(inst)
+        # reify is a non-data-descriptor which is leveraging the fact
+        # that it is not invoked if the equivalent attribute is defined in the
+        # object's dict, so the setattr here effectively hides this descriptor
+        # from subsequent lookups
         setattr(inst, self.wrapped.__name__, val)
         return val

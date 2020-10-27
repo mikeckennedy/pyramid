@@ -3,7 +3,7 @@ from zope.interface import implementer
 
 from pyramid import testing
 from pyramid.exceptions import ConfigurationError
-from pyramid.interfaces import IResponse, IRequest
+from pyramid.interfaces import IRequest, IResponse
 
 
 class TestDeriveView(unittest.TestCase):
@@ -28,12 +28,11 @@ class TestDeriveView(unittest.TestCase):
         return logger
 
     def _registerSecurityPolicy(self, permissive):
-        from pyramid.interfaces import IAuthenticationPolicy
-        from pyramid.interfaces import IAuthorizationPolicy
+        from pyramid.interfaces import ISecurityPolicy
 
         policy = DummySecurityPolicy(permissive)
-        self.config.registry.registerUtility(policy, IAuthenticationPolicy)
-        self.config.registry.registerUtility(policy, IAuthorizationPolicy)
+        self.config.registry.registerUtility(policy, ISecurityPolicy)
+        return policy
 
     def test_function_returns_non_adaptable(self):
         def view(request):
@@ -74,7 +73,7 @@ class TestDeriveView(unittest.TestCase):
             raise AssertionError
 
     def test_instance_returns_non_adaptable(self):
-        class AView(object):
+        class AView:
             def __call__(self, request):
                 return None
 
@@ -130,7 +129,7 @@ class TestDeriveView(unittest.TestCase):
     def test_requestonly_default_method_returns_non_adaptable(self):
         request = DummyRequest()
 
-        class AView(object):
+        class AView:
             def __init__(self, request):
                 pass
 
@@ -156,7 +155,7 @@ class TestDeriveView(unittest.TestCase):
     def test_requestonly_nondefault_method_returns_non_adaptable(self):
         request = DummyRequest()
 
-        class AView(object):
+        class AView:
             def __init__(self, request):
                 pass
 
@@ -192,7 +191,7 @@ class TestDeriveView(unittest.TestCase):
     def test_requestonly_function_with_renderer(self):
         response = DummyResponse()
 
-        class moo(object):
+        class moo:
             def render_view(inself, req, resp, view_inst, ctx):
                 self.assertEqual(req, request)
                 self.assertEqual(resp, 'OK')
@@ -236,7 +235,7 @@ class TestDeriveView(unittest.TestCase):
     def test_requestonly_function_with_renderer_request_has_view(self):
         response = DummyResponse()
 
-        class moo(object):
+        class moo:
             def render_view(inself, req, resp, view_inst, ctx):
                 self.assertEqual(req, request)
                 self.assertEqual(resp, 'OK')
@@ -262,7 +261,7 @@ class TestDeriveView(unittest.TestCase):
     def test_class_without_attr(self):
         response = DummyResponse()
 
-        class View(object):
+        class View:
             def __init__(self, request):
                 pass
 
@@ -277,7 +276,7 @@ class TestDeriveView(unittest.TestCase):
     def test_class_with_attr(self):
         response = DummyResponse()
 
-        class View(object):
+        class View:
             def __init__(self, request):
                 pass
 
@@ -315,7 +314,7 @@ class TestDeriveView(unittest.TestCase):
     def test_as_newstyle_class_context_and_request(self):
         response = DummyResponse()
 
-        class view(object):
+        class view:
             def __init__(self, context, request):
                 pass
 
@@ -335,7 +334,7 @@ class TestDeriveView(unittest.TestCase):
     def test_as_newstyle_class_requestonly(self):
         response = DummyResponse()
 
-        class view(object):
+        class view:
             def __init__(self, context, request):
                 pass
 
@@ -421,7 +420,7 @@ class TestDeriveView(unittest.TestCase):
         self.assertFalse(hasattr(result, '__call_permissive__'))
         self.assertEqual(result(None, None), response)
 
-    def test_with_debug_authorization_no_authpol(self):
+    def test_with_debug_authorization_no_security_policy(self):
         response = DummyResponse()
         view = lambda *arg: response
         self.config.registry.settings = dict(
@@ -442,59 +441,7 @@ class TestDeriveView(unittest.TestCase):
             logger.messages[0],
             "debug_authorization of url url (view name "
             "'view_name' against context None): Allowed "
-            "(no authorization policy in use)",
-        )
-
-    def test_with_debug_authorization_authn_policy_no_authz_policy(self):
-        response = DummyResponse()
-        view = lambda *arg: response
-        self.config.registry.settings = dict(debug_authorization=True)
-        from pyramid.interfaces import IAuthenticationPolicy
-
-        policy = DummySecurityPolicy(False)
-        self.config.registry.registerUtility(policy, IAuthenticationPolicy)
-        logger = self._registerLogger()
-        result = self.config._derive_view(view, permission='view')
-        self.assertEqual(view.__module__, result.__module__)
-        self.assertEqual(view.__doc__, result.__doc__)
-        self.assertEqual(view.__name__, result.__name__)
-        self.assertFalse(hasattr(result, '__call_permissive__'))
-        request = self._makeRequest()
-        request.view_name = 'view_name'
-        request.url = 'url'
-        self.assertEqual(result(None, request), response)
-        self.assertEqual(len(logger.messages), 1)
-        self.assertEqual(
-            logger.messages[0],
-            "debug_authorization of url url (view name "
-            "'view_name' against context None): Allowed "
-            "(no authorization policy in use)",
-        )
-
-    def test_with_debug_authorization_authz_policy_no_authn_policy(self):
-        response = DummyResponse()
-        view = lambda *arg: response
-        self.config.registry.settings = dict(debug_authorization=True)
-        from pyramid.interfaces import IAuthorizationPolicy
-
-        policy = DummySecurityPolicy(False)
-        self.config.registry.registerUtility(policy, IAuthorizationPolicy)
-        logger = self._registerLogger()
-        result = self.config._derive_view(view, permission='view')
-        self.assertEqual(view.__module__, result.__module__)
-        self.assertEqual(view.__doc__, result.__doc__)
-        self.assertEqual(view.__name__, result.__name__)
-        self.assertFalse(hasattr(result, '__call_permissive__'))
-        request = self._makeRequest()
-        request.view_name = 'view_name'
-        request.url = 'url'
-        self.assertEqual(result(None, request), response)
-        self.assertEqual(len(logger.messages), 1)
-        self.assertEqual(
-            logger.messages[0],
-            "debug_authorization of url url (view name "
-            "'view_name' against context None): Allowed "
-            "(no authorization policy in use)",
+            "(no security policy in use)",
         )
 
     def test_with_debug_authorization_no_permission(self):
@@ -665,32 +612,11 @@ class TestDeriveView(unittest.TestCase):
             "'view_name' against context Exception()): True",
         )
 
-    def test_secured_view_authn_policy_no_authz_policy(self):
+    def test_secured_view_authn_policy_no_security_policy(self):
         response = DummyResponse()
         view = lambda *arg: response
         self.config.registry.settings = {}
-        from pyramid.interfaces import IAuthenticationPolicy
 
-        policy = DummySecurityPolicy(False)
-        self.config.registry.registerUtility(policy, IAuthenticationPolicy)
-        result = self.config._derive_view(view, permission='view')
-        self.assertEqual(view.__module__, result.__module__)
-        self.assertEqual(view.__doc__, result.__doc__)
-        self.assertEqual(view.__name__, result.__name__)
-        self.assertFalse(hasattr(result, '__call_permissive__'))
-        request = self._makeRequest()
-        request.view_name = 'view_name'
-        request.url = 'url'
-        self.assertEqual(result(None, request), response)
-
-    def test_secured_view_authz_policy_no_authn_policy(self):
-        response = DummyResponse()
-        view = lambda *arg: response
-        self.config.registry.settings = {}
-        from pyramid.interfaces import IAuthorizationPolicy
-
-        policy = DummySecurityPolicy(False)
-        self.config.registry.registerUtility(policy, IAuthorizationPolicy)
         result = self.config._derive_view(view, permission='view')
         self.assertEqual(view.__module__, result.__module__)
         self.assertEqual(view.__doc__, result.__doc__)
@@ -702,53 +628,41 @@ class TestDeriveView(unittest.TestCase):
         self.assertEqual(result(None, request), response)
 
     def test_secured_view_raises_forbidden_no_name(self):
-        from pyramid.interfaces import IAuthenticationPolicy
-        from pyramid.interfaces import IAuthorizationPolicy
         from pyramid.httpexceptions import HTTPForbidden
 
         response = DummyResponse()
         view = lambda *arg: response
         self.config.registry.settings = {}
-        policy = DummySecurityPolicy(False)
-        self.config.registry.registerUtility(policy, IAuthenticationPolicy)
-        self.config.registry.registerUtility(policy, IAuthorizationPolicy)
+        self._registerSecurityPolicy(False)
         result = self.config._derive_view(view, permission='view')
         request = self._makeRequest()
         request.view_name = 'view_name'
         request.url = 'url'
-        try:
+        with self.assertRaises(HTTPForbidden) as cm:
             result(None, request)
-        except HTTPForbidden as e:
-            self.assertEqual(
-                e.message, 'Unauthorized: <lambda> failed permission check'
-            )
-        else:  # pragma: no cover
-            raise AssertionError
+        self.assertEqual(
+            cm.exception.message,
+            'Unauthorized: <lambda> failed permission check',
+        )
 
     def test_secured_view_raises_forbidden_with_name(self):
-        from pyramid.interfaces import IAuthenticationPolicy
-        from pyramid.interfaces import IAuthorizationPolicy
         from pyramid.httpexceptions import HTTPForbidden
 
         def myview(request):  # pragma: no cover
             pass
 
         self.config.registry.settings = {}
-        policy = DummySecurityPolicy(False)
-        self.config.registry.registerUtility(policy, IAuthenticationPolicy)
-        self.config.registry.registerUtility(policy, IAuthorizationPolicy)
+        self._registerSecurityPolicy(False)
         result = self.config._derive_view(myview, permission='view')
         request = self._makeRequest()
         request.view_name = 'view_name'
         request.url = 'url'
-        try:
+        with self.assertRaises(HTTPForbidden) as cm:
             result(None, request)
-        except HTTPForbidden as e:
-            self.assertEqual(
-                e.message, 'Unauthorized: myview failed permission check'
-            )
-        else:  # pragma: no cover
-            raise AssertionError
+        self.assertEqual(
+            cm.exception.message,
+            'Unauthorized: myview failed permission check',
+        )
 
     def test_secured_view_skipped_by_default_on_exception_view(self):
         from pyramid.request import Request
@@ -794,12 +708,8 @@ class TestDeriveView(unittest.TestCase):
         app = self.config.make_wsgi_app()
         request = Request.blank('/foo', base_url='http://example.com')
         request.method = 'POST'
-        try:
+        with self.assertRaises(HTTPForbidden):
             request.get_response(app)
-        except HTTPForbidden:
-            pass
-        else:  # pragma: no cover
-            raise AssertionError
 
     def test_secured_view_passed_on_explicit_exception_view(self):
         from pyramid.request import Request
@@ -967,9 +877,8 @@ class TestDeriveView(unittest.TestCase):
         self.assertEqual(predicates, [True, True])
 
     def test_with_wrapper_viewname(self):
+        from pyramid.interfaces import IView, IViewClassifier
         from pyramid.response import Response
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
 
         inner_response = Response('OK')
 
@@ -1014,7 +923,7 @@ class TestDeriveView(unittest.TestCase):
     def test_as_newstyle_class_context_and_request_attr_and_renderer(self):
         response = DummyResponse()
 
-        class renderer(object):
+        class renderer:
             def render_view(inself, req, resp, view_inst, ctx):
                 self.assertEqual(req, request)
                 self.assertEqual(resp, {'a': '1'})
@@ -1025,7 +934,7 @@ class TestDeriveView(unittest.TestCase):
             def clone(self):
                 return self
 
-        class View(object):
+        class View:
             def __init__(self, context, request):
                 pass
 
@@ -1046,7 +955,7 @@ class TestDeriveView(unittest.TestCase):
     def test_as_newstyle_class_requestonly_attr_and_renderer(self):
         response = DummyResponse()
 
-        class renderer(object):
+        class renderer:
             def render_view(inself, req, resp, view_inst, ctx):
                 self.assertEqual(req, request)
                 self.assertEqual(resp, {'a': '1'})
@@ -1057,7 +966,7 @@ class TestDeriveView(unittest.TestCase):
             def clone(self):
                 return self
 
-        class View(object):
+        class View:
             def __init__(self, request):
                 pass
 
@@ -1078,7 +987,7 @@ class TestDeriveView(unittest.TestCase):
     def test_as_oldstyle_cls_context_request_attr_and_renderer(self):
         response = DummyResponse()
 
-        class renderer(object):
+        class renderer:
             def render_view(inself, req, resp, view_inst, ctx):
                 self.assertEqual(req, request)
                 self.assertEqual(resp, {'a': '1'})
@@ -1110,7 +1019,7 @@ class TestDeriveView(unittest.TestCase):
     def test_as_oldstyle_cls_requestonly_attr_and_renderer(self):
         response = DummyResponse()
 
-        class renderer(object):
+        class renderer:
             def render_view(inself, req, resp, view_inst, ctx):
                 self.assertEqual(req, request)
                 self.assertEqual(resp, {'a': '1'})
@@ -1142,7 +1051,7 @@ class TestDeriveView(unittest.TestCase):
     def test_as_instance_context_and_request_attr_and_renderer(self):
         response = DummyResponse()
 
-        class renderer(object):
+        class renderer:
             def render_view(inself, req, resp, view_inst, ctx):
                 self.assertEqual(req, request)
                 self.assertEqual(resp, {'a': '1'})
@@ -1171,7 +1080,7 @@ class TestDeriveView(unittest.TestCase):
     def test_as_instance_requestonly_attr_and_renderer(self):
         response = DummyResponse()
 
-        class renderer(object):
+        class renderer:
             def render_view(inself, req, resp, view_inst, ctx):
                 self.assertEqual(req, request)
                 self.assertEqual(resp, {'a': '1'})
@@ -1200,7 +1109,7 @@ class TestDeriveView(unittest.TestCase):
     def test_with_view_mapper_config_specified(self):
         response = DummyResponse()
 
-        class mapper(object):
+        class mapper:
             def __init__(self, **kw):
                 self.kw = kw
 
@@ -1282,6 +1191,7 @@ class TestDeriveView(unittest.TestCase):
 
     def test_http_cached_view_integer(self):
         import datetime
+
         from pyramid.response import Response
 
         response = Response('OK')
@@ -1304,6 +1214,7 @@ class TestDeriveView(unittest.TestCase):
 
     def test_http_cached_view_timedelta(self):
         import datetime
+
         from pyramid.response import Response
 
         response = Response('OK')
@@ -1328,6 +1239,7 @@ class TestDeriveView(unittest.TestCase):
 
     def test_http_cached_view_tuple(self):
         import datetime
+
         from pyramid.response import Response
 
         response = Response('OK')
@@ -1497,6 +1409,49 @@ class TestDeriveView(unittest.TestCase):
         request.domain = "example.com"
         request.host_port = "443"
         request.referrer = "https://example.com/login/"
+        request.method = 'POST'
+        request.session = DummySession({'csrf_token': 'foo'})
+        request.POST = {'csrf_token': 'foo'}
+        view = self.config._derive_view(inner_view, require_csrf=True)
+        result = view(None, request)
+        self.assertTrue(result is response)
+
+    def test_csrf_view_disables_origin_check(self):
+        response = DummyResponse()
+
+        def inner_view(request):
+            return response
+
+        self.config.set_default_csrf_options(
+            require_csrf=True, check_origin=False
+        )
+        request = self._makeRequest()
+        request.scheme = "https"
+        request.domain = "example.com"
+        request.host_port = "443"
+        request.referrer = None
+        request.method = 'POST'
+        request.headers = {"Origin": "https://evil-example.com"}
+        request.session = DummySession({'csrf_token': 'foo'})
+        request.POST = {'csrf_token': 'foo'}
+        view = self.config._derive_view(inner_view, require_csrf=True)
+        result = view(None, request)
+        self.assertTrue(result is response)
+
+    def test_csrf_view_allow_no_origin(self):
+        response = DummyResponse()
+
+        def inner_view(request):
+            return response
+
+        self.config.set_default_csrf_options(
+            require_csrf=True, allow_no_origin=True
+        )
+        request = self._makeRequest()
+        request.scheme = "https"
+        request.domain = "example.com"
+        request.host_port = "443"
+        request.referrer = None
         request.method = 'POST'
         request.session = DummySession({'csrf_token': 'foo'})
         request.POST = {'csrf_token': 'foo'}
@@ -2031,9 +1986,8 @@ class TestDeriverIntegration(unittest.TestCase):
         self, config, ctx_iface=None, request_iface=None, name=''
     ):
         from zope.interface import Interface
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
+
+        from pyramid.interfaces import IRequest, IView, IViewClassifier
 
         classifier = IViewClassifier
         if ctx_iface is None:
@@ -2093,7 +2047,7 @@ class TestDeriverIntegration(unittest.TestCase):
 
 
 @implementer(IResponse)
-class DummyResponse(object):
+class DummyResponse:
     content_type = None
     default_content_type = None
     body = None
@@ -2130,10 +2084,7 @@ class DummySecurityPolicy:
     def __init__(self, permitted=True):
         self.permitted = permitted
 
-    def effective_principals(self, request):
-        return []
-
-    def permits(self, context, principals, permission):
+    def permits(self, request, context, permission):
         return self.permitted
 
 

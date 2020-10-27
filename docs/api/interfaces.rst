@@ -29,6 +29,9 @@ Event-Related Interfaces
 Other Interfaces
 ++++++++++++++++
 
+  .. autointerface:: ISecurityPolicy
+     :members:
+
   .. autointerface:: IAuthenticationPolicy
      :members:
 
@@ -108,4 +111,25 @@ Other Interfaces
      :members:
 
   .. autointerface:: IViewDeriverInfo
+     :members:
+
+  .. autointerface:: IPredicateFactory
+     :members:
+
+  .. autointerface:: IPredicateInfo
+     :members:
+
+  .. autointerface:: IPredicate
+     :members:
+
+  .. autointerface:: IRoutePredicate
+     :inherited-members:
+     :members:
+
+  .. autointerface:: ISubscriberPredicate
+     :inherited-members:
+     :members:
+
+  .. autointerface:: IViewPredicate
+     :inherited-members:
      :members:

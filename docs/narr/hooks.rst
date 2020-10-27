@@ -1335,7 +1335,7 @@ Specifying neither ``over`` nor ``under`` is equivalent to specifying
 
 If all options for ``under`` (or ``over``) cannot be found in the current
 configuration, it is an error. If some options are specified purely for
-compatibilty with other tweens, just add a fallback of ``MAIN`` or ``INGRESS``.
+compatibility with other tweens, just add a fallback of ``MAIN`` or ``INGRESS``.
 For example, ``under=('someothertween', 'someothertween2', INGRESS)``. This
 constraint will require the tween to be located under the ``someothertween``
 tween, the ``someothertween2`` tween, and ``INGRESS``. If any of these is not
@@ -1412,14 +1412,14 @@ time.
 Displaying Tween Ordering
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``ptweens`` command-line utility can be used to report the current implict
+The ``ptweens`` command-line utility can be used to report the current implicit
 and explicit tween chains used by an application.  See
 :ref:`displaying_tweens`.
 
-.. _registering_thirdparty_predicates:
+.. _registering_custom_predicates:
 
-Adding a Third Party View, Route, or Subscriber Predicate
----------------------------------------------------------
+Adding a Custom View, Route, or Subscriber Predicate
+----------------------------------------------------
 
 .. versionadded:: 1.4
 
@@ -1446,7 +1446,7 @@ Likewise, a similar predicate can be used as a *route* predicate:
     config.add_route('name', '/foo', request_method='POST')
 
 Many other built-in predicates exists (``request_param``, and others).  You can
-add third-party predicates to the list of available predicates by using one of
+add custom predicates to the list of available predicates by using one of
 :meth:`pyramid.config.Configurator.add_view_predicate` or
 :meth:`pyramid.config.Configurator.add_route_predicate`.  The former adds a
 view predicate, the latter a route predicate.
@@ -1482,7 +1482,7 @@ method. For example:
     :linenos:
 
     class ContentTypePredicate(object):
-        def __init__(self, val, config):
+        def __init__(self, val, info):
             self.val = val
 
         def text(self):
@@ -1493,11 +1493,11 @@ method. For example:
         def __call__(self, context, request):
             return request.content_type == self.val
 
-The constructor of a predicate factory takes two arguments: ``val`` and
-``config``.  The ``val`` argument will be the argument passed to
-``view_config`` (or ``add_view``).  In the example above, it will be the string
-``File``.  The second argument, ``config``, will be the Configurator instance
-at the time of configuration.
+The constructor of an :class:`pyramid.interfaces.IPredicateFactory`` takes two arguments: ``val`` and ``info``.
+The ``val`` argument will be the argument passed to ``view_config`` (or ``add_view``).
+In the example above, it will be the string ``File``.
+The second argument, ``info``, will be an :class:`pyramid.interfaces.IPredicateInfo` instance created relative to the action configuring the predicate.
+This means the ``info.package`` value is the package where the action is invoked passing in ``val`` and ``info.maybe_dotted`` is also relative to this package.
 
 The ``text`` method must return a string.  It should be useful to describe the
 behavior of the predicate in error messages.
@@ -1524,7 +1524,7 @@ a :term:`view predicate` or a :term:`route predicate`:
   performed using either the route's :term:`root factory` or the app's
   :term:`default root factory`.
 
-In both cases the ``__call__`` method is expected to return ``True`` or
+In all cases the ``__call__`` method is expected to return ``True`` or
 ``False``.
 
 It is possible to use the same predicate factory as both a view predicate and
@@ -1560,11 +1560,11 @@ event type.
     :linenos:
 
     class RequestPathStartsWith(object):
-        def __init__(self, val, config):
+        def __init__(self, val, info):
             self.val = val
 
         def text(self):
-            return 'path_startswith = %s' % (self.val,)
+            return 'request_path_startswith = %s' % (self.val,)
 
         phash = text
 

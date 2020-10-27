@@ -66,16 +66,16 @@ with the ``.jinja2`` extension within our project.
     :lineno-match:
     :language: py
 
-Next include the package ``models`` using a dotted Python path. The exact
-setup of the models will be covered later.
+Next include the ``routes`` module using a dotted Python path. This module will
+be explained in the next section.
 
 .. literalinclude:: src/basiclayout/tutorial/__init__.py
     :lines: 9
     :lineno-match:
     :language: py
 
-Next include the ``routes`` module using a dotted Python path. This module will
-be explained in the next section.
+Next include the package ``models`` using a dotted Python path. The exact
+setup of the models will be covered later.
 
 .. literalinclude:: src/basiclayout/tutorial/__init__.py
     :lines: 10
@@ -184,11 +184,30 @@ database and provide an alternate error response.  That response will include
 the text shown at the end of the file, which will be displayed in the browser
 to inform the user about possible actions to take to solve the problem.
 
+Open ``tutorial/views/notfound.py`` in the ``views`` package to look at the second view.
+
+.. literalinclude:: src/basiclayout/tutorial/views/notfound.py
+    :linenos:
+    :language: python
+
+Without repeating ourselves, we will point out the differences between this view and the previous.
+
+#.  *Line 4*.
+    The ``notfound_view`` function is decorated with ``@notfound_view_config``.
+    This decorator registers a :term:`Not Found View` using :meth:`pyramid.config.Configurator.add_notfound_view`.
+
+    The ``renderer`` argument names an :term:`asset specification` of ``tutorial:templates/404.jinja2``.
+
+#.  *Lines 5-7*.
+    A :term:`view callable` named ``notfound_view`` is defined, which is decorated in the step above.
+    It sets the HTTP response status code to ``404``.
+    The function returns an empty dictionary to the template ``404.jinja2``, which accepts no parameters anyway.
+
 
 Content models with the ``models`` package
 ------------------------------------------
 
-In an SQLAlchemy-based application, a *model* object is an object composed by
+In a SQLAlchemy-based application, a *model* object is an object composed by
 querying the SQL database. The ``models`` package is where the ``alchemy``
 cookiecutter put the classes that implement our models.
 
@@ -329,3 +348,9 @@ code in our stock application.
 
 The ``Index`` import and the ``Index`` object creation in ``mymodel.py`` is
 not required for this tutorial, and will be removed in the next step.
+
+Tests
+-----
+
+The project contains a basic structure for a test suite using ``pytest``.
+The structure is covered later in :ref:`wiki2_adding_tests`.

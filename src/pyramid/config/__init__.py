@@ -3,49 +3,20 @@ import logging
 import os
 import threading
 import venusian
-
 from webob.exc import WSGIHTTPException as WebobWSGIHTTPException
 
-from pyramid.interfaces import (
-    IDebugLogger,
-    IExceptionResponse,
-    PHASE0_CONFIG,
-    PHASE1_CONFIG,
-    PHASE2_CONFIG,
-    PHASE3_CONFIG,
-)
-
 from pyramid.asset import resolve_asset_spec
-
 from pyramid.authorization import ACLAuthorizationPolicy
-
-from pyramid.events import ApplicationCreated
-
-from pyramid.exceptions import ConfigurationError
-
-from pyramid.httpexceptions import default_exceptionresponse_view
-
-from pyramid.path import caller_package, package_of
-
-from pyramid.registry import Introspectable, Introspector, Registry
-
-from pyramid.router import Router
-
-from pyramid.settings import aslist
-
-from pyramid.threadlocal import manager
-
-from pyramid.util import WeakOrderedSet, get_callable_name, object_description
-
-from pyramid.config.actions import action_method, ActionState
-from pyramid.config.predicates import not_
-
-from pyramid.config.actions import ActionConfiguratorMixin
+from pyramid.config.actions import (
+    ActionConfiguratorMixin,
+    ActionState,
+    action_method,
+)
 from pyramid.config.adapters import AdaptersConfiguratorMixin
 from pyramid.config.assets import AssetsConfiguratorMixin
 from pyramid.config.factories import FactoriesConfiguratorMixin
 from pyramid.config.i18n import I18NConfiguratorMixin
-from pyramid.config.predicates import PredicateConfiguratorMixin
+from pyramid.config.predicates import PredicateConfiguratorMixin, not_
 from pyramid.config.rendering import RenderingConfiguratorMixin
 from pyramid.config.routes import RoutesConfiguratorMixin
 from pyramid.config.security import SecurityConfiguratorMixin
@@ -54,8 +25,23 @@ from pyramid.config.testing import TestingConfiguratorMixin
 from pyramid.config.tweens import TweensConfiguratorMixin
 from pyramid.config.views import ViewsConfiguratorMixin
 from pyramid.config.zca import ZCAConfiguratorMixin
-
-from pyramid.path import DottedNameResolver
+from pyramid.events import ApplicationCreated
+from pyramid.exceptions import ConfigurationError
+from pyramid.httpexceptions import default_exceptionresponse_view
+from pyramid.interfaces import (
+    PHASE0_CONFIG,
+    PHASE1_CONFIG,
+    PHASE2_CONFIG,
+    PHASE3_CONFIG,
+    IDebugLogger,
+    IExceptionResponse,
+)
+from pyramid.path import DottedNameResolver, caller_package, package_of
+from pyramid.registry import Introspectable, Introspector, Registry
+from pyramid.router import Router
+from pyramid.settings import aslist
+from pyramid.threadlocal import manager
+from pyramid.util import WeakOrderedSet, get_callable_name, object_description
 
 _marker = object()
 
@@ -138,6 +124,9 @@ class Configurator(
     representing the default :term:`root factory` for your application or a
     :term:`dotted Python name` to the same.  If it is ``None``, a default
     root factory will be used.
+
+    If ``security_policy`` is passed, it should be an instance of a
+    :term:`security policy` or a :term:`dotted Python name` to the same.
 
     If ``authentication_policy`` is passed, it should be an instance
     of an :term:`authentication policy` or a :term:`dotted Python
@@ -278,6 +267,7 @@ class Configurator(
         package=None,
         settings=None,
         root_factory=None,
+        security_policy=None,
         authentication_policy=None,
         authorization_policy=None,
         renderers=None,
@@ -315,6 +305,7 @@ class Configurator(
                 root_factory=root_factory,
                 authentication_policy=authentication_policy,
                 authorization_policy=authorization_policy,
+                security_policy=security_policy,
                 renderers=renderers,
                 debug_logger=debug_logger,
                 locale_negotiator=locale_negotiator,
@@ -330,6 +321,7 @@ class Configurator(
         self,
         settings=None,
         root_factory=None,
+        security_policy=None,
         authentication_policy=None,
         authorization_policy=None,
         renderers=None,
@@ -342,7 +334,7 @@ class Configurator(
         default_view_mapper=None,
         exceptionresponse_view=default_exceptionresponse_view,
     ):
-        """ When you pass a non-``None`` ``registry`` argument to the
+        """When you pass a non-``None`` ``registry`` argument to the
         :term:`Configurator` constructor, no initial setup is performed
         against the registry.  This is because the registry you pass in may
         have already been initialized for use under :app:`Pyramid` via a
@@ -415,6 +407,9 @@ class Configurator(
         if authentication_policy:
             self.set_authentication_policy(authentication_policy)
 
+        if security_policy:
+            self.set_security_policy(security_policy)
+
         if default_view_mapper is not None:
             self.set_view_mapper(default_view_mapper)
 
@@ -455,7 +450,7 @@ class Configurator(
         return '%s:%s' % (package, filename)
 
     def _fix_registry(self):
-        """ Fix up a ZCA component registry that is not a
+        """Fix up a ZCA component registry that is not a
         pyramid.registry.Registry by adding analogues of ``has_listeners``,
         ``notify``, ``queryAdapterOrSelf``, and ``registerSelfAdapter``
         through monkey-patching."""
@@ -719,7 +714,7 @@ class Configurator(
         return m
 
     def with_package(self, package):
-        """ Return a new Configurator instance with the same registry
+        """Return a new Configurator instance with the same registry
         as this configurator. ``package`` may be an actual Python package
         object or a :term:`dotted Python name` representing a package."""
         configurator = self.__class__(
@@ -736,7 +731,7 @@ class Configurator(
         return configurator
 
     def maybe_dotted(self, dotted):
-        """ Resolve the :term:`dotted Python name` ``dotted`` to a
+        """Resolve the :term:`dotted Python name` ``dotted`` to a
         global Python object.  If ``dotted`` is not a string, return
         it without attempting to do any name resolution.  If
         ``dotted`` is a relative dotted name (e.g. ``.foo.bar``,
@@ -745,7 +740,7 @@ class Configurator(
         return self.name_resolver.maybe_resolve(dotted)
 
     def absolute_asset_spec(self, relative_spec):
-        """ Resolve the potentially relative :term:`asset
+        """Resolve the potentially relative :term:`asset
         specification` string passed as ``relative_spec`` into an
         absolute asset specification string and return the string.
         Use the ``package`` of this configurator as the package to
@@ -760,7 +755,7 @@ class Configurator(
     absolute_resource_spec = absolute_asset_spec  # b/w compat forever
 
     def begin(self, request=_marker):
-        """ Indicate that application or test configuration has begun.
+        """Indicate that application or test configuration has begun.
         This pushes a dictionary containing the :term:`application
         registry` implied by ``registry`` attribute of this
         configurator and the :term:`request` implied by the
@@ -786,7 +781,7 @@ class Configurator(
         self.manager.push({'registry': self.registry, 'request': request})
 
     def end(self):
-        """ Indicate that application or test configuration has ended.
+        """Indicate that application or test configuration has ended.
         This pops the last value pushed onto the :term:`thread local`
         stack (usually by the ``begin`` method) and returns that
         value.
@@ -805,7 +800,12 @@ class Configurator(
 
     # this is *not* an action method (uses caller_package)
     def scan(
-        self, package=None, categories=None, onerror=None, ignore=None, **kw
+        self,
+        package=None,
+        categories=('pyramid',),
+        onerror=None,
+        ignore=None,
+        **kw
     ):
         """Scan a Python package and any of its subpackages for objects
         marked with :term:`configuration decoration` such as
@@ -820,12 +820,12 @@ class Configurator(
         The ``categories`` argument, if provided, should be the
         :term:`Venusian` 'scan categories' to use during scanning.  Providing
         this argument is not often necessary; specifying scan categories is
-        an extremely advanced usage.  By default, ``categories`` is ``None``
-        which will execute *all* Venusian decorator callbacks including
-        :app:`Pyramid`-related decorators such as
-        :class:`pyramid.view.view_config`.  See the :term:`Venusian`
-        documentation for more information about limiting a scan by using an
-        explicit set of categories.
+        an extremely advanced usage.  By default, ``categories`` is
+        ``['pyramid']`` which will execute only :app:`Pyramid`-related Venusian
+        decorator callbacks such as from :class:`pyramid.view.view_config`.
+        See the :term:`Venusian` documentation for more information about
+        limiting a scan by using an explicit set of categories. Pass ``None``
+        to pick up *all* Venusian decorators.
 
         The ``onerror`` argument, if provided, should be a Venusian
         ``onerror`` callback function.  The onerror function is passed to
@@ -863,6 +863,10 @@ class Configurator(
         .. versionadded:: 1.3
            The ``ignore`` argument.
 
+        .. versionchanged:: 2.0
+           The ``categories`` argument now defaults to ``['pyramid']`` instead
+           of ``None`` to control which decorator callbacks are executed.
+
         """
         package = self.maybe_dotted(package)
         if package is None:  # pragma: no cover
@@ -878,7 +882,7 @@ class Configurator(
         )
 
     def make_wsgi_app(self):
-        """ Commits any pending configuration statements, sends a
+        """Commits any pending configuration statements, sends a
         :class:`pyramid.events.ApplicationCreated` event to all listeners,
         adds this configuration's registry to
         :attr:`pyramid.config.global_registries`, and returns a

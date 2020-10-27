@@ -1,16 +1,13 @@
 from pyramid.config import global_registries
 from pyramid.exceptions import ConfigurationError
-
 from pyramid.interfaces import IRequestFactory, IRootFactory
-from pyramid.request import Request
-from pyramid.request import apply_request_extensions
-
+from pyramid.request import Request, apply_request_extensions
 from pyramid.threadlocal import RequestContext
 from pyramid.traversal import DefaultRootFactory
 
 
 def get_root(app, request=None):
-    """ Return a tuple composed of ``(root, closer)`` when provided a
+    """Return a tuple composed of ``(root, closer)`` when provided a
     :term:`router` instance as the ``app`` argument.  The ``root``
     returned is the application root object.  The ``closer`` returned
     is a callable (accepting no arguments) that should be called when
@@ -36,7 +33,7 @@ def get_root(app, request=None):
 
 
 def prepare(request=None, registry=None):
-    """ This function pushes data onto the Pyramid threadlocal stack
+    """This function pushes data onto the Pyramid threadlocal stack
     (request and registry), making those objects 'current'.  It
     returns a dictionary useful for bootstrapping a Pyramid
     application in a scripting environment.
@@ -77,6 +74,12 @@ def prepare(request=None, registry=None):
 
        Added the ability to use the return value as a context manager.
 
+    .. versionchanged:: 2.0
+
+       Request finished callbacks added via
+       :meth:`pyramid.request.Request.add_finished_callback` will be invoked
+       by the ``closer``.
+
     """
     if registry is None:
         registry = getattr(request, 'registry', global_registries.last)
@@ -97,6 +100,8 @@ def prepare(request=None, registry=None):
     apply_request_extensions(request)
 
     def closer():
+        if request.finished_callbacks:
+            request._process_finished_callbacks()
         ctx.end()
 
     root_factory = registry.queryUtility(
@@ -123,7 +128,7 @@ class AppEnvironment(dict):
 
 
 def _make_request(path, registry=None):
-    """ Return a :meth:`pyramid.request.Request` object anchored at a
+    """Return a :meth:`pyramid.request.Request` object anchored at a
     given path. The object returned will be generated from the supplied
     registry's :term:`Request Factory` using the
     :meth:`pyramid.interfaces.IRequestFactory.blank` method.

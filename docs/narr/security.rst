@@ -6,17 +6,12 @@
 Security
 ========
 
-:app:`Pyramid` provides an optional, declarative, security system. Security in
-:app:`Pyramid` is separated into authentication and authorization. The two
-systems communicate via :term:`principal` identifiers. Authentication is merely
-the mechanism by which credentials provided in the :term:`request` are resolved
-to one or more :term:`principal` identifiers. These identifiers represent the
-users and groups that are in effect during the request. Authorization then
-determines access based on the :term:`principal` identifiers, the requested
-:term:`permission`, and a :term:`context`.
+:app:`Pyramid` provides an optional, declarative security system.  The system
+determines the identity of the current user (authentication) and whether or not
+the user has access to certain resources (authorization).
 
-The :app:`Pyramid` authorization system can prevent a :term:`view` from being
-invoked based on an :term:`authorization policy`. Before a view is invoked, the
+The :app:`Pyramid` security system can prevent a :term:`view` from being
+invoked based on the :term:`security policy`. Before a view is invoked, the
 authorization system can use the credentials in the :term:`request` along with
 the :term:`context` resource to determine if access will be allowed.  Here's
 how it works at a high level:
@@ -37,89 +32,151 @@ how it works at a high level:
 - A :term:`view callable` is located by :term:`view lookup` using the context
   as well as other attributes of the request.
 
-- If an :term:`authentication policy` is in effect, it is passed the request.
-  It will return some number of :term:`principal` identifiers. To do this, the
-  policy would need to determine the authenticated :term:`userid` present in
-  the request.
-
-- If an :term:`authorization policy` is in effect and the :term:`view
+- If a :term:`security policy` is in effect and the :term:`view
   configuration` associated with the view callable that was found has a
-  :term:`permission` associated with it, the authorization policy is passed the
-  :term:`context`, some number of :term:`principal` identifiers returned by the
-  authentication policy, and the :term:`permission` associated with the view;
-  it will allow or deny access.
+  :term:`permission` associated with it, the policy is passed :term:`request`,
+  the :term:`context`, and the :term:`permission` associated with the view; it
+  will allow or deny access.
 
-- If the authorization policy allows access, the view callable is invoked.
+- If the security policy allows access, the view callable is invoked.
 
-- If the authorization policy denies access, the view callable is not invoked.
+- If the security policy denies access, the view callable is not invoked.
   Instead the :term:`forbidden view` is invoked.
 
-Authorization is enabled by modifying your application to include an
-:term:`authentication policy` and :term:`authorization policy`. :app:`Pyramid`
-comes with a variety of implementations of these policies.  To provide maximal
-flexibility, :app:`Pyramid` also allows you to create custom authentication
-policies and authorization policies.
+The security system is enabled by modifying your application to include a
+:term:`security policy`. :app:`Pyramid` comes with a variety of helpers to
+assist in the creation of this policy.
 
 .. index::
-   single: authorization policy
+   single: security policy
 
-.. _enabling_authorization_policy:
+.. _writing_security_policy:
 
-Enabling an Authorization Policy
---------------------------------
+Writing a Security Policy
+-------------------------
 
-:app:`Pyramid` does not enable any authorization policy by default.  All views
-are accessible by completely anonymous users.  In order to begin protecting
-views from execution based on security settings, you need to enable an
-authorization policy.
+:app:`Pyramid` does not enable any security policy by default.  All views are
+accessible by completely anonymous users.  In order to begin protecting views
+from execution based on security settings, you need to write a security policy.
 
-Enabling an Authorization Policy Imperatively
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Use the :meth:`~pyramid.config.Configurator.set_authorization_policy` method of
-the :class:`~pyramid.config.Configurator` to enable an authorization policy.
-
-You must also enable an :term:`authentication policy` in order to enable the
-authorization policy.  This is because authorization, in general, depends upon
-authentication.  Use the
-:meth:`~pyramid.config.Configurator.set_authentication_policy` method during
-application setup to specify the authentication policy.
-
-For example:
+Security policies are simple classes implementing
+:class:`pyramid.interfaces.ISecurityPolicy`.
+A simple security policy might look like the following:
 
 .. code-block:: python
     :linenos:
 
-    from pyramid.config import Configurator
-    from pyramid.authentication import AuthTktAuthenticationPolicy
-    from pyramid.authorization import ACLAuthorizationPolicy
-    authn_policy = AuthTktAuthenticationPolicy('seekrit', hashalg='sha512')
-    authz_policy = ACLAuthorizationPolicy()
-    config = Configurator()
-    config.set_authentication_policy(authn_policy)
-    config.set_authorization_policy(authz_policy)
+    from pyramid.security import Allowed, Denied
 
-.. note:: The ``authentication_policy`` and ``authorization_policy`` arguments
-   may also be passed to their respective methods mentioned above as
-   :term:`dotted Python name` values, each representing the dotted name path to
-   a suitable implementation global defined at Python module scope.
+    class SessionSecurityPolicy:
+        def authenticated_identity(self, request):
+            """ Return app-specific user object. """
+            userid = request.session.get('userid')
+            if userid is None:
+                return None
+            return load_identity_from_db(request, userid)
 
-The above configuration enables a policy which compares the value of an "auth
-ticket" cookie passed in the request's environment which contains a reference
-to a single :term:`userid`, and matches that userid's :term:`principals
-<principal>` against the principals present in any :term:`ACL` found in the
-resource tree when attempting to call some :term:`view`.
+        def authenticated_userid(self, request):
+            """ Return a string ID for the user. """
+            identity = self.authenticated_identity(request)
+            if identity is None:
+                return None
+            return string(identity.id)
 
-While it is possible to mix and match different authentication and
-authorization policies, it is an error to configure a Pyramid application with
-an authentication policy but without the authorization policy or vice versa. If
-you do this, you'll receive an error at application startup time.
+        def permits(self, request, context, permission):
+            """ Allow access to everything if signed in. """
+            identity = self.authenticated_identity(request)
+            if identity is not None:
+                return Allowed('User is signed in.')
+            else:
+                return Denied('User is not signed in.')
+
+        def remember(request, userid, **kw):
+            request.session['userid'] = userid
+            return []
+
+        def forget(request, **kw):
+            del request.session['userid']
+            return []
+
+Use the :meth:`~pyramid.config.Configurator.set_security_policy` method of
+the :class:`~pyramid.config.Configurator` to enforce the security policy on
+your application.
 
 .. seealso::
 
-    See also the :mod:`pyramid.authorization` and :mod:`pyramid.authentication`
-    modules for alternative implementations of authorization and authentication
-    policies.
+    For more information on implementing the ``permits`` method, see
+    :ref:`security_policy_permits`.
+
+Writing a Security Policy Using Helpers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To assist in writing common security policies, Pyramid provides several
+helpers.  The following authentication helpers assist with implementing
+``identity``, ``remember``, and ``forget``.
+
++-------------------------------+-------------------------------------------------------------------+
+| Use Case                      | Helper                                                            |
++===============================+===================================================================+
+| Store the :term:`userid`      | :class:`pyramid.authentication.SessionAuthenticationHelper`       |
+| in the :term:`session`.       |                                                                   |
++-------------------------------+-------------------------------------------------------------------+
+| Store the :term:`userid`      | :class:`pyramid.authentication.AuthTktCookieHelper`               |
+| with an "auth ticket" cookie. |                                                                   |
++-------------------------------+-------------------------------------------------------------------+
+| Retrieve user credentials     | Use :func:`pyramid.authentication.extract_http_basic_credentials` |
+| using HTTP Basic Auth.        | to retrieve credentials.                                          |
++-------------------------------+-------------------------------------------------------------------+
+| Retrieve the :term:`userid`   | ``REMOTE_USER`` can be accessed with                              |
+| from ``REMOTE_USER`` in the   | ``request.environ.get('REMOTE_USER')``.                           |
+| WSGI environment.             |                                                                   |
++-------------------------------+-------------------------------------------------------------------+
+
+For example, our above security policy can leverage these helpers like so:
+
+.. code-block:: python
+    :linenos:
+
+    from pyramid.security import Allowed, Denied
+    from pyramid.authentication import SessionAuthenticationHelper
+
+    class SessionSecurityPolicy:
+        def __init__(self):
+            self.helper = SessionAuthenticationHelper()
+
+        def authenticated_identity(self, request):
+            """ Return app-specific user object. """
+            userid = self.helper.authenticated_userid(request)
+            if userid is None:
+                return None
+            return load_identity_from_db(request, userid)
+
+        def authenticated_userid(self, request):
+            """ Return a string ID for the user. """
+            identity = self.authenticated_identity(request)
+            if identity is None:
+                return None
+            return str(identity.id)
+
+        def permits(self, request, context, permission):
+            """ Allow access to everything if signed in. """
+            identity = self.authenticated_identity(request)
+            if identity is not None:
+                return Allowed('User is signed in.')
+            else:
+                return Denied('User is not signed in.')
+
+        def remember(request, userid, **kw):
+            return self.helper.remember(request, userid, **kw)
+
+        def forget(request, **kw):
+            return self.helper.forget(request, **kw)
+
+Helpers are intended to be used with application-specific code.  Notice how the
+above code takes the userid from the helper and uses it to load the
+:term:`identity` from the database.  ``authenticated_userid`` pulls the
+:term:`userid` from the :term:`identity` in order to guarantee that the user ID
+stored in the session exists in the database ("authenticated").
 
 .. index::
    single: permissions
@@ -165,11 +222,56 @@ performed via the ``@view_config`` decorator:
         pass
 
 As a result of any of these various view configuration statements, if an
-authorization policy is in place when the view callable is found during normal
-application operations, the requesting user will need to possess the ``add``
-permission against the :term:`context` resource in order to be able to invoke
-the ``blog_entry_add_view`` view.  If they do not, the :term:`Forbidden view`
-will be invoked.
+security policy is in place when the view callable is found during normal
+application operations, the security policy will be queried to see if the
+requesting user is allowed the ``add`` permission within the current
+:term:`context`.  If the policy allows access, ``blog_entry_add_view`` will be
+invoked.  If not, the :term:`Forbidden view` will be invoked.
+
+.. _security_policy_permits:
+
+Allowing and Denying Access With a Security Policy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To determine whether access is allowed to a view with an attached permission,
+Pyramid calls the ``permits`` method of the security policy.  ``permits``
+should return an instance of :class:`pyramid.security.Allowed` or
+:class:`pyramid.security.Denied`.  Both classes accept a string as an argument,
+which should detail why access was allowed or denied.
+
+A simple ``permits`` implementation that grants access based on a user role
+might look like so:
+
+.. code-block:: python
+    :linenos:
+
+    from pyramid.security import Allowed, Denied
+
+    class SecurityPolicy:
+        def permits(self, request, context, permission):
+            identity = self.authenticated_identity(request)
+
+            if identity is None:
+                return Denied('User is not signed in.')
+            if identity.role == 'admin':
+                allowed = ['read', 'write', 'delete']
+            elif identity.role == 'editor':
+                allowed = ['read', 'write']
+            else:
+                allowed = ['read']
+
+            if permission in allowed:
+                return Allowed(
+                    'Access granted for user %s with role %s.',
+                    identity,
+                    identity.role,
+                )
+            else:
+                return Denied(
+                    'Access denied for user %s with role %s.',
+                    identity,
+                    identity.role,
+                )
 
 .. index::
    pair: permission; default
@@ -180,7 +282,7 @@ Setting a Default Permission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a permission is not supplied to a view configuration, the registered view
-will always be executable by entirely anonymous users: any authorization policy
+will always be executable by entirely anonymous users: any security policy
 in effect is ignored.
 
 In support of making it easier to configure applications which are "secure by
@@ -217,31 +319,53 @@ When a default permission is registered:
 
 .. _assigning_acls:
 
-Assigning ACLs to Your Resource Objects
----------------------------------------
+Implementing ACL Authorization
+------------------------------
 
-When the default :app:`Pyramid` :term:`authorization policy` determines whether
-a user possesses a particular permission with respect to a resource, it
-examines the :term:`ACL` associated with the resource.  An ACL is associated
-with a resource by adding an ``__acl__`` attribute to the resource object.
-This attribute can be defined on the resource *instance* if you need
-instance-level security, or it can be defined on the resource *class* if you
-just need type-level security.
+A common way to implement authorization is using an :term:`ACL`.  An ACL is a
+:term:`context`-specific list of access control entries, which allow or deny
+access to permissions based on a user's principals.
+
+Pyramid provides :class:`pyramid.authorization.ACLHelper` to assist with an
+ACL-based implementation of ``permits``.  Application-specific code should
+construct a list of principals for the user and call
+:meth:`pyramid.authorization.ACLHelper.permits`, which will return an
+:class:`pyramid.authorization.ACLAllowed` or :class:`pyramid.authorization.ACLDenied`
+object.  An implementation might look like this:
+
+.. code-block:: python
+    :linenos:
+
+    from pyramid.authorization import ACLHelper, Everyone, Authenticated
+
+    class SecurityPolicy:
+        def permits(self, request, context, permission):
+            principals = [Everyone]
+            if identity is not None:
+                principals.append(Authenticated)
+                principals.append('user:' + identity.id)
+                principals.append('group:' + identity.group)
+            return ACLHelper().permits(context, principals, permission)
+
+To associate an ACL with a resource, add an ``__acl__`` attribute to the
+resource object.  This attribute can be defined on the resource *instance* if
+you need instance-level security, or it can be defined on the resource *class*
+if you just need type-level security.
 
 For example, an ACL might be attached to the resource for a blog via its class:
 
 .. code-block:: python
     :linenos:
 
-    from pyramid.security import Allow
-    from pyramid.security import Everyone
+    from pyramid.authorization import Allow
+    from pyramid.authorization import Everyone
 
     class Blog(object):
         __acl__ = [
             (Allow, Everyone, 'view'),
             (Allow, 'group:editors', 'add'),
             (Allow, 'group:editors', 'edit'),
-            ]
+        ]
 
 Or, if your resources are persistent, an ACL might be specified via the
 ``__acl__`` attribute of an *instance* of a resource:
@@ -249,8 +373,8 @@ Or, if your resources are persistent, an ACL might be specified via the
 .. code-block:: python
     :linenos:
 
-    from pyramid.security import Allow
-    from pyramid.security import Everyone
+    from pyramid.authorization import Allow
+    from pyramid.authorization import Everyone
 
     class Blog(object):
         pass
@@ -258,10 +382,10 @@ Or, if your resources are persistent, an ACL might be specified via the
     blog = Blog()
 
     blog.__acl__ = [
-            (Allow, Everyone, 'view'),
-            (Allow, 'group:editors', 'add'),
-            (Allow, 'group:editors', 'edit'),
-            ]
+        (Allow, Everyone, 'view'),
+        (Allow, 'group:editors', 'add'),
+        (Allow, 'group:editors', 'edit'),
+    ]
 
 Whether an ACL is attached to a resource's class or an instance of the resource
 itself, the effect is the same.  It is useful to decorate individual resource
@@ -276,8 +400,8 @@ properties of the instance.
 .. code-block:: python
     :linenos:
 
-    from pyramid.security import Allow
-    from pyramid.security import Everyone
+    from pyramid.authorization import Allow
+    from pyramid.authorization import Everyone
 
     class Blog(object):
         def __acl__(self):
@@ -310,16 +434,16 @@ Here's an example ACL:
 .. code-block:: python
     :linenos:
 
-    from pyramid.security import Allow
-    from pyramid.security import Everyone
+    from pyramid.authorization import Allow
+    from pyramid.authorization import Everyone
 
     __acl__ = [
-            (Allow, Everyone, 'view'),
-            (Allow, 'group:editors', 'add'),
-            (Allow, 'group:editors', 'edit'),
-            ]
+        (Allow, Everyone, 'view'),
+        (Allow, 'group:editors', 'add'),
+        (Allow, 'group:editors', 'edit'),
+    ]
 
-The example ACL indicates that the :data:`pyramid.security.Everyone`
+The example ACL indicates that the :data:`pyramid.authorization.Everyone`
 principal—a special system-defined principal indicating, literally, everyone—is
 allowed to view the blog, and the ``group:editors`` principal is allowed to add
 to and edit the blog.
@@ -328,48 +452,46 @@ Each element of an ACL is an :term:`ACE`, or access control entry. For example,
 in the above code block, there are three ACEs: ``(Allow, Everyone, 'view')``,
 ``(Allow, 'group:editors', 'add')``, and ``(Allow, 'group:editors', 'edit')``.
 
-The first element of any ACE is either :data:`pyramid.security.Allow`, or
-:data:`pyramid.security.Deny`, representing the action to take when the ACE
+The first element of any ACE is either :data:`pyramid.authorization.Allow`, or
+:data:`pyramid.authorization.Deny`, representing the action to take when the ACE
 matches.  The second element is a :term:`principal`.  The third argument is a
 permission or sequence of permission names.
 
 A principal is usually a user id, however it also may be a group id if your
-authentication system provides group information and the effective
-:term:`authentication policy` policy is written to respect group information.
-See :ref:`extending_default_authentication_policies`.
+authentication system provides group information.
 
-Each ACE in an ACL is processed by an authorization policy *in the order
+Each ACE in an ACL is processed by the ACL helper *in the order
 dictated by the ACL*.  So if you have an ACL like this:
 
 .. code-block:: python
     :linenos:
 
-    from pyramid.security import Allow
-    from pyramid.security import Deny
-    from pyramid.security import Everyone
+    from pyramid.authorization import Allow
+    from pyramid.authorization import Deny
+    from pyramid.authorization import Everyone
 
     __acl__ = [
         (Allow, Everyone, 'view'),
         (Deny, Everyone, 'view'),
-        ]
+    ]
 
-The default authorization policy will *allow* everyone the view permission,
-even though later in the ACL you have an ACE that denies everyone the view
-permission.  On the other hand, if you have an ACL like this:
+The ACL helper will *allow* everyone the view permission, even though later in
+the ACL you have an ACE that denies everyone the view permission.  On the other
+hand, if you have an ACL like this:
 
 .. code-block:: python
     :linenos:
 
-    from pyramid.security import Everyone
-    from pyramid.security import Allow
-    from pyramid.security import Deny
+    from pyramid.authorization import Everyone
+    from pyramid.authorization import Allow
+    from pyramid.authorization import Deny
 
     __acl__ = [
         (Deny, Everyone, 'view'),
         (Allow, Everyone, 'view'),
-        ]
+    ]
 
-The authorization policy will deny everyone the view permission, even though
+The ACL helper will deny everyone the view permission, even though
 later in the ACL, there is an ACE that allows everyone.
 
 The third argument in an ACE can also be a sequence of permission names instead
@@ -380,14 +502,15 @@ can collapse this into a single ACE, as below.
 .. code-block:: python
     :linenos:
 
-    from pyramid.security import Allow
-    from pyramid.security import Everyone
+    from pyramid.authorization import Allow
+    from pyramid.authorization import Everyone
 
     __acl__ = [
         (Allow, Everyone, 'view'),
         (Allow, 'group:editors', ('add', 'edit')),
-        ]
+    ]
 
+.. _special_principals:
 
 .. index::
    single: principal
@@ -396,17 +519,17 @@ can collapse this into a single ACE, as below.
 Special Principal Names
 -----------------------
 
-Special principal names exist in the :mod:`pyramid.security` module.  They can
+Special principal names exist in the :mod:`pyramid.authorization` module.  They can
 be imported for use in your own code to populate ACLs, e.g.,
-:data:`pyramid.security.Everyone`.
+:data:`pyramid.authorization.Everyone`.
 
-:data:`pyramid.security.Everyone`
+:data:`pyramid.authorization.Everyone`
 
   Literally, everyone, no matter what.  This object is actually a string under
   the hood (``system.Everyone``).  Every user *is* the principal named
   "Everyone" during every request, even if a security policy is not in use.
 
-:data:`pyramid.security.Authenticated`
+:data:`pyramid.authorization.Authenticated`
 
   Any user with credentials as determined by the current security policy.  You
   might think of it as any user that is "logged in".  This object is actually a
@@ -419,12 +542,12 @@ be imported for use in your own code to populate ACLs, e.g.,
 Special Permissions
 -------------------
 
-Special permission names exist in the :mod:`pyramid.security` module.  These
+Special permission names exist in the :mod:`pyramid.authorization` module.  These
 can be imported for use in ACLs.
 
 .. _all_permissions:
 
-:data:`pyramid.security.ALL_PERMISSIONS`
+:data:`pyramid.authorization.ALL_PERMISSIONS`
 
   An object representing, literally, *all* permissions.  Useful in an ACL like
   so: ``(Allow, 'fred', ALL_PERMISSIONS)``.  The ``ALL_PERMISSIONS`` object is
@@ -441,28 +564,27 @@ Special ACEs
 ------------
 
 A convenience :term:`ACE` is defined representing a deny to everyone of all
-permissions in :data:`pyramid.security.DENY_ALL`.  This ACE is often used as
+permissions in :data:`pyramid.authorization.DENY_ALL`.  This ACE is often used as
 the *last* ACE of an ACL to explicitly cause inheriting authorization policies
 to "stop looking up the traversal tree" (effectively breaking any inheritance).
 For example, an ACL which allows *only* ``fred`` the view permission for a
-particular resource, despite what inherited ACLs may say when the default
-authorization policy is in effect, might look like so:
+particular resource, despite what inherited ACLs may say, might look like so:
 
 .. code-block:: python
     :linenos:
 
-    from pyramid.security import Allow
-    from pyramid.security import DENY_ALL
+    from pyramid.authorization import Allow
+    from pyramid.authorization import DENY_ALL
 
     __acl__ = [ (Allow, 'fred', 'view'), DENY_ALL ]
 
-Under the hood, the :data:`pyramid.security.DENY_ALL` ACE equals the
+Under the hood, the :data:`pyramid.authorization.DENY_ALL` ACE equals the
 following:
 
 .. code-block:: python
     :linenos:
 
-    from pyramid.security import ALL_PERMISSIONS
+    from pyramid.authorization import ALL_PERMISSIONS
     __acl__ = [ (Deny, Everyone, ALL_PERMISSIONS) ]
 
 .. index::
@@ -472,11 +594,10 @@ following:
 ACL Inheritance and Location-Awareness
 --------------------------------------
 
-While the default :term:`authorization policy` is in place, if a resource
-object does not have an ACL when it is the context, its *parent* is consulted
-for an ACL.  If that object does not have an ACL, *its* parent is consulted for
-an ACL, ad infinitum, until we've reached the root and there are no more
-parents left.
+While the ACL helper is in place, if a resource object does not have an ACL
+when it is the context, its *parent* is consulted for an ACL.  If that object
+does not have an ACL, *its* parent is consulted for an ACL, ad infinitum, until
+we've reached the root and there are no more parents left.
 
 In order to allow the security machinery to perform ACL inheritance, resource
 objects must provide *location-awareness*.  Providing *location-awareness*
@@ -559,7 +680,7 @@ security within view functions imperatively.  It returns instances of objects
 that are effectively booleans.  But these objects are not raw ``True`` or
 ``False`` objects, and have information attached to them about why the
 permission was allowed or denied.  The object will be one of
-:data:`pyramid.security.ACLAllowed`, :data:`pyramid.security.ACLDenied`,
+:data:`pyramid.authorization.ACLAllowed`, :data:`pyramid.authorization.ACLDenied`,
 :data:`pyramid.security.Allowed`, or :data:`pyramid.security.Denied`, as
 documented in :ref:`security_module`.  At the very minimum, these objects will
 have a ``msg`` attribute, which is a string indicating why the permission was
@@ -567,184 +688,16 @@ denied or allowed.  Introspecting this information in the debugger or via print
 statements when a call to :meth:`~pyramid.request.Request.has_permission` fails
 is often useful.
 
-.. index::
-   single: authentication policy (extending)
-
-.. _extending_default_authentication_policies:
-
-Extending Default Authentication Policies
------------------------------------------
-
-Pyramid ships with some built in authentication policies for use in your
-applications. See :mod:`pyramid.authentication` for the available policies.
-They differ on their mechanisms for tracking authentication credentials between
-requests, however they all interface with your application in mostly the same
-way.
-
-Above you learned about :ref:`assigning_acls`. Each :term:`principal` used in
-the :term:`ACL` is matched against the list returned from
-:meth:`pyramid.interfaces.IAuthenticationPolicy.effective_principals`.
-Similarly, :meth:`pyramid.request.Request.authenticated_userid` maps to
-:meth:`pyramid.interfaces.IAuthenticationPolicy.authenticated_userid`.
-
-You may control these values by subclassing the default authentication
-policies. For example, below we subclass the
-:class:`pyramid.authentication.AuthTktAuthenticationPolicy` and define extra
-functionality to query our database before confirming that the :term:`userid`
-is valid in order to avoid blindly trusting the value in the cookie (what if
-the cookie is still valid, but the user has deleted their account?).  We then
-use that :term:`userid` to augment the ``effective_principals`` with
-information about groups and other state for that user.
-
-.. code-block:: python
-    :linenos:
-
-    from pyramid.authentication import AuthTktAuthenticationPolicy
-
-    class MyAuthenticationPolicy(AuthTktAuthenticationPolicy):
-        def authenticated_userid(self, request):
-            userid = self.unauthenticated_userid(request)
-            if userid:
-                if request.verify_userid_is_still_valid(userid):
-                    return userid
-
-        def effective_principals(self, request):
-            principals = [Everyone]
-            userid = self.authenticated_userid(request)
-            if userid:
-                principals += [Authenticated, str(userid)]
-            return principals
-
-In most instances ``authenticated_userid`` and ``effective_principals`` are
-application-specific, whereas ``unauthenticated_userid``, ``remember``, and
-``forget`` are generic and focused on transport and serialization of data
-between consecutive requests.
-
-.. index::
-   single: authentication policy (creating)
-
-.. _creating_an_authentication_policy:
-
-Creating Your Own Authentication Policy
----------------------------------------
-
-:app:`Pyramid` ships with a number of useful out-of-the-box security policies
-(see :mod:`pyramid.authentication`).  However, creating your own authentication
-policy is often necessary when you want to control the "horizontal and
-vertical" of how your users authenticate.  Doing so is a matter of creating an
-instance of something that implements the following interface:
-
-.. code-block:: python
-    :linenos:
-
-    class IAuthenticationPolicy(object):
-        """ An object representing a Pyramid authentication policy. """
-
-        def authenticated_userid(self, request):
-            """ Return the authenticated :term:`userid` or ``None`` if
-            no authenticated userid can be found. This method of the
-            policy should ensure that a record exists in whatever
-            persistent store is used related to the user (the user
-            should not have been deleted); if a record associated with
-            the current id does not exist in a persistent store, it
-            should return ``None``.
-            """
-
-        def unauthenticated_userid(self, request):
-            """ Return the *unauthenticated* userid.  This method
-            performs the same duty as ``authenticated_userid`` but is
-            permitted to return the userid based only on data present
-            in the request; it needn't (and shouldn't) check any
-            persistent store to ensure that the user record related to
-            the request userid exists.
-
-            This method is intended primarily a helper to assist the
-            ``authenticated_userid`` method in pulling credentials out
-            of the request data, abstracting away the specific headers,
-            query strings, etc that are used to authenticate the request.
-            """
-
-        def effective_principals(self, request):
-            """ Return a sequence representing the effective principals
-            typically including the :term:`userid` and any groups belonged
-            to by the current user, always including 'system' groups such
-            as ``pyramid.security.Everyone`` and
-            ``pyramid.security.Authenticated``.
-            """
-
-        def remember(self, request, userid, **kw):
-            """ Return a set of headers suitable for 'remembering' the
-            :term:`userid` named ``userid`` when set in a response.  An
-            individual authentication policy and its consumers can
-            decide on the composition and meaning of **kw.
-            """
-
-        def forget(self, request):
-            """ Return a set of headers suitable for 'forgetting' the
-            current user on subsequent requests.
-            """
-
-After you do so, you can pass an instance of such a class into the
-:class:`~pyramid.config.Configurator.set_authentication_policy` method at
-configuration time to use it.
-
-.. index::
-   single: authorization policy (creating)
-
-.. _creating_an_authorization_policy:
-
-Creating Your Own Authorization Policy
---------------------------------------
-
-An authorization policy is a policy that allows or denies access after a user
-has been authenticated.  Most :app:`Pyramid` applications will use the default
-:class:`pyramid.authorization.ACLAuthorizationPolicy`.
-
-However, in some cases, it's useful to be able to use a different authorization
-policy than the default :class:`~pyramid.authorization.ACLAuthorizationPolicy`.
-For example, it might be desirable to construct an alternate authorization
-policy which allows the application to use an authorization mechanism that does
-not involve :term:`ACL` objects.
-
-:app:`Pyramid` ships with only a single default authorization policy, so you'll
-need to create your own if you'd like to use a different one.  Creating and
-using your own authorization policy is a matter of creating an instance of an
-object that implements the following interface:
-
-.. code-block:: python
-    :linenos:
-
-    class IAuthorizationPolicy(Interface):
-        """ An object representing a Pyramid authorization policy. """
-        def permits(context, principals, permission):
-            """ Return an instance of :class:`pyramid.security.Allowed` if any
-            of the ``principals`` is allowed the ``permission`` in the current
-            ``context``, else return an instance of
-            :class:`pyramid.security.Denied`.
-            """
-
-        def principals_allowed_by_permission(context, permission):
-            """ Return a set of principal identifiers allowed by the
-            ``permission`` in ``context``.  This behavior is optional; if you
-            choose to not implement it you should define this method as
-            something which raises a ``NotImplementedError``.  This method
-            will only be called when the
-            ``pyramid.security.principals_allowed_by_permission`` API is
-            used."""
-
-After you do so, you can pass an instance of such a class into the
-:class:`~pyramid.config.Configurator.set_authorization_policy` method at
-configuration time to use it.
-
 .. _admonishment_against_secret_sharing:
 
 Admonishment Against Secret-Sharing
 -----------------------------------
 
 A "secret" is required by various components of Pyramid.  For example, the
-:term:`authentication policy` below uses a secret value ``seekrit``::
+helper below might be used for a security policy and uses a secret value
+``seekrit``::
 
-  authn_policy = AuthTktAuthenticationPolicy('seekrit', hashalg='sha512')
+  helper = AuthTktCookieHelper('seekrit')
 
 A :term:`session factory` also requires a secret::
 
@@ -752,9 +705,8 @@ A :term:`session factory` also requires a secret::
 
 It is tempting to use the same secret for multiple Pyramid subsystems.  For
 example, you might be tempted to use the value ``seekrit`` as the secret for
-both the authentication policy and the session factory defined above.  This is
-a bad idea, because in both cases, these secrets are used to sign the payload
-of the data.
+both the helper and the session factory defined above.  This is a bad idea,
+because in both cases, these secrets are used to sign the payload of the data.
 
 If you use the same secret for two different parts of your application for
 signing purposes, it may allow an attacker to get his chosen plaintext signed,
@@ -767,12 +719,14 @@ has the possibility of providing a chosen plaintext.
    single: preventing cross-site request forgery attacks
    single: cross-site request forgery attacks, prevention
 
+.. _csrf_protection:
+
 Preventing Cross-Site Request Forgery Attacks
 ---------------------------------------------
 
 `Cross-site request forgery
 <https://en.wikipedia.org/wiki/Cross-site_request_forgery>`_ attacks are a
-phenomenon whereby a user who is logged in to your website might inadvertantly
+phenomenon whereby a user who is logged in to your website might inadvertently
 load a URL because it is linked from, or embedded in, an attacker's website.
 If the URL is one that may modify or delete data, the consequences can be dire.
 
@@ -944,33 +898,17 @@ that it matches one of the trusted origins. By default the only trusted origin
 is the current host, however additional origins may be configured by setting
 ``pyramid.csrf_trusted_origins`` to a list of domain names (and ports if they
 are non-standard). If a host in the list of domains starts with a ``.`` then
-that will allow all subdomains as well as the domain without the ``.``.
+that will allow all subdomains as well as the domain without the ``.``.  If no
+``Referer`` or ``Origin`` header is present in an HTTPS request, the CSRF check
+will fail unless ``allow_no_origin`` is set. The special ``Origin: null`` can
+be allowed by adding ``null`` to the ``pyramid.csrf_trusted_origins`` list.
+
+It is possible to opt out of checking the origin by passing
+``check_origin=False``. This is useful if the :term:`CSRF storage policy` is
+known to be secure such that the token cannot be easily used by an attacker.
 
 If CSRF checks fail then a :class:`pyramid.exceptions.BadCSRFToken` or
 :class:`pyramid.exceptions.BadCSRFOrigin` exception will be raised. This
 exception may be caught and handled by an :term:`exception view` but, by
 default, will result in a ``400 Bad Request`` response being sent to the
 client.
-
-Checking CSRF Tokens with a View Predicate
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. deprecated:: 1.7
-   Use the ``require_csrf`` option or read :ref:`auto_csrf_checking` instead
-   to have :class:`pyramid.exceptions.BadCSRFToken` exceptions raised.
-
-A convenient way to require a valid CSRF token for a particular view is to
-include ``check_csrf=True`` as a view predicate. See
-:meth:`pyramid.config.Configurator.add_view`.
-
-.. code-block:: python
-
-     @view_config(request_method='POST', check_csrf=True, ...)
-     def myview(request):
-         # ...
-
-.. note::
-   A mismatch of a CSRF token is treated like any other predicate miss, and the
-   predicate system, when it doesn't find a view, raises ``HTTPNotFound``
-   instead of ``HTTPBadRequest``, so ``check_csrf=True`` behavior is different
-   from calling :func:`pyramid.csrf.check_csrf_token`.

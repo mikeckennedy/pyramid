@@ -1,15 +1,12 @@
 import os
 import pkg_resources
 import sys
-
 from zope.interface import implementer
 
-from pyramid.interfaces import IPackageOverrides, PHASE1_CONFIG
-
-from pyramid.exceptions import ConfigurationError
-from pyramid.threadlocal import get_current_registry
-
 from pyramid.config.actions import action_method
+from pyramid.exceptions import ConfigurationError
+from pyramid.interfaces import PHASE1_CONFIG, IPackageOverrides
+from pyramid.threadlocal import get_current_registry
 
 
 class OverrideProvider(pkg_resources.DefaultProvider):
@@ -23,7 +20,7 @@ class OverrideProvider(pkg_resources.DefaultProvider):
         return overrides
 
     def get_resource_filename(self, manager, resource_name):
-        """ Return a true filesystem path for resource_name,
+        """Return a true filesystem path for resource_name,
         co-ordinating the extraction with manager, if the resource
         must be unpacked to the filesystem.
         """
@@ -88,7 +85,7 @@ class OverrideProvider(pkg_resources.DefaultProvider):
 
 
 @implementer(IPackageOverrides)
-class PackageOverrides(object):
+class PackageOverrides:
     # pkg_resources arg in kw args below for testing
     def __init__(self, package, pkg_resources=pkg_resources):
         loader = self._real_loader = getattr(package, '__loader__', None)
@@ -167,23 +164,19 @@ class PackageOverrides(object):
         return self._real_loader
 
     def get_data(self, path):
-        """ See IPEP302Loader.
-        """
+        """See IPEP302Loader."""
         return self.real_loader.get_data(path)
 
     def is_package(self, fullname):
-        """ See IPEP302Loader.
-        """
+        """See IPEP302Loader."""
         return self.real_loader.is_package(fullname)
 
     def get_code(self, fullname):
-        """ See IPEP302Loader.
-        """
+        """See IPEP302Loader."""
         return self.real_loader.get_code(fullname)
 
     def get_source(self, fullname):
-        """ See IPEP302Loader.
-        """
+        """See IPEP302Loader."""
         return self.real_loader.get_source(fullname)
 
 
@@ -209,7 +202,7 @@ class FileOverride:
             return self.source, ''
 
 
-class PackageAssetSource(object):
+class PackageAssetSource:
     """
     An asset source relative to a package.
 
@@ -261,7 +254,7 @@ class PackageAssetSource(object):
             return pkg_resources.resource_listdir(self.pkg_name, path)
 
 
-class FSAssetSource(object):
+class FSAssetSource:
     """
     An asset source relative to a path in the filesystem.
 
@@ -309,7 +302,7 @@ class FSAssetSource(object):
             return os.listdir(path)
 
 
-class AssetsConfiguratorMixin(object):
+class AssetsConfiguratorMixin:
     def _override(
         self, package, path, override_source, PackageOverrides=PackageOverrides
     ):
@@ -324,7 +317,7 @@ class AssetsConfiguratorMixin(object):
 
     @action_method
     def override_asset(self, to_override, override_with, _override=None):
-        """ Add a :app:`Pyramid` asset override to the current
+        """Add a :app:`Pyramid` asset override to the current
         configuration state.
 
         ``to_override`` is an :term:`asset specification` to the

@@ -5,7 +5,7 @@ from pyramid.config import Configurator
 
 
 class TestLegacySessionCSRFStoragePolicy(unittest.TestCase):
-    class MockSession(object):
+    class MockSession:
         def __init__(self, current_token='02821185e4c94269bdc38e6eeae0a2f8'):
             self.current_token = current_token
 
@@ -215,7 +215,7 @@ class Test_get_csrf_token(unittest.TestCase):
 
         csrf_token = self._callFUT(request)
 
-        self.assertEquals(csrf_token, '02821185e4c94269bdc38e6eeae0a2f8')
+        self.assertEqual(csrf_token, '02821185e4c94269bdc38e6eeae0a2f8')
 
 
 class Test_new_csrf_token(unittest.TestCase):
@@ -237,7 +237,7 @@ class Test_new_csrf_token(unittest.TestCase):
 
         csrf_token = self._callFUT(request)
 
-        self.assertEquals(csrf_token, 'e5e9e30a08b34ff9842ff7d2b958c14b')
+        self.assertEqual(csrf_token, 'e5e9e30a08b34ff9842ff7d2b958c14b')
 
 
 class Test_check_csrf_token(unittest.TestCase):
@@ -363,6 +363,12 @@ class Test_check_csrf_origin(unittest.TestCase):
         request.registry.settings = {}
         self.assertTrue(self._callFUT(request))
 
+    def test_success_with_allow_no_origin(self):
+        request = testing.DummyRequest()
+        request.scheme = "https"
+        request.referrer = None
+        self.assertTrue(self._callFUT(request, allow_no_origin=True))
+
     def test_fails_with_wrong_host(self):
         from pyramid.exceptions import BadCSRFOrigin
 
@@ -381,8 +387,48 @@ class Test_check_csrf_origin(unittest.TestCase):
         request = testing.DummyRequest()
         request.scheme = "https"
         request.referrer = None
-        self.assertRaises(BadCSRFOrigin, self._callFUT, request)
+        self.assertRaises(
+            BadCSRFOrigin, self._callFUT, request, allow_no_origin=False
+        )
+        self.assertFalse(
+            self._callFUT(request, raises=False, allow_no_origin=False)
+        )
+
+    def test_fail_with_null_origin(self):
+        from pyramid.exceptions import BadCSRFOrigin
+
+        request = testing.DummyRequest()
+        request.scheme = "https"
+        request.host = "example.com"
+        request.host_port = "443"
+        request.referrer = None
+        request.headers = {'Origin': 'null'}
+        request.registry.settings = {}
         self.assertFalse(self._callFUT(request, raises=False))
+        self.assertRaises(BadCSRFOrigin, self._callFUT, request)
+
+    def test_success_with_null_origin_and_setting(self):
+        request = testing.DummyRequest()
+        request.scheme = "https"
+        request.host = "example.com"
+        request.host_port = "443"
+        request.referrer = None
+        request.headers = {'Origin': 'null'}
+        request.registry.settings = {"pyramid.csrf_trusted_origins": ["null"]}
+        self.assertTrue(self._callFUT(request, raises=False))
+
+    def test_success_with_multiple_origins(self):
+        request = testing.DummyRequest()
+        request.scheme = "https"
+        request.host = "example.com"
+        request.host_port = "443"
+        request.headers = {
+            'Origin': 'https://google.com https://not-example.com'
+        }
+        request.registry.settings = {
+            "pyramid.csrf_trusted_origins": ["not-example.com"]
+        }
+        self.assertTrue(self._callFUT(request, raises=False))
 
     def test_fails_when_http_to_https(self):
         from pyramid.exceptions import BadCSRFOrigin
@@ -409,7 +455,7 @@ class Test_check_csrf_origin(unittest.TestCase):
         self.assertFalse(self._callFUT(request, raises=False))
 
 
-class DummyRequest(object):
+class DummyRequest:
     registry = None
     session = None
     response_callback = None
@@ -423,12 +469,12 @@ class DummyRequest(object):
         self.response_callback = callback
 
 
-class MockResponse(object):
+class MockResponse:
     def __init__(self):
         self.headerlist = []
 
 
-class DummyCSRF(object):
+class DummyCSRF:
     def new_csrf_token(self, request):
         return 'e5e9e30a08b34ff9842ff7d2b958c14b'
 

@@ -38,9 +38,9 @@ Glossary
      "Repoze" is essentially a "brand" of software developed by `Agendaless
      Consulting <https://agendaless.com>`_ and a set of contributors.  The
      term has no special intrinsic meaning.  The project's `website
-     <http://repoze.org>`_ has more information.  The software developed
+     <https://web.archive.org/web/20190127155548/http://repoze.org/>`_ has more information.  The software developed
      "under the brand" is available in a `Subversion repository
-     <http://svn.repoze.org>`_.  Pyramid was originally known as
+     <https://web.archive.org/web/20190103024221/http://svn.repoze.org/>`_.  Pyramid was originally known as
      :mod:`repoze.bfg`.
 
    Setuptools
@@ -61,8 +61,7 @@ Glossary
      
      .. seealso::
          
-         See also `PkgResources
-         <http://peak.telecommunity.com/DevCenter/PkgResources>`_.
+         See also `Package Discovery and Resource Access using pkg_resources <https://setuptools.readthedocs.io/en/latest/pkg_resources.html>`_.
 
    asset
      Any file contained within a Python :term:`package` which is *not*
@@ -298,13 +297,20 @@ Glossary
      foo` and `group bar`.
 
    userid
-     A *userid* is a string used to identify and authenticate
-     a real-world user or client. A userid is supplied to an
-     :term:`authentication policy` in order to discover the user's
-     :term:`principals <principal>`. In the authentication policies which
-     :app:`Pyramid` provides, the default behavior returns the user's userid as
-     a principal, but this is not strictly necessary in custom policies that
-     define their principals differently.
+     A *userid* is the string representation of an :term:`identity`.  Just like
+     the identity, it should identify the user associated with the current
+     request.  Oftentimes this is the ID of the user object in a database.
+
+   identity
+      An identity is an object identifying the user associated with the current request.
+      The object can be of any shape, such as a simple ID string or an ORM object.
+
+   security policy
+     A security policy in :app:`Pyramid` terms is an object implementing the
+     :class:`pyramid.interfaces.ISecurityPolicy` API which identifies the user
+     associated with the current request
+     (perhaps via a cookie or ``Authorization`` header) and determines whether
+     or not that user is permitted to access the requested resource.
 
    authorization policy
      An authorization policy in :app:`Pyramid` terms is a bit of
@@ -313,10 +319,18 @@ Glossary
      associated with a permission, based on the information found on the
      :term:`context` resource.
 
+     .. deprecated:: 2.0
+       Authorization policies have been deprecated in favor of a
+       :term:`security policy`.
+
    authentication policy
      An authentication policy in :app:`Pyramid` terms is a bit of
      code which has an API which determines the current
      :term:`principal` (or principals) associated with a request.
+
+     .. deprecated:: 2.0
+       Authentication policies have been deprecated in favor of a
+       :term:`security policy`.
 
    WSGI
      `Web Server Gateway Interface <https://wsgi.readthedocs.io/en/latest/>`_.
@@ -337,7 +351,7 @@ Glossary
      server, a WSGI application, with a set of :term:`middleware` in-between.
 
    Zope
-     `The Z Object Publishing Framework <http://www.zope.org/en/latest/>`_, a
+     `The Z Object Publishing Framework <https://www.zope.org/>`_, a
      full-featured Python web framework.
 
    Grok
@@ -382,12 +396,12 @@ Glossary
      the box in ZPT and text flavors.
 
    ZPT
-     The `Zope Page Template <https://zope.readthedocs.io/en/latest/zope2book/ZPT.html>`_
+     The `Zope Page Template <https://zope.readthedocs.io/en/latest/zopebook/ZPT.html>`_
      templating language.
 
    METAL
      `Macro Expansion for TAL
-     <https://zope.readthedocs.io/en/latest/zope2book/AppendixC.html#metal-overview>`_, a
+     <https://zope.readthedocs.io/en/latest/zopebook/AppendixC.html#metal-overview>`_, a
      part of :term:`ZPT` which makes it possible to share common look and feel
      between templates.
 
@@ -396,7 +410,7 @@ Glossary
      by Christopher Lenz.
 
    Jinja2
-     A `text templating language <http://jinja.pocoo.org/>`_ by Armin Ronacher.
+     A `text templating language <https://palletsprojects.com/p/jinja/>`_ by Armin Ronacher.
 
    Routes
      A `system by Ben Bangert <https://routes.readthedocs.io/en/latest/>`_
@@ -428,7 +442,7 @@ Glossary
      dispatching and other application configuration tasks.
 
    reStructuredText
-     A `plain text markup format <http://docutils.sourceforge.net/rst.html>`_
+     A `plain text markup format <https://docutils.sourceforge.io/rst.html>`_
      that is the defacto standard for documenting Python projects.
      The Pyramid documentation is written in reStructuredText.
 
@@ -488,13 +502,13 @@ Glossary
 
    repoze.lemonade
      Zope2 CMF-like `data structures and helper facilities
-     <http://docs.repoze.org/lemonade>`_ for CA-and-ZODB-based
+     <https://web.archive.org/web/20180903140246/http://docs.repoze.org/lemonade/>`_ for CA-and-ZODB-based
      applications useful within :app:`Pyramid` applications.
 
    repoze.catalog
      An indexing and search facility (fielded and full-text) based on
      `zope.index <https://pypi.org/project/zope.index/>`_.  See `the
-     documentation <http://docs.repoze.org/catalog>`_ for more
+     documentation <https://web.archive.org/web/20181214215757/http://docs.repoze.org/catalog/>`_ for more
      information.
 
    repoze.who
@@ -504,7 +518,7 @@ Glossary
 
    repoze.workflow
      `Barebones workflow for Python apps
-     <http://docs.repoze.org/workflow>`_ .  It can be used by
+     <https://web.archive.org/web/20181117003329/http://docs.repoze.org/workflow/>`_ .  It can be used by
      :app:`Pyramid` to form a workflow system.
 
    virtual root
@@ -717,7 +731,7 @@ Glossary
          See also `Agendaless Consulting <https://agendaless.com>`_.
 
    Jython
-     A `Python implementation <http://www.jython.org/>`_ written for
+     A `Python implementation <https://www.jython.org/>`_ written for
      the Java Virtual Machine.
 
    Python
@@ -1077,7 +1091,7 @@ Glossary
    predicate factory
       A callable which is used by a third party during the registration of a
       route, view, or subscriber predicates to extend the configuration
-      system.  See :ref:`registering_thirdparty_predicates` for more
+      system.  See :ref:`registering_custom_predicates` for more
       information.
 
    add-on
@@ -1141,7 +1155,7 @@ Glossary
       packaging.
 
    cookiecutter
-      A command-line utility that creates projects from :ref:`cookiecutters <cookiecutter:readme>` (project templates), e.g., creating a Python package project from a Python package project template.
+      A command-line utility that creates projects from `cookiecutters <https://cookiecutter.readthedocs.io/en/latest/>`__ (project templates), e.g., creating a Python package project from a Python package project template.
 
       .. versionadded:: 1.8
           Added cookiecutter support.

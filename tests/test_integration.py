@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import gc
 import locale
@@ -35,8 +34,8 @@ def wsgiapptest(environ, start_response):
 
 class WGSIAppPlusViewConfigTests(unittest.TestCase):
     def test_it(self):
-        from venusian import ATTACH_ATTR
         import types
+        from venusian import ATTACH_ATTR
 
         self.assertTrue(getattr(wsgiapptest, ATTACH_ATTR))
         self.assertIsInstance(wsgiapptest, types.FunctionType)
@@ -46,10 +45,9 @@ class WGSIAppPlusViewConfigTests(unittest.TestCase):
         self.assertEqual(result, '123')
 
     def test_scanned(self):
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IView
-        from pyramid.interfaces import IViewClassifier
         from pyramid.config import Configurator
+        from pyramid.interfaces import IRequest, IView, IViewClassifier
+
         from . import test_integration
 
         config = Configurator()
@@ -62,7 +60,7 @@ class WGSIAppPlusViewConfigTests(unittest.TestCase):
         self.assertEqual(view.__original_view__, wsgiapptest)
 
 
-class IntegrationBase(object):
+class IntegrationBase:
     root_factory = None
     package = None
 
@@ -73,8 +71,8 @@ class IntegrationBase(object):
             root_factory=self.root_factory, package=self.package
         )
         config.include(self.package)
-        app = config.make_wsgi_app()
-        self.testapp = TestApp(app)
+        self.app = config.make_wsgi_app()
+        self.testapp = TestApp(self.app)
         self.config = config
 
     def tearDown(self):
@@ -227,12 +225,64 @@ class TestStaticAppUsingAssetSpec(StaticAppBase, unittest.TestCase):
     package = 'tests.pkgs.static_assetspec'
 
 
+class TestStaticAppWithEncodings(IntegrationBase, unittest.TestCase):
+    package = 'tests.pkgs.static_encodings'
+
+    # XXX webtest actually runs response.decode_content() and so we can't
+    # use it to test gzip- or deflate-encoded responses to see if they
+    # were transferred correctly
+    def _getResponse(self, *args, **kwargs):
+        from pyramid.request import Request
+
+        req = Request.blank(*args, **kwargs)
+        return req.get_response(self.app)
+
+    def test_no_accept(self):
+        res = self._getResponse('/static/encoded.html')
+        self.assertEqual(res.headers['Vary'], 'Accept-Encoding')
+        self.assertNotIn('Content-Encoding', res.headers)
+        _assertBody(
+            res.body, os.path.join(here, 'fixtures/static/encoded.html')
+        )
+
+    def test_unsupported_accept(self):
+        res = self._getResponse(
+            '/static/encoded.html',
+            headers={'Accept-Encoding': 'br, foo, bar'},
+        )
+        self.assertEqual(res.headers['Vary'], 'Accept-Encoding')
+        self.assertNotIn('Content-Encoding', res.headers)
+        _assertBody(
+            res.body, os.path.join(here, 'fixtures/static/encoded.html')
+        )
+
+    def test_accept_gzip(self):
+        res = self._getResponse(
+            '/static/encoded.html',
+            headers={'Accept-Encoding': 'br, foo, gzip'},
+        )
+        self.assertEqual(res.headers['Vary'], 'Accept-Encoding')
+        self.assertEqual(res.headers['Content-Encoding'], 'gzip')
+        _assertBody(
+            res.body, os.path.join(here, 'fixtures/static/encoded.html.gz')
+        )
+
+    def test_accept_gzip_returns_identity(self):
+        res = self._getResponse(
+            '/static/index.html', headers={'Accept-Encoding': 'gzip'}
+        )
+        self.assertNotIn('Vary', res.headers)
+        self.assertNotIn('Content-Encoding', res.headers)
+        _assertBody(res.body, os.path.join(here, 'fixtures/static/index.html'))
+
+
 class TestStaticAppNoSubpath(unittest.TestCase):
     staticapp = static_view(os.path.join(here, 'fixtures'), use_subpath=False)
 
     def _makeRequest(self, extra):
-        from pyramid.request import Request
         from io import BytesIO
+
+        from pyramid.request import Request
 
         kw = {
             'PATH_INFO': '',
@@ -521,6 +571,48 @@ class TestExceptionViewsApp(IntegrationBase, unittest.TestCase):
         self.assertTrue(b'caught' in res.body)
 
 
+class TestSecurityApp(IntegrationBase, unittest.TestCase):
+    package = 'tests.pkgs.securityapp'
+
+    def test_public(self):
+        res = self.testapp.get('/public', status=200)
+        self.assertEqual(res.body, b'Hello')
+
+    def test_private_denied(self):
+        self.testapp.get('/private', status=403)
+
+    def test_private_allowed(self):
+        self.testapp.extra_environ = {'REMOTE_USER': 'bob'}
+        res = self.testapp.get('/private', status=200)
+        self.assertEqual(res.body, b'Secret')
+
+    def test_inaccessible(self):
+        self.testapp.get('/inaccessible', status=403)
+        self.testapp.extra_environ = {'REMOTE_USER': 'bob'}
+        self.testapp.get('/inaccessible', status=403)
+
+
+class TestLegacySecurityApp(IntegrationBase, unittest.TestCase):
+    package = 'tests.pkgs.legacysecurityapp'
+
+    def test_public(self):
+        res = self.testapp.get('/public', status=200)
+        self.assertEqual(res.body, b'Hello')
+
+    def test_private_denied(self):
+        self.testapp.get('/private', status=403)
+
+    def test_private_allowed(self):
+        self.testapp.extra_environ = {'REMOTE_USER': 'bob'}
+        res = self.testapp.get('/private', status=200)
+        self.assertEqual(res.body, b'Secret')
+
+    def test_inaccessible(self):
+        self.testapp.get('/inaccessible', status=403)
+        self.testapp.extra_environ = {'REMOTE_USER': 'bob'}
+        self.testapp.get('/inaccessible', status=403)
+
+
 class TestConflictApp(unittest.TestCase):
     package = 'tests.pkgs.conflictapp'
 
@@ -581,10 +673,12 @@ class TestConflictApp(unittest.TestCase):
     def test_overridden_authorization_policy(self):
         config = self._makeConfig()
         config.include(self.package)
-        from pyramid.testing import DummySecurityPolicy
 
-        config.set_authorization_policy(DummySecurityPolicy('fred'))
-        config.set_authentication_policy(DummySecurityPolicy(permissive=True))
+        class DummySecurityPolicy:
+            def permits(self, context, principals, permission):
+                return True
+
+        config.set_authorization_policy(DummySecurityPolicy())
         app = config.make_wsgi_app()
         self.testapp = TestApp(app)
         res = self.testapp.get('/protected', status=200)
@@ -871,7 +965,7 @@ class AcceptContentTypeTest(unittest.TestCase):
         self.assertEqual(res.content_type, 'text/x-fallback')
 
 
-class DummyContext(object):
+class DummyContext:
     pass
 
 

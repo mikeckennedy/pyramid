@@ -9,6 +9,7 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
     CHANGES = f.read()
 
 requires = [
+    'docutils',
     'plaster_pastedeploy',
     'pyramid',
     'pyramid_chameleon',
@@ -19,7 +20,6 @@ requires = [
     'pyramid_zodbconn',
     'transaction',
     'ZODB3',
-    'docutils',
 ]
 
 tests_require = [
@@ -43,7 +43,7 @@ setup(
     author_email='',
     url='',
     keywords='web pyramid pylons',
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests']),
     include_package_data=True,
     zip_safe=False,
     extras_require={

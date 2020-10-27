@@ -28,7 +28,7 @@ class DottedNameResolver(_DottedNameResolver):
 
 
 def text_(s, encoding='latin-1', errors='strict'):
-    """ If ``s`` is an instance of ``bytes``, return
+    """If ``s`` is an instance of ``bytes``, return
     ``s.decode(encoding, errors)``, otherwise return ``s``"""
     if isinstance(s, bytes):
         return s.decode(encoding, errors)
@@ -36,7 +36,7 @@ def text_(s, encoding='latin-1', errors='strict'):
 
 
 def bytes_(s, encoding='latin-1', errors='strict'):
-    """ If ``s`` is an instance of ``str``, return
+    """If ``s`` is an instance of ``str``, return
     ``s.encode(encoding, errors)``, otherwise return ``s``"""
     if isinstance(s, str):
         return s.encode(encoding, errors)
@@ -73,7 +73,20 @@ def as_sorted_tuple(val):
     return val
 
 
-class InstancePropertyHelper(object):
+class SettableProperty:
+    # this is just like reify but does not store the computed result on
+    # the class such that subsequent invocations invoke the callable again
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        functools.update_wrapper(self, wrapped)
+
+    def __get__(self, obj, type=None):
+        if obj is None:  # pragma: no cover
+            return self
+        return self.wrapped(obj)
+
+
+class InstancePropertyHelper:
     """A helper object for assigning properties and descriptors to instances.
     It is not normally possible to do this because descriptors must be
     defined on the class itself.
@@ -89,31 +102,34 @@ class InstancePropertyHelper(object):
 
     @classmethod
     def make_property(cls, callable, name=None, reify=False):
-        """ Convert a callable into one suitable for adding to the
+        """Convert a callable into one suitable for adding to the
         instance. This will return a 2-tuple containing the computed
         (name, property) pair.
         """
 
-        is_property = isinstance(callable, property)
-        if is_property:
-            fn = callable
-            if name is None:
-                raise ValueError('must specify "name" for a property')
-            if reify:
-                raise ValueError('cannot reify a property')
-        elif name is not None:
-            fn = lambda this: callable(this)
-            fn.__name__ = get_callable_name(name)
-            fn.__doc__ = callable.__doc__
-        else:
+        if name is None:
+            if not hasattr(callable, '__name__'):
+                raise ValueError(
+                    'missing __name__, must specify "name" for property'
+                )
             name = callable.__name__
+        name = get_callable_name(name)
+        is_data_descriptor = inspect.isdatadescriptor(callable)
+        if reify and is_data_descriptor:
+            raise ValueError('cannot reify a data descriptor')
+        if is_data_descriptor:
             fn = callable
-        if reify:
-            import pyramid.decorator  # avoid circular import
+        else:
+            wrapped = lambda this: callable(this)
+            wrapped.__name__ = name
+            wrapped.__doc__ = callable.__doc__
 
-            fn = pyramid.decorator.reify(fn)
-        elif not is_property:
-            fn = property(fn)
+            if reify:
+                import pyramid.decorator  # avoid circular import
+
+                fn = pyramid.decorator.reify(wrapped)
+            else:
+                fn = SettableProperty(wrapped)
 
         return name, fn
 
@@ -171,14 +187,14 @@ class InstancePropertyHelper(object):
             self.apply_properties(target, self.properties)
 
 
-class InstancePropertyMixin(object):
-    """ Mixin that will allow an instance to add properties at
+class InstancePropertyMixin:
+    """Mixin that will allow an instance to add properties at
     run-time as if they had been defined via @property or @reify
     on the class itself.
     """
 
     def set_property(self, callable, name=None, reify=False):
-        """ Add a callable or a property descriptor to the instance.
+        """Add a callable or a property descriptor to the instance.
 
         Properties, unlike attributes, are lazily evaluated by executing
         an underlying callable when accessed. They can be useful for
@@ -234,8 +250,8 @@ class InstancePropertyMixin(object):
         )
 
 
-class WeakOrderedSet(object):
-    """ Maintain a set of items.
+class WeakOrderedSet:
+    """Maintain a set of items.
 
     Each item is stored as a weakref to avoid extending their lifetime.
 
@@ -330,7 +346,7 @@ def strings_differ(string1, string2):
 
 
 def object_description(object):
-    """ Produce a human-consumable text description of ``object``,
+    """Produce a human-consumable text description of ``object``,
     usually involving a Python dotted name. For example:
 
     >>> object_description(None)
@@ -394,7 +410,7 @@ def shortrepr(object, closer):
     return r
 
 
-class Sentinel(object):
+class Sentinel:
     def __init__(self, repr):
         self.repr = repr
 
@@ -406,8 +422,8 @@ FIRST = Sentinel('FIRST')
 LAST = Sentinel('LAST')
 
 
-class TopologicalSorter(object):
-    """ A utility class which can be used to perform topological sorts against
+class TopologicalSorter:
+    """A utility class which can be used to perform topological sorts against
     tuple-like data."""
 
     def __init__(
@@ -444,7 +460,7 @@ class TopologicalSorter(object):
                 self.order.remove((name, u))
 
     def add(self, name, val, after=None, before=None):
-        """ Add a node to the sort input.  The ``name`` should be a string or
+        """Add a node to the sort input.  The ``name`` should be a string or
         any other hashable object, the ``val`` should be the sortable (doesn't
         need to be hashable).  ``after`` and ``before`` represents the name of
         one of the other sortables (or a sequence of such named) or one of the
@@ -679,7 +695,7 @@ def takes_one_arg(callee, attr=None, argname=None):
     return False
 
 
-class SimpleSerializer(object):
+class SimpleSerializer:
     def loads(self, bstruct):
         return text_(bstruct)
 

@@ -14,7 +14,7 @@
                      model_url, resource_url, resource_path, set_property, 
                      effective_principals, authenticated_userid,
                      unauthenticated_userid, has_permission,
-                     invoke_exception_view, localizer
+                     invoke_exception_view, localizer, response, session
 
    .. attribute:: context
 
@@ -166,19 +166,17 @@
 
    .. attribute:: authenticated_userid
 
-      .. versionadded:: 1.5
-
       A property which returns the :term:`userid` of the currently
-      authenticated user or ``None`` if there is no :term:`authentication
-      policy` in effect or there is no currently authenticated user.  This
-      differs from :attr:`~pyramid.request.Request.unauthenticated_userid`,
-      because the effective authentication policy will have ensured that a
-      record associated with the :term:`userid` exists in persistent storage;
-      if it has not, this value will be ``None``.
+      authenticated user or ``None`` if there is no :term:`security policy` in
+      effect or there is no currently authenticated user.
 
    .. attribute:: unauthenticated_userid
 
-      .. versionadded:: 1.5
+      .. deprecated:: 2.0
+
+          ``unauthenticated_userid`` has been deprecated in version 2.0.  Use
+          :attr:`authenticated_userid` or :attr:`authenticated_identity`
+          instead.  See :ref:`upgrading_auth` for more information.
 
       A property which returns a value which represents the *claimed* (not
       verified) :term:`userid` of the credentials present in the
@@ -193,7 +191,10 @@
 
    .. attribute:: effective_principals
 
-      .. versionadded:: 1.5
+      .. deprecated:: 2.0
+
+          The new security policy has removed the concept of principals.  See
+          :ref:`upgrading_auth` for more information.
 
       A property which returns the list of 'effective' :term:`principal`
       identifiers for this request.  This list typically includes the
@@ -201,7 +202,7 @@
       currently authenticated, but this depends on the
       :term:`authentication policy` in effect.  If no :term:`authentication
       policy` is in effect, this will return a sequence containing only the
-      :attr:`pyramid.security.Everyone` principal.
+      :attr:`pyramid.authorization.Everyone` principal.
 
    .. method:: invoke_subrequest(request, use_tweens=False)
 
@@ -361,3 +362,6 @@
    see :class:`pyramid.interfaces.IMultiDict`.
 
 .. autofunction:: apply_request_extensions(request)
+
+.. autoclass:: RequestLocalCache
+    :members:

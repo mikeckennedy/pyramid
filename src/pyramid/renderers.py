@@ -2,21 +2,15 @@ from functools import partial
 import json
 import os
 import re
-
 from zope.interface import implementer, providedBy
 from zope.interface.registry import Components
 
-from pyramid.interfaces import IJSONAdapter, IRendererFactory, IRendererInfo
-
 from pyramid.csrf import get_csrf_token
 from pyramid.decorator import reify
-
 from pyramid.events import BeforeRender
-
 from pyramid.httpexceptions import HTTPBadRequest
-
+from pyramid.interfaces import IJSONAdapter, IRendererFactory, IRendererInfo
 from pyramid.path import caller_package
-
 from pyramid.response import _get_response_factory
 from pyramid.threadlocal import get_current_registry
 from pyramid.util import hide_attrs
@@ -25,7 +19,7 @@ from pyramid.util import hide_attrs
 
 
 def render(renderer_name, value, request=None, package=None):
-    """ Using the renderer ``renderer_name`` (a template
+    """Using the renderer ``renderer_name`` (a template
     or a static renderer), render the value (or set of values) present
     in ``value``. Return the result of the renderer's ``__call__``
     method (usually a string or Unicode).
@@ -78,7 +72,7 @@ def render(renderer_name, value, request=None, package=None):
 def render_to_response(
     renderer_name, value, request=None, package=None, response=None
 ):
-    """ Using the renderer ``renderer_name`` (a template
+    """Using the renderer ``renderer_name`` (a template
     or a static renderer), render the value (or set of values) using
     the result of the renderer's ``__call__`` method (usually a string
     or Unicode) as the response body.
@@ -139,7 +133,7 @@ def render_to_response(
 
 
 def get_renderer(renderer_name, package=None, registry=None):
-    """ Return the renderer object for the renderer ``renderer_name``.
+    """Return the renderer object for the renderer ``renderer_name``.
 
     You may supply a relative asset spec as ``renderer_name``.  If
     the ``package`` argument is supplied, a relative renderer name
@@ -183,8 +177,8 @@ def string_renderer_factory(info):
 _marker = object()
 
 
-class JSON(object):
-    """ Renderer that returns a JSON-encoded string.
+class JSON:
+    """Renderer that returns a JSON-encoded string.
 
     Configure a custom JSON renderer using the
     :meth:`~pyramid.config.Configurator.add_renderer` API at application
@@ -232,7 +226,7 @@ class JSON(object):
     """
 
     def __init__(self, serializer=json.dumps, adapters=(), **kw):
-        """ Any keyword arguments will be passed to the ``serializer``
+        """Any keyword arguments will be passed to the ``serializer``
         function."""
         self.serializer = serializer
         self.kw = kw
@@ -241,7 +235,7 @@ class JSON(object):
             self.add_adapter(type, adapter)
 
     def add_adapter(self, type_or_iface, adapter):
-        """ When an object of the type (or interface) ``type_or_iface`` fails
+        """When an object of the type (or interface) ``type_or_iface`` fails
         to automatically encode using the serializer, the renderer will use
         the adapter ``adapter`` to convert it into a JSON-serializable
         object.  The adapter must accept two arguments: the object and the
@@ -249,7 +243,7 @@ class JSON(object):
 
         .. code-block:: python
 
-           class Foo(object):
+           class Foo:
                x = 5
 
            def foo_adapter(obj, request):
@@ -267,7 +261,7 @@ class JSON(object):
         )
 
     def __call__(self, info):
-        """ Returns a plain JSON-encoded string with content-type
+        """Returns a plain JSON-encoded string with content-type
         ``application/json``. The content-type may be overridden by
         setting ``request.response.content_type``."""
 
@@ -305,7 +299,7 @@ JSONP_VALID_CALLBACK = re.compile(r"^[$a-z_][$0-9a-z_\.\[\]]+[^.]$", re.I)
 
 
 class JSONP(JSON):
-    """ `JSONP <https://en.wikipedia.org/wiki/JSONP>`_ renderer factory helper
+    """`JSONP <https://en.wikipedia.org/wiki/JSONP>`_ renderer factory helper
     which implements a hybrid json/jsonp renderer.  JSONP is useful for
     making cross-domain AJAX requests.
 
@@ -372,7 +366,7 @@ class JSONP(JSON):
         JSON.__init__(self, **kw)
 
     def __call__(self, info):
-        """ Returns JSONP-encoded string with content-type
+        """Returns JSONP-encoded string with content-type
         ``application/javascript`` if query parameter matching
         ``self.param_name`` is present in request.GET; otherwise returns
         plain-JSON encoded string with content-type ``application/json``"""
@@ -393,7 +387,7 @@ class JSONP(JSON):
                         )
 
                     ct = 'application/javascript'
-                    body = '/**/{0}({1});'.format(callback, val)
+                    body = '/**/{}({});'.format(callback, val)
                 response = request.response
                 if response.content_type == response.default_content_type:
                     response.content_type = ct
@@ -403,7 +397,7 @@ class JSONP(JSON):
 
 
 @implementer(IRendererInfo)
-class RendererHelper(object):
+class RendererHelper:
     def __init__(self, name=None, package=None, registry=None):
         if name and '.' in name:
             rtype = os.path.splitext(name)[1]
@@ -505,7 +499,7 @@ class RendererHelper(object):
 
 
 class NullRendererHelper(RendererHelper):
-    """ Special renderer helper that has render_* methods which simply return
+    """Special renderer helper that has render_* methods which simply return
     the value they are fed rather than converting them to response objects;
     useful for testing purposes and special case view configuration
     registrations that want to use the view configuration machinery but do

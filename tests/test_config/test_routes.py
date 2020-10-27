@@ -1,8 +1,9 @@
 import unittest
+import warnings
 
-from . import dummyfactory
-from . import DummyContext
 from pyramid.util import text_
+
+from . import DummyContext, dummyfactory
 
 
 class RoutesConfiguratorMixinTests(unittest.TestCase):
@@ -183,6 +184,18 @@ class RoutesConfiguratorMixinTests(unittest.TestCase):
         request.params = {}
         self.assertEqual(predicate(None, request), False)
 
+    def test_add_route_with_is_authenticated(self):
+        config = self._makeOne(autocommit=True)
+        config.add_route('name', 'path', is_authenticated=True)
+        route = self._assertRoute(config, 'name', 'path', 1)
+        predicate = route.predicates[0]
+        request = self._makeRequest(config)
+        request.is_authenticated = True
+        self.assertEqual(predicate(None, request), True)
+        request = self._makeRequest(config)
+        request.is_authenticated = False
+        self.assertEqual(predicate(None, request), False)
+
     def test_add_route_with_custom_predicates(self):
         import warnings
 
@@ -308,6 +321,16 @@ class RoutesConfiguratorMixinTests(unittest.TestCase):
         else:  # pragma: no cover
             raise AssertionError
 
+    def test_add_route_effective_principals_deprecated(self):
+        config = self._makeOne(autocommit=True)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', DeprecationWarning)
+            config.add_route('foo', '/bar', effective_principals=['any'])
+            self.assertIn(
+                'deprecated effective_principals', str(w[-1].message)
+            )
+
 
 class DummyRequest:
     subpath = ()
@@ -321,7 +344,7 @@ class DummyRequest:
         self.cookies = {}
 
 
-class DummyAccept(object):
+class DummyAccept:
     def __init__(self, *matches, **kw):
         self.matches = list(matches)
         self.contains = kw.pop('contains', False)

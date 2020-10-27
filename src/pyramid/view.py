@@ -1,38 +1,32 @@
+import inspect
 import itertools
 import sys
-
 import venusian
-
 from zope.interface import providedBy
 
-from pyramid.interfaces import (
-    IRoutesMapper,
-    IMultiView,
-    ISecuredView,
-    IView,
-    IViewClassifier,
-    IRequest,
-    IExceptionViewClassifier,
-)
-
 from pyramid.exceptions import ConfigurationError, PredicateMismatch
-
 from pyramid.httpexceptions import (
     HTTPNotFound,
     HTTPTemporaryRedirect,
     default_exceptionresponse_view,
 )
-
+from pyramid.interfaces import (
+    IExceptionViewClassifier,
+    IMultiView,
+    IRequest,
+    IRoutesMapper,
+    ISecuredView,
+    IView,
+    IViewClassifier,
+)
 from pyramid.threadlocal import get_current_registry, manager
-
-from pyramid.util import hide_attrs
-from pyramid.util import reraise as reraise_
+from pyramid.util import hide_attrs, reraise as reraise_
 
 _marker = object()
 
 
 def render_view_to_response(context, request, name='', secure=True):
-    """ Call the :term:`view callable` configured with a :term:`view
+    """Call the :term:`view callable` configured with a :term:`view
     configuration` that matches the :term:`view name` ``name``
     registered against the specified ``context`` and ``request`` and
     return a :term:`response` object.  This function will return
@@ -83,7 +77,7 @@ def render_view_to_response(context, request, name='', secure=True):
 
 
 def render_view_to_iterable(context, request, name='', secure=True):
-    """ Call the :term:`view callable` configured with a :term:`view
+    """Call the :term:`view callable` configured with a :term:`view
     configuration` that matches the :term:`view name` ``name``
     registered against the specified ``context`` and ``request`` and
     return an iterable object which represents the body of a response.
@@ -101,7 +95,7 @@ def render_view_to_iterable(context, request, name='', secure=True):
     If ``secure`` is ``True``, and the view is protected by a permission, the
     permission will be checked before the view function is invoked.  If the
     permission check disallows view execution (based on the current
-    :term:`authentication policy`), a
+    :term:`security policy`), a
     :exc:`pyramid.httpexceptions.HTTPForbidden` exception will be raised; its
     ``args`` attribute explains why the view access was disallowed.
 
@@ -114,7 +108,7 @@ def render_view_to_iterable(context, request, name='', secure=True):
 
 
 def render_view(context, request, name='', secure=True):
-    """ Call the :term:`view callable` configured with a :term:`view
+    """Call the :term:`view callable` configured with a :term:`view
     configuration` that matches the :term:`view name` ``name``
     registered against the specified ``context`` and ``request``
     and unwind the view response's ``app_iter`` (see
@@ -141,8 +135,8 @@ def render_view(context, request, name='', secure=True):
     return b''.join(iterable)
 
 
-class view_config(object):
-    """ A function, class or method :term:`decorator` which allows a
+class view_config:
+    """A function, class or method :term:`decorator` which allows a
     developer to create view registrations nearer to a :term:`view
     callable` definition than use :term:`imperative
     configuration` to do the same.
@@ -173,7 +167,7 @@ class view_config(object):
     ``request_type``, ``route_name``, ``request_method``, ``request_param``,
     ``containment``, ``xhr``, ``accept``, ``header``, ``path_info``,
     ``custom_predicates``, ``decorator``, ``mapper``, ``http_cache``,
-    ``require_csrf``, ``match_param``, ``check_csrf``, ``physical_path``, and
+    ``require_csrf``, ``match_param``, ``physical_path``, and
     ``view_options``.
 
     The meanings of these arguments are the same as the arguments passed to
@@ -202,11 +196,27 @@ class view_config(object):
         See also :ref:`mapping_views_using_a_decorator_section` for
         details about using :class:`pyramid.view.view_config`.
 
-    .. warning::
+    .. note::
 
-        ``view_config`` will work ONLY on module top level members
-        because of the limitation of ``venusian.Scanner.scan``.
+        Because of a limitation with ``venusian.Scanner.scan``, note that
+        ``view_config`` will work only for the following conditions.
 
+        -   In Python packages that have an ``__init__.py`` file in their
+            directory.
+
+            .. seealso::
+
+                See also https://github.com/Pylons/venusian/issues/68
+
+        -   On module top level members.
+        -   On Python source (``.py``) files.
+            Compiled Python files (``.pyc``, ``.pyo``) without a corresponding
+            source file are ignored.
+
+        .. seealso::
+
+            See also the `Venusian documentation
+            <https://docs.pylonsproject.org/projects/venusian/en/latest/#using-venusian>`_.
     """
 
     venusian = venusian  # for testing injection
@@ -216,6 +226,14 @@ class view_config(object):
             if settings.get('context') is None:
                 settings['context'] = settings['for_']
         self.__dict__.update(settings)
+        self._get_info()
+
+    def _get_info(self):
+        depth = self.__dict__.get('_depth', 0)
+        frame = sys._getframe(depth + 2)
+        frameinfo = inspect.getframeinfo(frame)
+        sourceline = frameinfo[3][0].strip()
+        self._info = frameinfo[0], frameinfo[1], frameinfo[2], sourceline
 
     def __call__(self, wrapped):
         settings = self.__dict__.copy()
@@ -237,15 +255,14 @@ class view_config(object):
             if settings.get('attr') is None:
                 settings['attr'] = wrapped.__name__
 
-        settings['_info'] = info.codeinfo  # fbo "action_method"
         return wrapped
 
 
 bfg_view = view_config  # bw compat (forever)
 
 
-class view_defaults(view_config):
-    """ A class :term:`decorator` which, when applied to a class, will
+def view_defaults(**settings):
+    """A class :term:`decorator` which, when applied to a class, will
     provide defaults for all view configurations that use the class.  This
     decorator accepts all the arguments accepted by
     :meth:`pyramid.view.view_config`, and each has the same meaning.
@@ -253,13 +270,15 @@ class view_defaults(view_config):
     See :ref:`view_defaults` for more information.
     """
 
-    def __call__(self, wrapped):
-        wrapped.__view_defaults__ = self.__dict__.copy()
+    def wrap(wrapped):
+        wrapped.__view_defaults__ = settings
         return wrapped
 
+    return wrap
 
-class AppendSlashNotFoundViewFactory(object):
-    """ There can only be one :term:`Not Found view` in any
+
+class AppendSlashNotFoundViewFactory:
+    """There can only be one :term:`Not Found view` in any
     :app:`Pyramid` application.  Even if you use
     :func:`pyramid.view.append_slash_notfound_view` as the Not
     Found view, :app:`Pyramid` still must generate a ``404 Not
@@ -345,7 +364,7 @@ view as the Not Found view::
 """
 
 
-class notfound_view_config(object):
+class notfound_view_config:
     """
     .. versionadded:: 1.3
 
@@ -441,7 +460,7 @@ class notfound_view_config(object):
         return wrapped
 
 
-class forbidden_view_config(object):
+class forbidden_view_config:
     """
     .. versionadded:: 1.3
 
@@ -505,7 +524,7 @@ class forbidden_view_config(object):
         return wrapped
 
 
-class exception_view_config(object):
+class exception_view_config:
     """
     .. versionadded:: 1.8
 
@@ -663,14 +682,14 @@ def _call_view(
     return response
 
 
-class ViewMethodsMixin(object):
-    """ Request methods mixin for BaseRequest having to do with executing
-    views """
+class ViewMethodsMixin:
+    """Request methods mixin for BaseRequest having to do with executing
+    views"""
 
     def invoke_exception_view(
         self, exc_info=None, request=None, secure=True, reraise=False
     ):
-        """ Executes an exception view related to the request it's called upon.
+        """Executes an exception view related to the request it's called upon.
         The arguments it takes are these:
 
         ``exc_info``

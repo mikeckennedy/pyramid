@@ -1,29 +1,69 @@
+import warnings
 from zope.interface import implementer
 
+from pyramid.config.actions import action_method
+from pyramid.csrf import LegacySessionCSRFStoragePolicy
+from pyramid.exceptions import ConfigurationError
 from pyramid.interfaces import (
-    IAuthorizationPolicy,
+    PHASE1_CONFIG,
+    PHASE2_CONFIG,
     IAuthenticationPolicy,
+    IAuthorizationPolicy,
     ICSRFStoragePolicy,
     IDefaultCSRFOptions,
     IDefaultPermission,
-    PHASE1_CONFIG,
-    PHASE2_CONFIG,
+    ISecurityPolicy,
 )
-
-from pyramid.csrf import LegacySessionCSRFStoragePolicy
-from pyramid.exceptions import ConfigurationError
+from pyramid.security import LegacySecurityPolicy
 from pyramid.util import as_sorted_tuple
 
-from pyramid.config.actions import action_method
 
-
-class SecurityConfiguratorMixin(object):
+class SecurityConfiguratorMixin:
     def add_default_security(self):
         self.set_csrf_storage_policy(LegacySessionCSRFStoragePolicy())
 
     @action_method
+    def set_security_policy(self, policy):
+        """Override the :app:`Pyramid` :term:`security policy` in the current
+        configuration.  The ``policy`` argument must be an instance
+        of a security policy or a :term:`dotted Python name`
+        that points at an instance of a security policy.
+
+        .. note::
+
+           Using the ``security_policy`` argument to the
+           :class:`pyramid.config.Configurator` constructor can be used to
+           achieve the same purpose.
+
+        """
+
+        def register():
+            self.registry.registerUtility(policy, ISecurityPolicy)
+
+        policy = self.maybe_dotted(policy)
+        intr = self.introspectable(
+            'security policy',
+            None,
+            self.object_description(policy),
+            'security policy',
+        )
+        intr['policy'] = policy
+        self.action(
+            ISecurityPolicy,
+            register,
+            order=PHASE2_CONFIG,
+            introspectables=(intr,),
+        )
+
+    @action_method
     def set_authentication_policy(self, policy):
-        """ Override the :app:`Pyramid` :term:`authentication policy` in the
+        """
+        .. deprecated:: 2.0
+
+            Authentication policies have been replaced by
+            security policies.  See :ref:`upgrading_auth` for more information.
+
+        Override the :app:`Pyramid` :term:`authentication policy` in the
         current configuration.  The ``policy`` argument must be an instance
         of an authentication policy or a :term:`dotted Python name`
         that points at an instance of an authentication policy.
@@ -35,16 +75,32 @@ class SecurityConfiguratorMixin(object):
            achieve the same purpose.
 
         """
+        warnings.warn(
+            'Authentication and authorization policies have been deprecated '
+            'in favor of security policies.  See "Upgrading '
+            'Authentication/Authorization" in "What\'s New in Pyramid 2.0" '
+            'of the documentation for more information.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
 
         def register():
-            self._set_authentication_policy(policy)
+            self.registry.registerUtility(policy, IAuthenticationPolicy)
             if self.registry.queryUtility(IAuthorizationPolicy) is None:
                 raise ConfigurationError(
                     'Cannot configure an authentication policy without '
                     'also configuring an authorization policy '
                     '(use the set_authorization_policy method)'
                 )
+            if self.registry.queryUtility(ISecurityPolicy) is not None:
+                raise ConfigurationError(
+                    'Cannot configure an authentication and authorization'
+                    'policy with a configured security policy.'
+                )
+            security_policy = LegacySecurityPolicy()
+            self.registry.registerUtility(security_policy, ISecurityPolicy)
 
+        policy = self.maybe_dotted(policy)
         intr = self.introspectable(
             'authentication policy',
             None,
@@ -60,13 +116,15 @@ class SecurityConfiguratorMixin(object):
             introspectables=(intr,),
         )
 
-    def _set_authentication_policy(self, policy):
-        policy = self.maybe_dotted(policy)
-        self.registry.registerUtility(policy, IAuthenticationPolicy)
-
     @action_method
     def set_authorization_policy(self, policy):
-        """ Override the :app:`Pyramid` :term:`authorization policy` in the
+        """
+        .. deprecated:: 2.0
+
+            Authentication policies have been replaced by
+            security policies.  See :ref:`upgrading_auth` for more information.
+
+        Override the :app:`Pyramid` :term:`authorization policy` in the
         current configuration.  The ``policy`` argument must be an instance
         of an authorization policy or a :term:`dotted Python name` that points
         at an instance of an authorization policy.
@@ -76,10 +134,19 @@ class SecurityConfiguratorMixin(object):
            Using the ``authorization_policy`` argument to the
            :class:`pyramid.config.Configurator` constructor can be used to
            achieve the same purpose.
+
         """
+        warnings.warn(
+            'Authentication and authorization policies have been deprecated '
+            'in favor of security policies.  See "Upgrading '
+            'Authentication/Authorization" in "What\'s New in Pyramid 2.0" '
+            'of the documentation for more information.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
 
         def register():
-            self._set_authorization_policy(policy)
+            self.registry.registerUtility(policy, IAuthorizationPolicy)
 
         def ensure():
             if self.autocommit:
@@ -91,6 +158,7 @@ class SecurityConfiguratorMixin(object):
                     '(use the set_authorization_policy method)'
                 )
 
+        policy = self.maybe_dotted(policy)
         intr = self.introspectable(
             'authorization policy',
             None,
@@ -107,10 +175,6 @@ class SecurityConfiguratorMixin(object):
             introspectables=(intr,),
         )
         self.action(None, ensure)
-
-    def _set_authorization_policy(self, policy):
-        policy = self.maybe_dotted(policy)
-        self.registry.registerUtility(policy, IAuthorizationPolicy)
 
     @action_method
     def set_default_permission(self, permission):
@@ -197,6 +261,8 @@ class SecurityConfiguratorMixin(object):
         token='csrf_token',
         header='X-CSRF-Token',
         safe_methods=('GET', 'HEAD', 'OPTIONS', 'TRACE'),
+        check_origin=True,
+        allow_no_origin=False,
         callback=None,
     ):
         """
@@ -221,6 +287,14 @@ class SecurityConfiguratorMixin(object):
         never be automatically checked for CSRF tokens.
         Default: ``('GET', 'HEAD', 'OPTIONS', TRACE')``.
 
+        ``check_origin`` is a boolean. If ``False``, the ``Origin`` and
+        ``Referer`` headers will not be validated as part of automated
+        CSRF checks.
+
+        ``allow_no_origin`` is a boolean.  If ``True``, a request lacking both
+        an ``Origin`` and ``Referer`` header will pass the CSRF check. This
+        option has no effect if ``check_origin`` is ``False``.
+
         If ``callback`` is set, it must be a callable accepting ``(request)``
         and returning ``True`` if the request should be checked for a valid
         CSRF token. This callback allows an application to support
@@ -236,9 +310,18 @@ class SecurityConfiguratorMixin(object):
         .. versionchanged:: 1.8
            Added the ``callback`` option.
 
+        .. versionchanged:: 2.0
+           Added the ``allow_no_origin`` and ``check_origin`` options.
+
         """
         options = DefaultCSRFOptions(
-            require_csrf, token, header, safe_methods, callback
+            require_csrf=require_csrf,
+            token=token,
+            header=header,
+            safe_methods=safe_methods,
+            check_origin=check_origin,
+            allow_no_origin=allow_no_origin,
+            callback=callback,
         )
 
         def register():
@@ -254,6 +337,8 @@ class SecurityConfiguratorMixin(object):
         intr['token'] = token
         intr['header'] = header
         intr['safe_methods'] = as_sorted_tuple(safe_methods)
+        intr['check_origin'] = allow_no_origin
+        intr['allow_no_origin'] = check_origin
         intr['callback'] = callback
 
         self.action(
@@ -286,10 +371,21 @@ class SecurityConfiguratorMixin(object):
 
 
 @implementer(IDefaultCSRFOptions)
-class DefaultCSRFOptions(object):
-    def __init__(self, require_csrf, token, header, safe_methods, callback):
+class DefaultCSRFOptions:
+    def __init__(
+        self,
+        require_csrf,
+        token,
+        header,
+        safe_methods,
+        check_origin,
+        allow_no_origin,
+        callback,
+    ):
         self.require_csrf = require_csrf
         self.token = token
         self.header = header
         self.safe_methods = frozenset(safe_methods)
+        self.check_origin = check_origin
+        self.allow_no_origin = allow_no_origin
         self.callback = callback

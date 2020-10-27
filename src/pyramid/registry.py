@@ -1,18 +1,15 @@
 import operator
 import threading
-
 from zope.interface import implementer
 from zope.interface.registry import Components
 
 from pyramid.decorator import reify
-
-from pyramid.interfaces import IIntrospector, IIntrospectable, ISettings
-
+from pyramid.interfaces import IIntrospectable, IIntrospector, ISettings
 from pyramid.path import CALLER_PACKAGE, caller_package
 
 
 class Registry(Components, dict):
-    """ A registry object is an :term:`application registry`.
+    """A registry object is an :term:`application registry`.
 
     It is used by the framework itself to perform mappings of URLs to view
     callables, as well as servicing other various framework duties. A registry
@@ -60,7 +57,7 @@ class Registry(Components, dict):
     def _clear_view_lookup_cache(self):
         self._view_lookup_cache = {}
 
-    def __nonzero__(self):
+    def __bool__(self):
         # defeat bool determination via dict.__len__
         return True
 
@@ -118,7 +115,7 @@ class Registry(Components, dict):
 
 
 @implementer(IIntrospector)
-class Introspector(object):
+class Introspector:
     def __init__(self):
         self._refs = {}
         self._categories = {}
@@ -248,10 +245,8 @@ class Introspectable(dict):
             self.discriminator,
         )
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
-
-    __bool__ = __nonzero__  # py3
 
     def register(self, introspector, action_info):
         self.discriminator = undefer(self.discriminator)
@@ -269,8 +264,8 @@ class Introspectable(dict):
             )
 
 
-class Deferred(object):
-    """ Can be used by a third-party configuration extender to wrap a
+class Deferred:
+    """Can be used by a third-party configuration extender to wrap a
     :term:`discriminator` during configuration if an immediately hashable
     discriminator cannot be computed because it relies on unresolved values.
     The function should accept no arguments and should return a hashable
@@ -290,7 +285,7 @@ class Deferred(object):
 
 
 def undefer(v):
-    """ Function which accepts an object and returns it unless it is a
+    """Function which accepts an object and returns it unless it is a
     :class:`pyramid.registry.Deferred` instance.  If it is an instance of
     that class, its ``resolve`` method is called, and the result of the
     method is returned."""

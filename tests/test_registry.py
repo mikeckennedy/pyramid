@@ -1,6 +1,5 @@
 import unittest
-from zope.interface import Interface
-from zope.interface import implementer
+from zope.interface import Interface, implementer
 
 
 class TestRegistry(unittest.TestCase):
@@ -12,9 +11,9 @@ class TestRegistry(unittest.TestCase):
     def _makeOne(self, *args, **kw):
         return self._getTargetClass()(*args, **kw)
 
-    def test___nonzero__(self):
+    def test___bool__(self):
         registry = self._makeOne()
-        self.assertEqual(registry.__nonzero__(), True)
+        self.assertEqual(registry.__bool__(), True)
 
     def test__lock(self):
         registry = self._makeOne()
@@ -101,8 +100,8 @@ class TestIntrospector(unittest.TestCase):
         return self._getTargetClass()()
 
     def test_conformance(self):
-        from zope.interface.verify import verifyClass
-        from zope.interface.verify import verifyObject
+        from zope.interface.verify import verifyClass, verifyObject
+
         from pyramid.interfaces import IIntrospector
 
         verifyClass(IIntrospector, self._getTargetClass())
@@ -347,8 +346,8 @@ class TestIntrospectable(unittest.TestCase):
         return self._makeOne('category', 'discrim', 'title', 'type')
 
     def test_conformance(self):
-        from zope.interface.verify import verifyClass
-        from zope.interface.verify import verifyObject
+        from zope.interface.verify import verifyClass, verifyObject
+
         from pyramid.interfaces import IIntrospectable
 
         verifyClass(IIntrospectable, self._getTargetClass())
@@ -381,10 +380,6 @@ class TestIntrospectable(unittest.TestCase):
             "<Introspectable category 'category', discriminator 'discrim'>",
         )
 
-    def test___nonzero__(self):
-        inst = self._makeOnePopulated()
-        self.assertEqual(inst.__nonzero__(), True)
-
     def test___bool__(self):
         inst = self._makeOnePopulated()
         self.assertEqual(inst.__bool__(), True)
@@ -408,7 +403,7 @@ class TestIntrospectable(unittest.TestCase):
         )
 
 
-class DummyIntrospector(object):
+class DummyIntrospector:
     def __init__(self):
         self.intrs = []
         self.relations = []
@@ -430,7 +425,7 @@ class DummyModule:
     __file__ = ''
 
 
-class DummyIntrospectable(object):
+class DummyIntrospectable:
     category_name = 'category'
     discriminator = 'discriminator'
     title = 'title'
@@ -448,5 +443,5 @@ class IDummyEvent(Interface):
 
 
 @implementer(IDummyEvent)
-class DummyEvent(object):
+class DummyEvent:
     pass

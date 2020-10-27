@@ -1,7 +1,6 @@
 # package
 from functools import partial
-from zope.interface import implementer
-from zope.interface import Interface
+from zope.interface import Interface, implementer
 
 
 class IFactory(Interface):
@@ -34,7 +33,7 @@ class DummyContext:
 
 
 @implementer(IFactory)
-class DummyFactory(object):
+class DummyFactory:
     def __call__(self):
         """ """
 
@@ -62,7 +61,7 @@ def dummy_extend2(config, discrim):
 dummy_partial = partial(dummy_extend, discrim='partial')
 
 
-class DummyCallable(object):
+class DummyCallable:
     def __call__(self, config, discrim):
         config.action(discrim, None, config.package)
 

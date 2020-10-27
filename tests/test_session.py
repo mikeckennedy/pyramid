@@ -2,10 +2,11 @@ import base64
 import json
 import pickle
 import unittest
+
 from pyramid import testing
 
 
-class SharedCookieSessionTests(object):
+class SharedCookieSessionTests:
     def test_ctor_no_cookie(self):
         request = testing.DummyRequest()
         session = self._makeOne(request)
@@ -13,6 +14,7 @@ class SharedCookieSessionTests(object):
 
     def test_instance_conforms(self):
         from zope.interface.verify import verifyObject
+
         from pyramid.interfaces import ISession
 
         request = testing.DummyRequest()
@@ -476,8 +478,8 @@ class TestSignedCookieSession(SharedCookieSessionTests, unittest.TestCase):
         self.assertEqual(session['state'], 1)
 
     def test_invalid_data_size(self):
-        from hashlib import sha512
         import base64
+        from hashlib import sha512
 
         request = testing.DummyRequest()
         num_bytes = sha512().digest_size - 1
@@ -564,6 +566,10 @@ class Test_manage_changed(unittest.TestCase):
 
 
 class TestPickleSerializer(unittest.TestCase):
+    """
+    .. deprecated:: 2.0
+    """
+
     def _makeOne(self):
         from pyramid.session import PickleSerializer
 
@@ -598,11 +604,11 @@ class TestPickleSerializer(unittest.TestCase):
         self.assertIsInstance(result, bytes)
 
 
-class Dummy(object):
+class Dummy:
     pass
 
 
-class DummySerializer(object):
+class DummySerializer:
     def dumps(self, value):
         return base64.b64encode(json.dumps(value).encode('utf-8'))
 
@@ -629,6 +635,6 @@ class DummySessionFactory(dict):
         self._dirty = True
 
 
-class DummyResponse(object):
+class DummyResponse:
     def __init__(self):
         self.headerlist = []

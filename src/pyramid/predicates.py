@@ -1,21 +1,18 @@
 import re
 
 from pyramid.exceptions import ConfigurationError
-
-from pyramid.csrf import check_csrf_token
 from pyramid.traversal import (
     find_interface,
-    traversal_path,
     resource_path_tuple,
+    traversal_path,
 )
-
 from pyramid.urldispatch import _compile_route
 from pyramid.util import as_sorted_tuple, is_nonstr_iter, object_description
 
 _marker = object()
 
 
-class XHRPredicate(object):
+class XHRPredicate:
     def __init__(self, val, config):
         self.val = bool(val)
 
@@ -28,7 +25,7 @@ class XHRPredicate(object):
         return bool(request.is_xhr) is self.val
 
 
-class RequestMethodPredicate(object):
+class RequestMethodPredicate:
     def __init__(self, val, config):
         request_method = as_sorted_tuple(val)
         if 'GET' in request_method and 'HEAD' not in request_method:
@@ -45,7 +42,7 @@ class RequestMethodPredicate(object):
         return request.method in self.val
 
 
-class PathInfoPredicate(object):
+class PathInfoPredicate:
     def __init__(self, val, config):
         self.orig = val
         try:
@@ -63,7 +60,7 @@ class PathInfoPredicate(object):
         return self.val.match(request.upath_info) is not None
 
 
-class RequestParamPredicate(object):
+class RequestParamPredicate:
     def __init__(self, val, config):
         val = as_sorted_tuple(val)
         reqs = []
@@ -99,38 +96,48 @@ class RequestParamPredicate(object):
         return True
 
 
-class HeaderPredicate(object):
+class HeaderPredicate:
     def __init__(self, val, config):
-        name = val
-        v = None
-        if ':' in name:
-            name, val_str = name.split(':', 1)
-            try:
-                v = re.compile(val_str)
-            except re.error as why:
-                raise ConfigurationError(why.args[0])
-        if v is None:
-            self._text = 'header %s' % (name,)
-        else:
-            self._text = 'header %s=%s' % (name, val_str)
-        self.name = name
-        self.val = v
+        values = []
+
+        val = as_sorted_tuple(val)
+        for name in val:
+            v, val_str = None, None
+            if ':' in name:
+                name, val_str = name.split(':', 1)
+                try:
+                    v = re.compile(val_str)
+                except re.error as why:
+                    raise ConfigurationError(why.args[0])
+
+            values.append((name, v, val_str))
+
+        self.val = values
 
     def text(self):
-        return self._text
+        return 'header %s' % ', '.join(
+            '%s=%s' % (name, val_str) if val_str else name
+            for name, _, val_str in self.val
+        )
 
     phash = text
 
     def __call__(self, context, request):
-        if self.val is None:
-            return self.name in request.headers
-        val = request.headers.get(self.name)
-        if val is None:
-            return False
-        return self.val.match(val) is not None
+        for name, val, _ in self.val:
+            if val is None:
+                if name not in request.headers:
+                    return False
+            else:
+                value = request.headers.get(name)
+                if value is None:
+                    return False
+                if val.match(value) is None:
+                    return False
+
+        return True
 
 
-class AcceptPredicate(object):
+class AcceptPredicate:
     def __init__(self, values, config):
         if not is_nonstr_iter(values):
             values = (values,)
@@ -145,7 +152,7 @@ class AcceptPredicate(object):
         return bool(request.accept.acceptable_offers(self.values))
 
 
-class ContainmentPredicate(object):
+class ContainmentPredicate:
     def __init__(self, val, config):
         self.val = config.maybe_dotted(val)
 
@@ -159,7 +166,7 @@ class ContainmentPredicate(object):
         return find_interface(ctx, self.val) is not None
 
 
-class RequestTypePredicate(object):
+class RequestTypePredicate:
     def __init__(self, val, config):
         self.val = val
 
@@ -172,7 +179,7 @@ class RequestTypePredicate(object):
         return self.val.providedBy(request)
 
 
-class MatchParamPredicate(object):
+class MatchParamPredicate:
     def __init__(self, val, config):
         val = as_sorted_tuple(val)
         self.val = val
@@ -196,7 +203,7 @@ class MatchParamPredicate(object):
         return True
 
 
-class CustomPredicate(object):
+class CustomPredicate:
     def __init__(self, func, config):
         self.func = func
 
@@ -220,7 +227,7 @@ class CustomPredicate(object):
         return self.func(context, request)
 
 
-class TraversePredicate(object):
+class TraversePredicate:
     # Can only be used as a *route* "predicate"; it adds 'traverse' to the
     # matchdict if it's specified in the routing args.  This causes the
     # ResourceTreeTraverser to use the resolved traverse pattern as the
@@ -250,28 +257,7 @@ class TraversePredicate(object):
         return True
 
 
-class CheckCSRFTokenPredicate(object):
-
-    check_csrf_token = staticmethod(check_csrf_token)  # testing
-
-    def __init__(self, val, config):
-        self.val = val
-
-    def text(self):
-        return 'check_csrf = %s' % (self.val,)
-
-    phash = text
-
-    def __call__(self, context, request):
-        val = self.val
-        if val:
-            if val is True:
-                val = 'csrf_token'
-            return self.check_csrf_token(request, val, raises=False)
-        return True
-
-
-class PhysicalPathPredicate(object):
+class PhysicalPathPredicate:
     def __init__(self, val, config):
         if is_nonstr_iter(val):
             self.val = tuple(val)
@@ -290,12 +276,25 @@ class PhysicalPathPredicate(object):
         return False
 
 
-class EffectivePrincipalsPredicate(object):
+class IsAuthenticatedPredicate:
+    def __init__(self, val, config):
+        self.val = val
+
+    def text(self):
+        return "is_authenticated = %r" % (self.val,)
+
+    phash = text
+
+    def __call__(self, context, request):
+        return request.is_authenticated == self.val
+
+
+class EffectivePrincipalsPredicate:
     def __init__(self, val, config):
         if is_nonstr_iter(val):
             self.val = set(val)
         else:
-            self.val = set((val,))
+            self.val = {val}
 
     def text(self):
         return 'effective_principals = %s' % sorted(list(self.val))
@@ -311,7 +310,7 @@ class EffectivePrincipalsPredicate(object):
         return False
 
 
-class Notted(object):
+class Notted:
     def __init__(self, predicate):
         self.predicate = predicate
 

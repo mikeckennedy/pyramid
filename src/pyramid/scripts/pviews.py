@@ -3,8 +3,7 @@ import sys
 import textwrap
 
 from pyramid.interfaces import IMultiView
-from pyramid.paster import bootstrap
-from pyramid.paster import setup_logging
+from pyramid.paster import bootstrap, setup_logging
 from pyramid.request import Request
 from pyramid.scripts.common import parse_vars
 from pyramid.view import _find_views
@@ -15,7 +14,7 @@ def main(argv=sys.argv, quiet=False):
     return command.run()
 
 
-class PViewsCommand(object):
+class PViewsCommand:
     description = """\
     Print, for a given URL, the views that might match. Underneath each
     potentially matching route, list the predicates required. Underneath
@@ -85,15 +84,16 @@ class PViewsCommand(object):
         find a :app:`Pyramid` view based on introspection of :term:`view
         configuration` within the application registry; return the view.
         """
-        from zope.interface import providedBy
-        from zope.interface import implementer
-        from pyramid.interfaces import IRequest
-        from pyramid.interfaces import IRootFactory
-        from pyramid.interfaces import IRouteRequest
-        from pyramid.interfaces import IRoutesMapper
-        from pyramid.interfaces import ITraverser
-        from pyramid.traversal import DefaultRootFactory
-        from pyramid.traversal import ResourceTreeTraverser
+        from zope.interface import implementer, providedBy
+
+        from pyramid.interfaces import (
+            IRequest,
+            IRootFactory,
+            IRouteRequest,
+            IRoutesMapper,
+            ITraverser,
+        )
+        from pyramid.traversal import DefaultRootFactory, ResourceTreeTraverser
 
         registry = request.registry
         q = registry.queryUtility
@@ -103,7 +103,7 @@ class PViewsCommand(object):
         adapters = registry.adapters
 
         @implementer(IMultiView)
-        class RoutesMultiView(object):
+        class RoutesMultiView:
             def __init__(self, infos, context_iface, root_factory, request):
                 self.views = []
                 for info in infos:

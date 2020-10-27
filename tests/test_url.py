@@ -2,7 +2,6 @@ import os
 import unittest
 
 from pyramid import testing
-
 from pyramid.util import WIN, text_
 
 
@@ -32,10 +31,11 @@ class TestURLMethodsMixin(unittest.TestCase):
         return request
 
     def _registerResourceURL(self, reg):
-        from pyramid.interfaces import IResourceURL
         from zope.interface import Interface
 
-        class DummyResourceURL(object):
+        from pyramid.interfaces import IResourceURL
+
+        class DummyResourceURL:
             physical_path = '/context/'
             virtual_path = '/context/'
 
@@ -685,8 +685,9 @@ class TestURLMethodsMixin(unittest.TestCase):
         )
 
     def test_current_route_url_with_request_query(self):
-        from pyramid.interfaces import IRoutesMapper
         from webob.multidict import GetDict
+
+        from pyramid.interfaces import IRoutesMapper
 
         request = self._makeOne()
         request.GET = GetDict([('q', '123')], {})
@@ -699,8 +700,9 @@ class TestURLMethodsMixin(unittest.TestCase):
         self.assertEqual(result, 'http://example.com:5432/1/2/3?q=123')
 
     def test_current_route_url_with_request_query_duplicate_entries(self):
-        from pyramid.interfaces import IRoutesMapper
         from webob.multidict import GetDict
+
+        from pyramid.interfaces import IRoutesMapper
 
         request = self._makeOne()
         request.GET = GetDict(
@@ -717,8 +719,9 @@ class TestURLMethodsMixin(unittest.TestCase):
         )
 
     def test_current_route_url_with_query_override(self):
-        from pyramid.interfaces import IRoutesMapper
         from webob.multidict import GetDict
+
+        from pyramid.interfaces import IRoutesMapper
 
         request = self._makeOne()
         request.GET = GetDict([('q', '123')], {})
@@ -835,8 +838,8 @@ class TestURLMethodsMixin(unittest.TestCase):
         self.assertEqual(info.args, ('tests:static/foo.css', request, {}))
 
     def test_static_url_abspath_integration_with_staticurlinfo(self):
-        from pyramid.interfaces import IStaticURLInfo
         from pyramid.config.views import StaticURLInfo
+        from pyramid.interfaces import IStaticURLInfo
 
         info = StaticURLInfo()
         here = os.path.abspath(os.path.dirname(__file__))
@@ -851,8 +854,8 @@ class TestURLMethodsMixin(unittest.TestCase):
         )
 
     def test_static_url_noscheme_uses_scheme_from_request(self):
-        from pyramid.interfaces import IStaticURLInfo
         from pyramid.config.views import StaticURLInfo
+        from pyramid.interfaces import IStaticURLInfo
 
         info = StaticURLInfo()
         here = os.path.abspath(os.path.dirname(__file__))
@@ -940,7 +943,7 @@ class TestURLMethodsMixin(unittest.TestCase):
         self.assertEqual(result, 'http://example.com:8080')
 
     def test_partial_application_url_with_http_host_nondefault_port_https(
-        self
+        self,
     ):
         environ = {'wsgi.url_scheme': 'https', 'HTTP_HOST': 'example.com:4443'}
         request = self._makeOne(environ)
@@ -1082,7 +1085,7 @@ class Test_route_url(unittest.TestCase):
         return route_url(route_name, request, *elements, **kw)
 
     def _makeRequest(self):
-        class Request(object):
+        class Request:
             def route_url(self, route_name, *elements, **kw):
                 self.route_name = route_name
                 self.elements = elements
@@ -1107,7 +1110,7 @@ class Test_route_path(unittest.TestCase):
         return route_path(route_name, request, *elements, **kw)
 
     def _makeRequest(self):
-        class Request(object):
+        class Request:
             def route_path(self, route_name, *elements, **kw):
                 self.route_name = route_name
                 self.elements = elements
@@ -1132,7 +1135,7 @@ class Test_resource_url(unittest.TestCase):
         return resource_url(resource, request, *elements, **kw)
 
     def _makeRequest(self):
-        class Request(object):
+        class Request:
             def resource_url(self, resource, *elements, **kw):
                 self.resource = resource
                 self.elements = elements
@@ -1157,7 +1160,7 @@ class Test_static_url(unittest.TestCase):
         return static_url(path, request, **kw)
 
     def _makeRequest(self):
-        class Request(object):
+        class Request:
             def static_url(self, path, **kw):
                 self.path = path
                 self.kw = kw
@@ -1194,7 +1197,7 @@ class Test_static_path(unittest.TestCase):
         return static_path(path, request, **kw)
 
     def _makeRequest(self):
-        class Request(object):
+        class Request:
             def static_path(self, path, **kw):
                 self.path = path
                 self.kw = kw
@@ -1231,7 +1234,7 @@ class Test_current_route_url(unittest.TestCase):
         return current_route_url(request, *elements, **kw)
 
     def _makeRequest(self):
-        class Request(object):
+        class Request:
             def current_route_url(self, *elements, **kw):
                 self.elements = elements
                 self.kw = kw
@@ -1254,7 +1257,7 @@ class Test_current_route_path(unittest.TestCase):
         return current_route_path(request, *elements, **kw)
 
     def _makeRequest(self):
-        class Request(object):
+        class Request:
             def current_route_path(self, *elements, **kw):
                 self.elements = elements
                 self.kw = kw
@@ -1411,7 +1414,7 @@ class Test_with_route_prefix(unittest.TestCase):
         assert self.config.route_prefix == 'old_prefix'
 
 
-class DummyContext(object):
+class DummyContext:
     def __init__(self, next=None):
         self.next = next
 

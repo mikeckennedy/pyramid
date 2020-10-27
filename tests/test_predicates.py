@@ -1,7 +1,6 @@
 import unittest
 
 from pyramid import testing
-
 from pyramid.util import text_
 
 
@@ -315,55 +314,6 @@ class TestTraversePredicate(unittest.TestCase):
         self.assertEqual(inst.phash(), '')
 
 
-class Test_CheckCSRFTokenPredicate(unittest.TestCase):
-    def _makeOne(self, val, config):
-        from pyramid.predicates import CheckCSRFTokenPredicate
-
-        return CheckCSRFTokenPredicate(val, config)
-
-    def test_text(self):
-        inst = self._makeOne(True, None)
-        self.assertEqual(inst.text(), 'check_csrf = True')
-
-    def test_phash(self):
-        inst = self._makeOne(True, None)
-        self.assertEqual(inst.phash(), 'check_csrf = True')
-
-    def test_it_call_val_True(self):
-        inst = self._makeOne(True, None)
-        request = Dummy()
-
-        def check_csrf_token(req, val, raises=True):
-            self.assertEqual(req, request)
-            self.assertEqual(val, 'csrf_token')
-            self.assertEqual(raises, False)
-            return True
-
-        inst.check_csrf_token = check_csrf_token
-        result = inst(None, request)
-        self.assertEqual(result, True)
-
-    def test_it_call_val_str(self):
-        inst = self._makeOne('abc', None)
-        request = Dummy()
-
-        def check_csrf_token(req, val, raises=True):
-            self.assertEqual(req, request)
-            self.assertEqual(val, 'abc')
-            self.assertEqual(raises, False)
-            return True
-
-        inst.check_csrf_token = check_csrf_token
-        result = inst(None, request)
-        self.assertEqual(result, True)
-
-    def test_it_call_val_False(self):
-        inst = self._makeOne(False, None)
-        request = Dummy()
-        result = inst(None, request)
-        self.assertEqual(result, True)
-
-
 class TestHeaderPredicate(unittest.TestCase):
     def _makeOne(self, val):
         from pyramid.predicates import HeaderPredicate
@@ -502,6 +452,24 @@ class Test_EffectivePrincipalsPredicate(unittest.TestCase):
 
         return EffectivePrincipalsPredicate(val, config)
 
+    def _testing_authn_policy(self, userid, groupids=tuple()):
+        from pyramid.authorization import Authenticated, Everyone
+        from pyramid.interfaces import IAuthenticationPolicy, ISecurityPolicy
+        from pyramid.security import LegacySecurityPolicy
+
+        class DummyPolicy:
+            def effective_principals(self, request):
+                p = [Everyone]
+                if userid:
+                    p.append(Authenticated)
+                    p.append(userid)
+                    p.extend(groupids)
+                return p
+
+        registry = self.config.registry
+        registry.registerUtility(DummyPolicy(), IAuthenticationPolicy)
+        registry.registerUtility(LegacySecurityPolicy(), ISecurityPolicy)
+
     def test_text(self):
         inst = self._makeOne(('verna', 'fred'), None)
         self.assertEqual(
@@ -526,23 +494,23 @@ class Test_EffectivePrincipalsPredicate(unittest.TestCase):
 
     def test_it_call_authentication_policy_provides_superset(self):
         request = testing.DummyRequest()
-        self.config.testing_securitypolicy('fred', groupids=('verna', 'bambi'))
+        self._testing_authn_policy('fred', groupids=('verna', 'bambi'))
         inst = self._makeOne(('verna', 'fred'), None)
         context = Dummy()
         self.assertTrue(inst(context, request))
 
     def test_it_call_authentication_policy_provides_superset_implicit(self):
-        from pyramid.security import Authenticated
+        from pyramid.authorization import Authenticated
 
         request = testing.DummyRequest()
-        self.config.testing_securitypolicy('fred', groupids=('verna', 'bambi'))
+        self._testing_authn_policy('fred', groupids=('verna', 'bambi'))
         inst = self._makeOne(Authenticated, None)
         context = Dummy()
         self.assertTrue(inst(context, request))
 
     def test_it_call_authentication_policy_doesnt_provide_superset(self):
         request = testing.DummyRequest()
-        self.config.testing_securitypolicy('fred')
+        self._testing_authn_policy('fred')
         inst = self._makeOne(('verna', 'fred'), None)
         context = Dummy()
         self.assertFalse(inst(context, request))
@@ -569,7 +537,7 @@ class TestNotted(unittest.TestCase):
         self.assertEqual(inst(None, None), True)
 
 
-class predicate(object):
+class predicate:
     def __repr__(self):
         return 'predicate'
 
@@ -577,11 +545,11 @@ class predicate(object):
         return 1
 
 
-class Dummy(object):
+class Dummy:
     pass
 
 
-class DummyPredicate(object):
+class DummyPredicate:
     def __init__(self, result):
         self.result = result
 

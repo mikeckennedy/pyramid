@@ -86,10 +86,10 @@ At the time of a Pyramid version release, each supports all versions of Python
 through the end of their lifespans. The end-of-life for a given version of
 Python is when security updates are no longer released.
 
-- `Python 3.4 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2019-03-16	.
-- `Python 3.5 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2020-09-13	.
+- `Python 3.5 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2020-09-13.
 - `Python 3.6 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2021-12-23.
-- `Python 3.7 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2023-06-27	.
+- `Python 3.7 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2023-06-27.
+- `Python 3.8 Lifespan <https://devguide.python.org/#status-of-python-branches>`_ 2024-10-??.
 
 To determine the Python support for a specific release of Pyramid, view its
 ``tox.ini`` file at the root of the repository's version.
@@ -103,7 +103,7 @@ a newer Pyramid release is always to read the :ref:`changelog` to find the
 deprecations and removals for each release between the release you're currently
 running and the one to which you wish to upgrade.  The change history notes
 every deprecation within a ``Deprecation`` section and every removal within a
-``Backwards Incompatibilies`` section for each release.
+``Backwards Incompatibilities`` section for each release.
 
 The change history often contains instructions for changing your code to avoid
 deprecation warnings and how to change docs-deprecated spellings to newer ones.

@@ -50,7 +50,7 @@ The suggested mechanism for unit and integration testing of a :app:`Pyramid`
 application is the Python :mod:`unittest` module.  Although this module is
 named :mod:`unittest`, it is actually capable of driving both unit and
 integration tests.  A good :mod:`unittest` tutorial is available within `Dive
-Into Python <http://www.diveintopython.net/unit_testing/index.html>`_ by Mark
+Into Python 3 <https://diveinto.org/python3/unit-testing.html>`_ by Mark
 Pilgrim.
 
 :app:`Pyramid` provides a number of facilities that make unit, integration, and
@@ -278,7 +278,7 @@ In the above example, we create a ``MyTest`` test case that inherits from
 be found when ``pytest`` is run.  It has two test methods.
 
 The first test method, ``test_view_fn_forbidden`` tests the ``view_fn`` when
-the authentication policy forbids the current user the ``edit`` permission. Its
+the security policy forbids the current user the ``edit`` permission. Its
 third line registers a "dummy" "non-permissive" authorization policy using the
 :meth:`~pyramid.config.Configurator.testing_securitypolicy` method, which is a
 special helper method for unit testing.
@@ -288,13 +288,13 @@ WebOb request object API.  A :class:`pyramid.testing.DummyRequest` is a request
 object that requires less setup than a "real" :app:`Pyramid` request.  We call
 the function being tested with the manufactured request.  When the function is
 called, :meth:`pyramid.request.Request.has_permission` will call the "dummy"
-authentication policy we've registered through
+security policy we've registered through
 :meth:`~pyramid.config.Configurator.testing_securitypolicy`, which denies
 access.  We check that the view function raises a
 :exc:`~pyramid.httpexceptions.HTTPForbidden` error.
 
 The second test method, named ``test_view_fn_allowed``, tests the alternate
-case, where the authentication policy allows access.  Notice that we pass
+case, where the security policy allows access.  Notice that we pass
 different values to :meth:`~pyramid.config.Configurator.testing_securitypolicy`
 to obtain this result.  We assert at the end of this that the view function
 returns a value.
@@ -395,28 +395,36 @@ As always, whenever you change your dependencies, make sure to run the correct
 
     $VENV/bin/pip install -e ".[testing]"
 
-In your ``MyPackage`` project, your :term:`package` is named ``myproject``
+In your ``myproject`` project, your :term:`package` is named ``myproject``
 which contains a ``views`` package containing a ``default.py`` module, which in turn contains a :term:`view`
 function ``my_view`` that returns an HTML body when the root URL is invoked:
 
-   .. literalinclude:: myproject/myproject/views/default.py
+    .. literalinclude:: myproject/myproject/views/default.py
+        :linenos:
+        :language: python
+
+Test configuration and fixtures are defined in ``conftest.py``.
+In the following example, we define a test fixture.
+
+    .. literalinclude:: myproject/tests/conftest.py
+        :pyobject: testapp
+        :linenos:
+        :language: python
+
+This fixture is used in the following example functional tests, to demonstrate invoking the above :term:`view`:
+
+   .. literalinclude:: myproject/tests/test_functional.py
       :linenos:
       :language: python
 
-The following example functional test demonstrates invoking the above
-:term:`view`:
+When these tests are run, each test method creates a "real" :term:`WSGI` application using the ``main`` function in your ``myproject.__init__`` module, using :term:`WebTest` to wrap that WSGI application.
+It assigns the result to ``res``.
 
-   .. literalinclude:: myproject/myproject/tests.py
-      :linenos:
-      :pyobject: FunctionalTests
-      :language: python
+In the test named ``test_root``, the ``TestApp``'s ``GET`` method is used to invoke the root URL.
+An assertion is made that the returned HTML contains the text ``Pyramid``.
 
-When this test is run, each test method creates a "real" :term:`WSGI`
-application using the ``main`` function in your ``myproject.__init__`` module,
-using :term:`WebTest` to wrap that WSGI application.  It assigns the result to
-``self.testapp``.  In the test named ``test_root``, the ``TestApp``'s ``GET``
-method is used to invoke the root URL.  Finally, an assertion is made that the
-returned HTML contains the text ``Pyramid``.
+In the test named ``test_notfound``, the ``TestApp``'s ``GET`` method is used to invoke a bad URL ``/badurl``.
+An assertion is made that the returned status code in the response is ``404``.
 
 See the :term:`WebTest` documentation for further information about the methods
 available to a :class:`webtest.app.TestApp` instance.

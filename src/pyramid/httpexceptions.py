@@ -129,13 +129,10 @@ subclasses have one additional keyword argument: ``location``,
 which indicates the location to which to redirect.
 """
 import json
-
 from string import Template
-
-from zope.interface import implementer
-
 from webob import html_escape as _html_escape
 from webob.acceptparse import create_accept_header
+from zope.interface import implementer
 
 from pyramid.interfaces import IExceptionResponse
 from pyramid.response import Response
@@ -146,8 +143,6 @@ def _no_escape(value):
     if value is None:
         return ''
     if not isinstance(value, str):
-        if hasattr(value, '__unicode__'):
-            value = value.__unicode__()
         if isinstance(value, bytes):
             value = text_(value, 'utf-8')
         else:
@@ -283,7 +278,7 @@ ${body}'''
                 if comment:
                     html_comment = escape(comment)
 
-                class JsonPageTemplate(object):
+                class JsonPageTemplate:
                     def __init__(self, excobj):
                         self.excobj = excobj
 
@@ -367,7 +362,7 @@ class HTTPRedirection(HTTPException):
 
     This is an abstract base class for 3xx redirection.  It indicates
     that further action needs to be taken by the user agent in order
-    to fulfill the request.  It does not necessarly signal an error
+    to fulfill the request.  It does not necessarily signal an error
     condition.
     """
 
@@ -537,7 +532,7 @@ ${html_comment}'''
     ):
         if location is None:
             raise ValueError("HTTP redirects need a location to redirect to.")
-        super(_HTTPMove, self).__init__(
+        super().__init__(
             detail=detail,
             headers=headers,
             comment=comment,
@@ -758,11 +753,12 @@ class HTTPForbidden(HTTPClientError):
     argument, ``detail``, should be a string.  The value of this string will
     be used as the ``message`` attribute of the exception object.  The second
     special keyword argument, ``result`` is usually an instance of
-    :class:`pyramid.security.Denied` or :class:`pyramid.security.ACLDenied`
-    each of which indicates a reason for the forbidden error.  However,
-    ``result`` is also permitted to be just a plain boolean ``False`` object
-    or ``None``.  The ``result`` value will be used as the ``result``
-    attribute of the exception object.  It defaults to ``None``.
+    :class:`pyramid.security.Denied` or
+    :class:`pyramid.authorization.ACLDenied` each of which indicates a reason
+    for the forbidden error.  However, ``result`` is also permitted to be just
+    a plain boolean ``False`` object or ``None``.  The ``result`` value will
+    be used as the ``result`` attribute of the exception object.
+    It defaults to ``None``.
 
     The :term:`Forbidden View` can use the attributes of a Forbidden
     exception as necessary to provide extended information in an error
@@ -914,9 +910,7 @@ class HTTPConflict(HTTPClientError):
 
     code = 409
     title = 'Conflict'
-    explanation = (
-        'There was a conflict when trying to complete ' 'your request.'
-    )
+    explanation = 'There was a conflict when trying to complete your request.'
 
 
 class HTTPGone(HTTPClientError):
@@ -1040,7 +1034,7 @@ class HTTPExpectationFailed(HTTPClientError):
     """
     subclass of :class:`~HTTPClientError`
 
-    This indidcates that the expectation given in an Expect
+    This indicates that the expectation given in an Expect
     request-header field could not be met by this server.
 
     code: 417, title: Expectation Failed

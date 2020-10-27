@@ -5,8 +5,8 @@ from pyramid.util import text_
 
 class TestPredicateList(unittest.TestCase):
     def _makeOne(self):
-        from pyramid.config.predicates import PredicateList
         from pyramid import predicates
+        from pyramid.config.predicates import PredicateList
 
         inst = PredicateList()
         for name, factory in (
@@ -19,6 +19,7 @@ class TestPredicateList(unittest.TestCase):
             ('containment', predicates.ContainmentPredicate),
             ('request_type', predicates.RequestTypePredicate),
             ('match_param', predicates.MatchParamPredicate),
+            ('is_authenticated', predicates.IsAuthenticatedPredicate),
             ('custom', predicates.CustomPredicate),
             ('traverse', predicates.TraversePredicate),
         ):
@@ -38,6 +39,19 @@ class TestPredicateList(unittest.TestCase):
     def test_ordering_number_of_predicates(self):
         from pyramid.config.predicates import predvalseq
 
+        order0, _, _ = self._callFUT(
+            xhr='xhr',
+            request_method='request_method',
+            path_info='path_info',
+            request_param='param',
+            match_param='foo=bar',
+            header='header',
+            accept='accept',
+            is_authenticated=True,
+            containment='containment',
+            request_type='request_type',
+            custom=predvalseq([DummyCustomPredicate()]),
+        )
         order1, _, _ = self._callFUT(
             xhr='xhr',
             request_method='request_method',
@@ -121,6 +135,7 @@ class TestPredicateList(unittest.TestCase):
         )
         order11, _, _ = self._callFUT(xhr='xhr')
         order12, _, _ = self._callFUT()
+        self.assertTrue(order1 > order0)
         self.assertEqual(order1, order2)
         self.assertTrue(order3 > order2)
         self.assertTrue(order4 > order3)
@@ -131,7 +146,7 @@ class TestPredicateList(unittest.TestCase):
         self.assertTrue(order9 > order8)
         self.assertTrue(order10 > order9)
         self.assertTrue(order11 > order10)
-        self.assertTrue(order12 > order10)
+        self.assertTrue(order12 > order11)
 
     def test_ordering_importance_of_predicates(self):
         from pyramid.config.predicates import predvalseq
@@ -145,7 +160,8 @@ class TestPredicateList(unittest.TestCase):
         order7, _, _ = self._callFUT(containment='containment')
         order8, _, _ = self._callFUT(request_type='request_type')
         order9, _, _ = self._callFUT(match_param='foo=bar')
-        order10, _, _ = self._callFUT(
+        order10, _, _ = self._callFUT(is_authenticated=True)
+        order11, _, _ = self._callFUT(
             custom=predvalseq([DummyCustomPredicate()])
         )
         self.assertTrue(order1 > order2)
@@ -157,6 +173,7 @@ class TestPredicateList(unittest.TestCase):
         self.assertTrue(order7 > order8)
         self.assertTrue(order8 > order9)
         self.assertTrue(order9 > order10)
+        self.assertTrue(order10 > order11)
 
     def test_ordering_importance_and_number(self):
         from pyramid.config.predicates import predvalseq
@@ -200,7 +217,7 @@ class TestPredicateList(unittest.TestCase):
     def test_different_custom_predicates_with_same_hash(self):
         from pyramid.config.predicates import predvalseq
 
-        class PredicateWithHash(object):
+        class PredicateWithHash:
             def __hash__(self):
                 return 1
 
@@ -296,6 +313,7 @@ class TestPredicateList(unittest.TestCase):
                 ]
             ),
             match_param='foo=bar',
+            is_authenticated=False,
         )
         self.assertEqual(predicates[0].text(), 'xhr = True')
         self.assertEqual(
@@ -308,9 +326,24 @@ class TestPredicateList(unittest.TestCase):
         self.assertEqual(predicates[6].text(), 'containment = containment')
         self.assertEqual(predicates[7].text(), 'request_type = request_type')
         self.assertEqual(predicates[8].text(), "match_param foo=bar")
-        self.assertEqual(predicates[9].text(), 'custom predicate')
-        self.assertEqual(predicates[10].text(), 'classmethod predicate')
-        self.assertTrue(predicates[11].text().startswith('custom predicate'))
+        self.assertEqual(predicates[9].text(), "is_authenticated = False")
+        self.assertEqual(predicates[10].text(), 'custom predicate')
+        self.assertEqual(predicates[11].text(), 'classmethod predicate')
+        self.assertTrue(predicates[12].text().startswith('custom predicate'))
+
+    def test_predicate_text_is_correct_when_multiple(self):
+        _, predicates, _ = self._callFUT(
+            request_method=('one', 'two'),
+            request_param=('par2=on', 'par1'),
+            header=('header2', 'header1:val.*'),
+            accept=('accept1', 'accept2'),
+            match_param=('foo=bar', 'baz=bim'),
+        )
+        self.assertEqual(predicates[0].text(), "request_method = one,two")
+        self.assertEqual(predicates[1].text(), 'request_param par1,par2=on')
+        self.assertEqual(predicates[2].text(), 'header header1=val.*, header2')
+        self.assertEqual(predicates[3].text(), 'accept = accept1, accept2')
+        self.assertEqual(predicates[4].text(), "match_param baz=bim,foo=bar")
 
     def test_match_param_from_string(self):
         _, predicates, _ = self._callFUT(match_param='foo=bar')
@@ -353,6 +386,96 @@ class TestPredicateList(unittest.TestCase):
         hash1, _, __ = self._callFUT(request_method=('GET',))
         hash2, _, __ = self._callFUT(request_method='GET')
         self.assertEqual(hash1, hash2)
+
+    def test_header_simple(self):
+        _, predicates, _ = self._callFUT(header='foo')
+        request = DummyRequest()
+        request.headers = {'foo': 'bars', 'baz': 'foo'}
+        self.assertTrue(predicates[0](Dummy(), request))
+
+    def test_header_simple_fails(self):
+        _, predicates, _ = self._callFUT(header='content-length')
+        request = DummyRequest()
+        request.headers = {'foo': 'bars', 'baz': 'foo'}
+        self.assertFalse(predicates[0](Dummy(), request))
+
+    def test_header_with_value(self):
+        _, predicates, _ = self._callFUT(header='foo:bar')
+        request = DummyRequest()
+        request.headers = {'foo': 'bars', 'baz': 'foo'}
+        self.assertTrue(predicates[0](Dummy(), request))
+
+    def test_header_with_value_fails(self):
+        _, predicates, _ = self._callFUT(header='foo:bar')
+        request = DummyRequest()
+        request.headers = {'foo': 'nobar', 'baz': 'foo'}
+        self.assertFalse(predicates[0](Dummy(), request))
+
+    def test_header_with_value_fails_case(self):
+        _, predicates, _ = self._callFUT(header='foo:bar')
+        request = DummyRequest()
+        request.headers = {'foo': 'BAR'}
+        self.assertFalse(predicates[0](Dummy(), request))
+
+    def test_header_multiple(self):
+        _, predicates, _ = self._callFUT(header=('foo', 'content-length'))
+        request = DummyRequest()
+        request.headers = {'foo': 'bars', 'content-length': '42'}
+        self.assertTrue(predicates[0](Dummy(), request))
+
+    def test_header_multiple_fails(self):
+        _, predicates, _ = self._callFUT(header=('foo', 'content-encoding'))
+        request = DummyRequest()
+        request.headers = {'foo': 'bars', 'content-length': '42'}
+        self.assertFalse(predicates[0](Dummy(), request))
+
+    def test_header_multiple_with_values(self):
+        _, predicates, _ = self._callFUT(header=('foo:bar', 'spam:egg'))
+        request = DummyRequest()
+        request.headers = {'foo': 'bars', 'spam': 'eggs'}
+        self.assertTrue(predicates[0](Dummy(), request))
+
+    def test_header_multiple_with_values_fails(self):
+        _, predicates, _ = self._callFUT(header=('foo:bar', 'spam:egg$'))
+        request = DummyRequest()
+        request.headers = {'foo': 'bars', 'spam': 'eggs'}
+        self.assertFalse(predicates[0](Dummy(), request))
+
+    def test_header_multiple_mixed(self):
+        _, predicates, _ = self._callFUT(header=('foo:bar', 'spam'))
+        request = DummyRequest()
+        request.headers = {'foo': 'bars', 'spam': 'ham'}
+        self.assertTrue(predicates[0](Dummy(), request))
+
+    def test_header_multiple_mixed_fails(self):
+        _, predicates, _ = self._callFUT(header=('foo:bar', 'spam'))
+        request = DummyRequest()
+        request.headers = {'foo': 'nobar', 'spamme': 'ham'}
+        self.assertFalse(predicates[0](Dummy(), request))
+
+    def test_is_authenticated_true_matches(self):
+        _, predicates, _ = self._callFUT(is_authenticated=True)
+        request = DummyRequest()
+        request.is_authenticated = True
+        self.assertTrue(predicates[0](Dummy(), request))
+
+    def test_is_authenticated_true_fails(self):
+        _, predicates, _ = self._callFUT(is_authenticated=True)
+        request = DummyRequest()
+        request.is_authenticated = False
+        self.assertFalse(predicates[0](Dummy(), request))
+
+    def test_is_authenticated_false_matches(self):
+        _, predicates, _ = self._callFUT(is_authenticated=False)
+        request = DummyRequest()
+        request.is_authenticated = False
+        self.assertTrue(predicates[0](Dummy(), request))
+
+    def test_is_authenticated_false_fails(self):
+        _, predicates, _ = self._callFUT(is_authenticated=False)
+        request = DummyRequest()
+        request.is_authenticated = True
+        self.assertFalse(predicates[0](Dummy(), request))
 
     def test_unknown_predicate(self):
         from pyramid.exceptions import ConfigurationError
@@ -443,7 +566,7 @@ class Test_sort_accept_offers(unittest.TestCase):
         )
 
 
-class DummyCustomPredicate(object):
+class DummyCustomPredicate:
     def __init__(self):
         self.__text__ = 'custom predicate'
 
@@ -458,7 +581,7 @@ class DummyCustomPredicate(object):
         pass  # pragma: no cover
 
 
-class Dummy(object):
+class Dummy:
     def __init__(self, **kw):
         self.__dict__.update(**kw)
 
@@ -472,9 +595,16 @@ class DummyRequest:
             environ = {}
         self.environ = environ
         self.params = {}
+        self.headers = {}
         self.cookies = {}
 
 
-class DummyConfigurator(object):
+class DummyConfigurator:
+    package = 'dummy package'
+    registry = 'dummy registry'
+
+    def get_settings(self):
+        return {}
+
     def maybe_dotted(self, thing):
         return thing

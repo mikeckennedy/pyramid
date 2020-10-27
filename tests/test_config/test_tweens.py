@@ -1,9 +1,8 @@
 import unittest
 
-from . import dummy_tween_factory
-from . import dummy_tween_factory2
-
 from pyramid.exceptions import ConfigurationConflictError
+
+from . import dummy_tween_factory, dummy_tween_factory2
 
 
 class TestTweensConfiguratorMixin(unittest.TestCase):
@@ -46,8 +45,7 @@ class TestTweensConfiguratorMixin(unittest.TestCase):
 
     def test_add_tweens_names_with_underover(self):
         from pyramid.interfaces import ITweens
-        from pyramid.tweens import excview_tween_factory
-        from pyramid.tweens import MAIN
+        from pyramid.tweens import MAIN, excview_tween_factory
 
         config = self._makeOne()
         config.add_tween('tests.test_config.dummy_tween_factory', over=MAIN)
@@ -118,7 +116,7 @@ class TestTweensConfiguratorMixin(unittest.TestCase):
     def test_add_tween_instance(self):
         from pyramid.exceptions import ConfigurationError
 
-        class ATween(object):
+        class ATween:
             pass
 
         atween = ATween()
@@ -317,7 +315,7 @@ class TestTweens(unittest.TestCase):
         )
 
     def test_implicit_ordering_5(self):
-        from pyramid.tweens import MAIN, INGRESS
+        from pyramid.tweens import INGRESS, MAIN
 
         tweens = self._makeOne()
         add = tweens.add_implicit

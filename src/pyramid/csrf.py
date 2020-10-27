@@ -1,25 +1,23 @@
 from urllib.parse import urlparse
 import uuid
-
 from webob.cookies import CookieProfile
 from zope.interface import implementer
-
 
 from pyramid.exceptions import BadCSRFOrigin, BadCSRFToken
 from pyramid.interfaces import ICSRFStoragePolicy
 from pyramid.settings import aslist
 from pyramid.util import (
     SimpleSerializer,
+    bytes_,
     is_same_domain,
     strings_differ,
-    bytes_,
     text_,
 )
 
 
 @implementer(ICSRFStoragePolicy)
-class LegacySessionCSRFStoragePolicy(object):
-    """ A CSRF storage policy that defers control of CSRF storage to the
+class LegacySessionCSRFStoragePolicy:
+    """A CSRF storage policy that defers control of CSRF storage to the
     session.
 
     This policy maintains compatibility with legacy ISession implementations
@@ -38,7 +36,7 @@ class LegacySessionCSRFStoragePolicy(object):
         return request.session.new_csrf_token()
 
     def get_csrf_token(self, request):
-        """ Returns the currently active CSRF token from the session,
+        """Returns the currently active CSRF token from the session,
         generating a new one if needed."""
         return request.session.get_csrf_token()
 
@@ -51,8 +49,8 @@ class LegacySessionCSRFStoragePolicy(object):
 
 
 @implementer(ICSRFStoragePolicy)
-class SessionCSRFStoragePolicy(object):
-    """ A CSRF storage policy that persists the CSRF token in the session.
+class SessionCSRFStoragePolicy:
+    """A CSRF storage policy that persists the CSRF token in the session.
 
     Note that using this CSRF implementation requires that
     a :term:`session factory` is configured.
@@ -78,7 +76,7 @@ class SessionCSRFStoragePolicy(object):
         return token
 
     def get_csrf_token(self, request):
-        """ Returns the currently active CSRF token from the session,
+        """Returns the currently active CSRF token from the session,
         generating a new one if needed."""
         token = request.session.get(self.key, None)
         if not token:
@@ -94,12 +92,12 @@ class SessionCSRFStoragePolicy(object):
 
 
 @implementer(ICSRFStoragePolicy)
-class CookieCSRFStoragePolicy(object):
-    """ An alternative CSRF implementation that stores its information in
+class CookieCSRFStoragePolicy:
+    """An alternative CSRF implementation that stores its information in
     unauthenticated cookies, known as the 'Double Submit Cookie' method in the
-    `OWASP CSRF guidelines <https://www.owasp.org/index.php/
-    Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#
-    Double_Submit_Cookie>`_. This gives some additional flexibility with
+    `OWASP CSRF guidelines
+    <https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#double-submit-cookie>`_.
+    This gives some additional flexibility with
     regards to scaling as the tokens can be generated and verified by a
     front-end server.
 
@@ -147,7 +145,7 @@ class CookieCSRFStoragePolicy(object):
         return token
 
     def get_csrf_token(self, request):
-        """ Returns the currently active CSRF token by checking the cookies
+        """Returns the currently active CSRF token by checking the cookies
         sent with the current request."""
         bound_cookies = self.cookie_profile.bind(request)
         token = bound_cookies.get_value()
@@ -164,7 +162,7 @@ class CookieCSRFStoragePolicy(object):
 
 
 def get_csrf_token(request):
-    """ Get the currently active CSRF token for the request passed, generating
+    """Get the currently active CSRF token for the request passed, generating
     a new one using ``new_csrf_token(request)`` if one does not exist. This
     calls the equivalent method in the chosen CSRF protection implementation.
 
@@ -177,7 +175,7 @@ def get_csrf_token(request):
 
 
 def new_csrf_token(request):
-    """ Generate a new CSRF token for the request passed and persist it in an
+    """Generate a new CSRF token for the request passed and persist it in an
     implementation defined manner. This calls the equivalent method in the
     chosen CSRF protection implementation.
 
@@ -192,7 +190,7 @@ def new_csrf_token(request):
 def check_csrf_token(
     request, token='csrf_token', header='X-CSRF-Token', raises=True
 ):
-    """ Check the CSRF token returned by the
+    """Check the CSRF token returned by the
     :class:`pyramid.interfaces.ICSRFStoragePolicy` implementation against the
     value in ``request.POST.get(token)`` (if a POST request) or
     ``request.headers.get(header)``. If a ``token`` keyword is not supplied to
@@ -247,7 +245,9 @@ def check_csrf_token(
     return True
 
 
-def check_csrf_origin(request, trusted_origins=None, raises=True):
+def check_csrf_origin(
+    request, *, trusted_origins=None, allow_no_origin=False, raises=True
+):
     """
     Check the ``Origin`` of the request to see if it is a cross site request or
     not.
@@ -264,6 +264,10 @@ def check_csrf_origin(request, trusted_origins=None, raises=True):
     (the default) this list of additional domains will be pulled from the
     ``pyramid.csrf_trusted_origins`` setting.
 
+    ``allow_no_origin`` determines whether to return ``True`` when the
+    origin cannot be determined via either the ``Referer`` or ``Origin``
+    header. The default is ``False`` which will reject the check.
+
     Note that this function will do nothing if ``request.scheme`` is not
     ``https``.
 
@@ -272,74 +276,90 @@ def check_csrf_origin(request, trusted_origins=None, raises=True):
     .. versionchanged:: 1.9
        Moved from :mod:`pyramid.session` to :mod:`pyramid.csrf`
 
+    .. versionchanged:: 2.0
+       Added the ``allow_no_origin`` option.
+
     """
 
     def _fail(reason):
         if raises:
-            raise BadCSRFOrigin(reason)
+            raise BadCSRFOrigin("Origin checking failed - " + reason)
         else:
             return False
 
-    if request.scheme == "https":
-        # Suppose user visits http://example.com/
-        # An active network attacker (man-in-the-middle, MITM) sends a
-        # POST form that targets https://example.com/detonate-bomb/ and
-        # submits it via JavaScript.
-        #
-        # The attacker will need to provide a CSRF cookie and token, but
-        # that's no problem for a MITM when we cannot make any assumptions
-        # about what kind of session storage is being used. So the MITM can
-        # circumvent the CSRF protection. This is true for any HTTP connection,
-        # but anyone using HTTPS expects better! For this reason, for
-        # https://example.com/ we need additional protection that treats
-        # http://example.com/ as completely untrusted. Under HTTPS,
-        # Barth et al. found that the Referer header is missing for
-        # same-domain requests in only about 0.2% of cases or less, so
-        # we can use strict Referer checking.
+    # Origin checks are only trustworthy / useful on HTTPS requests.
+    if request.scheme != "https":
+        return True
 
-        # Determine the origin of this request
-        origin = request.headers.get("Origin")
-        if origin is None:
-            origin = request.referrer
+    # Suppose user visits http://example.com/
+    # An active network attacker (man-in-the-middle, MITM) sends a
+    # POST form that targets https://example.com/detonate-bomb/ and
+    # submits it via JavaScript.
+    #
+    # The attacker will need to provide a CSRF cookie and token, but
+    # that's no problem for a MITM when we cannot make any assumptions
+    # about what kind of session storage is being used. So the MITM can
+    # circumvent the CSRF protection. This is true for any HTTP connection,
+    # but anyone using HTTPS expects better! For this reason, for
+    # https://example.com/ we need additional protection that treats
+    # http://example.com/ as completely untrusted. Under HTTPS,
+    # Barth et al. found that the Referer header is missing for
+    # same-domain requests in only about 0.2% of cases or less, so
+    # we can use strict Referer checking.
 
-        # Fail if we were not able to locate an origin at all
-        if not origin:
-            return _fail("Origin checking failed - no Origin or Referer.")
+    # Determine the origin of this request
+    origin = request.headers.get("Origin")
+    origin_is_referrer = False
+    if origin is None:
+        origin = request.referrer
+        origin_is_referrer = True
 
-        # Parse our origin so we we can extract the required information from
-        # it.
-        originp = urlparse(origin)
+    else:
+        # use the last origin in the list under the assumption that the
+        # server generally appends values and we want the origin closest
+        # to us
+        origin = origin.split(' ')[-1]
 
-        # Ensure that our Referer is also secure.
-        if originp.scheme != "https":
-            return _fail(
-                "Referer checking failed - Referer is insecure while host is "
-                "secure."
-            )
-
-        # Determine which origins we trust, which by default will include the
-        # current origin.
-        if trusted_origins is None:
-            trusted_origins = aslist(
-                request.registry.settings.get(
-                    "pyramid.csrf_trusted_origins", []
-                )
-            )
-
-        if request.host_port not in set(["80", "443"]):
-            trusted_origins.append("{0.domain}:{0.host_port}".format(request))
+    # If we can't find an origin, fail or pass immediately depending on
+    # ``allow_no_origin``
+    if not origin:
+        if allow_no_origin:
+            return True
         else:
-            trusted_origins.append(request.domain)
+            return _fail("missing Origin or Referer.")
 
-        # Actually check to see if the request's origin matches any of our
-        # trusted origins.
-        if not any(
-            is_same_domain(originp.netloc, host) for host in trusted_origins
-        ):
-            reason = (
-                "Referer checking failed - {0} does not match any trusted "
-                "origins."
-            )
-            return _fail(reason.format(origin))
+    # Determine which origins we trust, which by default will include the
+    # current origin.
+    if trusted_origins is None:
+        trusted_origins = aslist(
+            request.registry.settings.get("pyramid.csrf_trusted_origins", [])
+        )
+
+    if request.host_port not in {"80", "443"}:
+        trusted_origins.append("{0.domain}:{0.host_port}".format(request))
+    else:
+        trusted_origins.append(request.domain)
+
+    # Check "Origin: null" against trusted_origins
+    if not origin_is_referrer and origin == 'null':
+        if origin in trusted_origins:
+            return True
+        else:
+            return _fail("null does not match any trusted origins.")
+
+    # Parse our origin so we we can extract the required information from
+    # it.
+    originp = urlparse(origin)
+
+    # Ensure that our Referer is also secure.
+    if originp.scheme != "https":
+        return _fail("Origin is insecure while host is secure.")
+
+    # Actually check to see if the request's origin matches any of our
+    # trusted origins.
+    if not any(
+        is_same_domain(originp.netloc, host) for host in trusted_origins
+    ):
+        return _fail("{} does not match any trusted origins.".format(origin))
 
     return True

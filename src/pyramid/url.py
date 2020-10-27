@@ -3,19 +3,17 @@
 from functools import lru_cache
 import os
 
-from pyramid.interfaces import IResourceURL, IRoutesMapper, IStaticURLInfo
-
 from pyramid.encode import url_quote, urlencode
+from pyramid.interfaces import IResourceURL, IRoutesMapper, IStaticURLInfo
 from pyramid.path import caller_package
 from pyramid.threadlocal import get_current_registry
-from pyramid.util import bytes_
-
 from pyramid.traversal import (
-    ResourceURL,
-    quote_path_segment,
     PATH_SAFE,
     PATH_SEGMENT_SAFE,
+    ResourceURL,
+    quote_path_segment,
 )
+from pyramid.util import bytes_
 
 QUERY_SAFE = "/?:@!$&'()*+,;="  # RFC 3986
 ANCHOR_SAFE = QUERY_SAFE
@@ -58,9 +56,9 @@ def parse_url_overrides(request, kw):
     return app_url, qs, frag
 
 
-class URLMethodsMixin(object):
-    """ Request methods mixin for BaseRequest having to do with URL
-    generation """
+class URLMethodsMixin:
+    """Request methods mixin for BaseRequest having to do with URL
+    generation"""
 
     def _partial_application_url(self, scheme=None, host=None, port=None):
         """

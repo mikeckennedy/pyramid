@@ -5,114 +5,152 @@ Adding Tests
 ============
 
 We will now add tests for the models and views as well as a few functional
-tests in a new ``tests`` subpackage.  Tests ensure that an application works,
+tests in a new ``tests`` package.  Tests ensure that an application works,
 and that it continues to work when changes are made in the future.
 
-The file ``tests.py`` was generated from choosing the ``sqlalchemy`` backend
-option, but it is a common practice to put tests into a ``tests``
-subpackage, especially as projects grow in size and complexity.  Each module in
-the test subpackage should contain tests for its corresponding module in our
-application.  Each corresponding pair of modules should have the same names,
-except the test module should have the prefix ``test_``.
 
-Start by deleting ``tests.py``, then create a new directory to contain our new
-tests as well as a new empty file ``tests/__init__.py``.
+Test harness
+============
 
-.. warning::
+The project came bootstrapped with some tests and a basic harness.
+These are located in the ``tests`` package at the top-level of the project.
+It is a common practice to put tests into a ``tests`` package alongside the application package, especially as projects grow in size and complexity.
+A useful convention is for each module in the application to contain a corresponding module in the ``tests`` package.
+The test module would have the same name with the prefix ``test_``.
 
-   It is very important when refactoring a Python module into a package to be
-   sure to delete the cache files (``.pyc`` files or ``__pycache__`` folders)
-   sitting around! Python will prioritize the cache files before traversing
-   into folders, using the old code, and you will wonder why none of your
-   changes are working!
+The harness consists of the following setup:
+
+- ``pytest.ini`` - controls basic ``pytest`` config including where to find the tests.
+  We have configured ``pytest`` to search for tests in the application package and in the ``tests`` package.
+
+- ``.coveragerc`` - controls coverage config.
+  In our setup, it works with the ``pytest-cov`` plugin that we use via the ``--cov`` options to the ``pytest`` command.
+
+- ``testing.ini`` - a mirror of ``development.ini`` and ``production.ini`` that contains settings used for executing the test suite.
+  Most importantly, it contains the database connection information used by tests that require the database.
+
+- ``tests_require`` in ``setup.py`` - controls the dependencies installed when testing.
+  When the list is changed, it's necessary to re-run ``$VENV/bin/pip install -e ".[testing]"`` to ensure the new dependencies are installed.
+
+- ``tests/conftest.py`` - the core fixtures available throughout our tests.
+  The fixtures are explained in more detail below.
 
 
-Test the views
-==============
+Session-scoped test fixtures
+----------------------------
 
-We'll create a new ``tests/test_views.py`` file, adding a ``BaseTest`` class
-used as the base for other test classes. Next we'll add tests for each view
-function we previously added to our application. We'll add four test classes:
-``ViewWikiTests``, ``ViewPageTests``, ``AddPageTests``, and ``EditPageTests``.
-These test the ``view_wiki``, ``view_page``, ``add_page``, and ``edit_page``
-views.
+- ``app_settings`` - the settings ``dict`` parsed from the ``testing.ini`` file that would normally be passed by ``pserve`` into your app's ``main`` function.
+
+- ``dbengine`` - initializes the database.
+  It's important to start each run of the test suite from a known state, and this fixture is responsible for preparing the database appropriately.
+  This includes deleting any existing tables, running migrations, and potentially even loading some fixture data into the tables for use within the tests.
+
+- ``app`` - the :app:`Pyramid` WSGI application, implementing the :class:`pyramid.interfaces.IRouter` interface.
+  Most commonly this would be used for functional tests.
+
+
+Per-test fixtures
+-----------------
+
+- ``tm`` - a :class:`transaction.TransactionManager` object controlling a transaction lifecycle.
+  Generally other fixtures would join to the ``tm`` fixture to control their lifecycle and ensure they are aborted at the end of the test.
+
+- ``dbsession`` - a :class:`sqlalchemy.orm.session.Session` object connected to the database.
+  The session is scoped to the ``tm`` fixture.
+  Any changes made will be aborted at the end of the test.
+
+- ``testapp`` - a :class:`webtest.TestApp` instance wrapping the ``app`` and is used to sending requests into the application and return full response objects that can be inspected.
+  The ``testapp`` is able to mutate the request environ such that the ``dbsession`` and ``tm`` fixtures are injected and used by any code that's touching ``request.dbsession`` and ``request.tm``.
+  The ``testapp`` maintains a cookiejar, so it can be used to share state across requests, as well as the transaction database connection.
+
+- ``app_request`` - a :class:`pyramid.request.Request` object that can be used for more lightweight tests versus the full ``testapp``.
+  The ``app_request`` can be passed to view functions and other code that need a fully functional request object.
+
+- ``dummy_request`` - a :class:`pyramid.testing.DummyRequest` object that is very lightweight.
+  This is a great object to pass to view functions that have minimal side-effects as it'll be fast and simple.
+
+
+Modifying the fixtures
+----------------------
+
+We're going to make a few application-specific changes to the test harness.
+It's always good to come up with patterns for things that are done often to avoid lots of boilerplate.
+
+- Initialize the cookiejar with a CSRF token.
+  Remember our application is using :class:`pyramid.csrf.CookieCSRFStoragePolicy`.
+
+- ``testapp.get_csrf_token()`` - every POST/PUT/DELETE/PATCH request must contain the current CSRF token to prove to our app that the client isn't a third-party.
+  So we want an easy way to grab the current CSRF token and add it to the request.
+
+- ``testapp.login(params)`` - many pages are only accessible by logged in users so we want a simple way to login a user at the start of a test.
+
+Update ``tests/conftest.py`` to look like the following, adding the highlighted lines:
+
+.. literalinclude:: src/tests/tests/conftest.py
+    :linenos:
+    :emphasize-lines: 10,69-104,111,118-120
+    :language: python
+
+
+Unit tests
+==========
+
+We can test individual APIs within our codebase to ensure they fulfill the expected contract that the rest of the application expects.
+For example, we'll test the password hashing features we added to the ``tutorial.models.User`` object.
+
+Create ``tests/test_user_model.py`` such that it appears as follows:
+
+.. literalinclude:: src/tests/tests/test_user_model.py
+    :linenos:
+    :language: python
+
+
+Integration tests
+=================
+
+We can directly execute the view code, bypassing :app:`Pyramid` and testing just the code that we've written.
+These tests use dummy requests that we'll prepare appropriately to set the conditions each view expects.
+For example, setting ``request.user``, or adding some dummy data to the session.
+
+Update ``tests/test_views.py`` such that it appears as follows:
+
+.. literalinclude:: src/tests/tests/test_views.py
+    :linenos:
+    :language: python
 
 
 Functional tests
 ================
 
-We'll test the whole application, covering security aspects that are not tested
-in the unit tests, like logging in, logging out, checking that the ``basic``
-user cannot edit pages that it didn't create but the ``editor`` user can, and
-so on.
+We'll test the whole application, covering security aspects that are not tested in the unit and integration tests, like logging in, logging out, checking that the ``basic`` user cannot edit pages that it didn't create but the ``editor`` user can, and so on.
 
+Update ``tests/test_functional.py`` such that it appears as follows:
 
-View the results of all our edits to ``tests`` subpackage
-=========================================================
-
-Create ``tutorial/tests/test_views.py`` such that it appears as follows:
-
-.. literalinclude:: src/tests/tutorial/tests/test_views.py
+.. literalinclude:: src/tests/tests/test_functional.py
     :linenos:
     :language: python
-
-Create ``tutorial/tests/test_functional.py`` such that it appears as follows:
-
-.. literalinclude:: src/tests/tutorial/tests/test_functional.py
-    :linenos:
-    :language: python
-
-Create ``tutorial/tests/test_initdb.py`` such that it appears as follows:
-
-.. literalinclude:: src/tests/tutorial/tests/test_initdb.py
-    :linenos:
-    :language: python
-
-Create ``tutorial/tests/test_security.py`` such that it appears as follows:
-
-.. literalinclude:: src/tests/tutorial/tests/test_security.py
-    :linenos:
-    :language: python
-
-Create ``tutorial/tests/test_user_model.py`` such that it appears as follows:
-
-.. literalinclude:: src/tests/tutorial/tests/test_user_model.py
-    :linenos:
-    :language: python
-
-.. note::
-
-   We're utilizing the excellent WebTest_ package to do functional testing of
-   the application. This is defined in the ``tests_require`` section of our
-   ``setup.py``. Any other dependencies needed only for testing purposes can be
-   added there and will be installed automatically when running
-   ``setup.py test``.
 
 
 Running the tests
 =================
 
-We can run these tests similarly to how we did in :ref:`running_tests`, but first delete the SQLite database ``tutorial.sqlite``. If you do not delete the database, then you will see an integrity error when running the tests.
-
 On Unix:
 
 .. code-block:: bash
 
-    rm tutorial.sqlite
     $VENV/bin/pytest -q
 
 On Windows:
 
 .. code-block:: doscon
 
-    del tutorial.sqlite
     %VENV%\Scripts\pytest -q
 
 The expected result should look like the following:
 
 .. code-block:: text
 
-    ................................
-    32 passed in 9.90 seconds
+    ...........................                                         [100%]
+    27 passed in 6.91s
 
 .. _webtest: https://docs.pylonsproject.org/projects/webtest/en/latest/

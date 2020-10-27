@@ -34,7 +34,7 @@ For our example above, you can do this instead:
 .. code-block:: python
     :linenos:
 
-    @view_config(route_name="items", effective_principals=pyramid.security.Authenticated)
+    @view_config(route_name="items", is_authenticated=True)
     def auth_view(request):
         # do one thing
 
@@ -84,7 +84,7 @@ Speaking of the :app:`Pyramid` structured :meth:`~pyramid.config.Configurator.in
 If you need, you can extend or override the configuration of an existing application by including its configuration in your own and then modifying it.
 
 
-For example, if you want to reuse an existing application that already has a bunch of routes, you can just use the ``include`` statement with a ``route_prefix``. All the routes of that application will be availabe, prefixed as you requested:
+For example, if you want to reuse an existing application that already has a bunch of routes, you can just use the ``include`` statement with a ``route_prefix``. All the routes of that application will be available, prefixed as you requested:
 
 .. code-block:: python
     :linenos:
@@ -104,18 +104,19 @@ For example, if you want to reuse an existing application that already has a bun
 Authenticate Users Your Way
 ---------------------------
 
-:app:`Pyramid` ships with prebuilt, well-tested authentication and authorization schemes out of the box. Using a scheme is a matter of configuration. So if you need to change approaches later, you need only update your configuration.
-
-In addition, the system that handles authentication and authorization is flexible and pluggable. If you want to use another security add-on, or define your own, you can. And again, you need only update your application configuration to make the change.
+:app:`Pyramid` has a powerful security system that can be tailored to your
+needs.  Build your own security policy tailored to your needs, or use one of
+the many helpers provided to easily implement common authentication and
+authorization patterns.
 
 .. seealso::
 
-   See also :ref:`enabling_authorization_policy`.
+   See also :ref:`writing_security_policy`.
 
 Build Trees of Resources
 ------------------------
 
-:app:`Pyramid` supports :term:`traversal`, a way of mapping URLs to a concrete :term:`resource tree`. If your application naturally consists of an arbitrary heirarchy of different types of content (like a CMS or a Document Management System), traversal is for you. If you have a requirement for a highly granular security model ("Jane can edit documents in *this* folder, but not *that* one"), traversal can be a powerful approach.
+:app:`Pyramid` supports :term:`traversal`, a way of mapping URLs to a concrete :term:`resource tree`. If your application naturally consists of an arbitrary hierarchy of different types of content (like a CMS or a Document Management System), traversal is for you. If you have a requirement for a highly granular security model ("Jane can edit documents in *this* folder, but not *that* one"), traversal can be a powerful approach.
 
 .. seealso::
 

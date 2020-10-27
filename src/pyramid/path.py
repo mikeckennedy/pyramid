@@ -1,18 +1,12 @@
+from importlib.machinery import SOURCE_SUFFIXES
 import os
 import pkg_resources
 import sys
-import imp
-
 from zope.interface import implementer
 
 from pyramid.interfaces import IAssetDescriptor
 
-ignore_types = [imp.C_EXTENSION, imp.C_BUILTIN]
-init_names = [
-    '__init__%s' % x[0]
-    for x in imp.get_suffixes()
-    if x[0] and x[2] not in ignore_types
-]
+init_names = ['__init__%s' % x for x in SOURCE_SUFFIXES]
 
 
 def caller_path(path, level=2):
@@ -31,7 +25,7 @@ def caller_module(level=2, sys=sys):
 
 
 def package_name(pkg_or_module):
-    """ If this function is passed a module, return the dotted Python
+    """If this function is passed a module, return the dotted Python
     package name of the package in which the module lives.  If this
     function is passed a package, return the dotted Python package
     name of the package itself."""
@@ -86,7 +80,7 @@ def package_path(package):
     return prefix
 
 
-class _CALLER_PACKAGE(object):
+class _CALLER_PACKAGE:
     def __repr__(self):  # pragma: no cover (for docs)
         return 'pyramid.path.CALLER_PACKAGE'
 
@@ -94,7 +88,7 @@ class _CALLER_PACKAGE(object):
 CALLER_PACKAGE = _CALLER_PACKAGE()
 
 
-class Resolver(object):
+class Resolver:
     def __init__(self, package=CALLER_PACKAGE):
         if package in (None, CALLER_PACKAGE):
             self.package = package
@@ -125,7 +119,7 @@ class Resolver(object):
 
 
 class AssetResolver(Resolver):
-    """ A class used to resolve an :term:`asset specification` to an
+    """A class used to resolve an :term:`asset specification` to an
     :term:`asset descriptor`.
 
     .. versionadded:: 1.3
@@ -221,7 +215,7 @@ class AssetResolver(Resolver):
 
 
 class DottedNameResolver(Resolver):
-    """ A class used to resolve a :term:`dotted Python name` to a package or
+    """A class used to resolve a :term:`dotted Python name` to a package or
     module object.
 
     .. versionadded:: 1.3
@@ -399,7 +393,7 @@ class DottedNameResolver(Resolver):
 
 
 @implementer(IAssetDescriptor)
-class PkgResourcesAssetDescriptor(object):
+class PkgResourcesAssetDescriptor:
     pkg_resources = pkg_resources
 
     def __init__(self, pkg_name, path):
@@ -428,7 +422,7 @@ class PkgResourcesAssetDescriptor(object):
 
 
 @implementer(IAssetDescriptor)
-class FSAssetDescriptor(object):
+class FSAssetDescriptor:
     def __init__(self, path):
         self.path = os.path.abspath(path)
 

@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 import os
 import unittest
+
 from pyramid import testing
 
 here = os.path.dirname(__file__)
@@ -499,8 +499,8 @@ class TestLocalizerRequestMixin(unittest.TestCase):
         self.assertEqual(request.localizer, dummy)
 
     def test_localizer_from_mo(self):
-        from pyramid.interfaces import ITranslationDirectories
         from pyramid.i18n import Localizer
+        from pyramid.interfaces import ITranslationDirectories
 
         localedirs = [localedir]
         self.config.registry.registerUtility(
@@ -517,8 +517,8 @@ class TestLocalizerRequestMixin(unittest.TestCase):
         self.assertTrue(hasattr(result, 'pluralize'))
 
     def test_localizer_from_mo_bad_mo(self):
-        from pyramid.interfaces import ITranslationDirectories
         from pyramid.i18n import Localizer
+        from pyramid.interfaces import ITranslationDirectories
 
         localedirs = [localedir]
         self.config.registry.registerUtility(
@@ -531,7 +531,7 @@ class TestLocalizerRequestMixin(unittest.TestCase):
         self.assertEqual(result.translate('Approve', 'deformsite'), 'Approve')
 
 
-class DummyRequest(object):
+class DummyRequest:
     def __init__(self):
         self.params = {}
         self.cookies = {}
@@ -541,7 +541,7 @@ def dummy_negotiator(request):
     return 'bogus'
 
 
-class DummyTranslations(object):
+class DummyTranslations:
     def ugettext(self, text):
         return text
 
