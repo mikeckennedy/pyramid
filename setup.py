@@ -22,7 +22,7 @@ def readfile(name):
 README = readfile('README.rst')
 CHANGES = readfile('CHANGES.rst')
 
-VERSION = '2.0.dev0'
+VERSION = '2.0b1'
 
 install_requires = [
     'hupper >= 1.5',  # ignore_files support
@@ -41,13 +41,13 @@ tests_require = [
     'zope.component >= 4.0',  # py3 compat
 ]
 
-
 docs_extras = [
-    'Sphinx >= 1.8.1',  # Unicode characters in tree diagrams
+    'Sphinx >= 3.0.0',  # Force RTD to use >= 3.0.0
     'docutils',
     'pylons-sphinx-themes >= 1.0.8',  # Ethical Ads
     'pylons_sphinx_latesturl',
     'repoze.sphinx.autointerface',
+    'sphinx-copybutton',
     'sphinxcontrib-autoprogram',
 ]
 
@@ -73,10 +73,10 @@ setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Framework :: Pyramid",
@@ -93,12 +93,12 @@ setup(
         'Changelog': '{}whatsnew-{}.html'.format(docs_url, branch_version),
         'Issue Tracker': 'https://github.com/Pylons/pyramid/issues',
     },
-    license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
+    license="BSD-derived (Repoze)",
     packages=find_packages('src', exclude=['tests']),
     package_dir={'': 'src'},
     include_package_data=True,
     zip_safe=False,
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     install_requires=install_requires,
     extras_require={'testing': testing_extras, 'docs': docs_extras},
     tests_require=tests_require,
