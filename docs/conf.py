@@ -14,7 +14,6 @@
 import sys
 import os
 import datetime
-import inspect
 import warnings
 
 warnings.simplefilter('ignore', DeprecationWarning)
@@ -77,6 +76,7 @@ intersphinx_mapping = {
     'tutorials': ('https://docs.pylonsproject.org/projects/pyramid-tutorials/en/latest/', None),
     'venusian': ('https://docs.pylonsproject.org/projects/venusian/en/latest/', None),
     'webtest': ('https://docs.pylonsproject.org/projects/webtest/en/latest/', None),
+    'webob': ('https://docs.pylonsproject.org/projects/webob/en/latest/', None),
     'zcml': (
     'https://docs.pylonsproject.org/projects/pyramid-zcml/en/latest/', None),
 }
@@ -384,19 +384,7 @@ def setup(app):
     app.add_directive('frontmatter', FrontMatter)
     app.add_directive('mainmatter', MainMatter)
     app.add_directive('backmatter', BackMatter)
-    app.connect('autodoc-process-signature', resig)
 
-
-def resig(app, what, name, obj, options, signature, return_annotation):
-    """ Allow for preservation of ``@action_method`` decorated methods
-    in configurator """
-    docobj = getattr(obj, '__docobj__', None)
-    if docobj is not None:
-        argspec = inspect.getargspec(docobj)
-        if argspec[0] and argspec[0][0] in ('cls', 'self'):
-            del argspec[0][0]
-        signature = inspect.formatargspec(*argspec)
-    return signature, return_annotation
 
 # turn off all line numbers in latex formatting
 
