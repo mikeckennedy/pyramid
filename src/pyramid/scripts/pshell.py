@@ -1,8 +1,8 @@
 import argparse
 from code import interact
 from contextlib import contextmanager
+import importlib.metadata
 import os
-import pkg_resources
 import sys
 import textwrap
 
@@ -38,9 +38,10 @@ class PShellCommand:
     than one Pyramid application within it, the loader will use the
     last one.
     """
+    script_name = 'pshell'
     bootstrap = staticmethod(bootstrap)  # for testing
     get_config_loader = staticmethod(get_config_loader)  # for testing
-    pkg_resources = pkg_resources  # for testing
+    importlib_metadata = importlib.metadata  # for testing
 
     parser = argparse.ArgumentParser(
         description=textwrap.dedent(description),
@@ -130,6 +131,7 @@ class PShellCommand:
 
         config_uri = self.args.config_uri
         config_vars = parse_vars(self.args.config_vars)
+        config_vars.setdefault('__script__', self.script_name)
         loader = self.get_config_loader(config_uri)
         loader.setup_logging(config_vars)
         self.pshell_file_config(loader, config_vars)
@@ -162,9 +164,9 @@ class PShellCommand:
         env_help['root'] = 'Root of the default resource tree.'
         env_help['registry'] = 'Active Pyramid registry.'
         env_help['request'] = 'Active request object.'
-        env_help[
-            'root_factory'
-        ] = 'Default root factory used to create `root`.'
+        env_help['root_factory'] = (
+            'Default root factory used to create `root`.'
+        )
 
         # load the pshell section of the ini file
         env.update(self.loaded_objects)
@@ -226,10 +228,16 @@ class PShellCommand:
         return 0
 
     def find_all_shells(self):
-        pkg_resources = self.pkg_resources
+        importlib_metadata = self.importlib_metadata
 
         shells = {}
-        for ep in pkg_resources.iter_entry_points('pyramid.pshell_runner'):
+        eps = importlib_metadata.entry_points()
+        if hasattr(eps, 'select'):
+            eps = eps.select(group='pyramid.pshell_runner')
+        else:  # pragma: no cover
+            # fallback for py38 and py39
+            eps = eps.get('pyramid.pshell_runner')
+        for ep in eps:
             name = ep.name
             shell_factory = ep.load()
             shells[name] = shell_factory
