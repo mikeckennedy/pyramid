@@ -9,14 +9,13 @@
 # All configuration values have a default value; values that are commented out
 # serve to show the default value.
 
-import sys
+import importlib.metadata
 import os
 import datetime
 import warnings
 
 warnings.simplefilter('ignore', DeprecationWarning)
 
-import pkg_resources
 import pylons_sphinx_themes
 
 # skip raw nodes
@@ -98,7 +97,7 @@ copyright = '2008-%s, Agendaless Consulting' % thisyear
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = pkg_resources.get_distribution('pyramid').version
+version = importlib.metadata.distribution('pyramid').version
 
 # The full version, including alpha/beta/rc tags.
 release = version
@@ -141,6 +140,7 @@ if book:
 #     'whatsnew-1.9': 'index',
 #     'whatsnew-1.10': 'index',
 #     'whatsnew-2.0': 'index',
+#     'whatsnew-2.1': 'index',
 #     'tutorials/gae/index': 'index',
 #     'api/chameleon_text': 'api',
 #     'api/chameleon_zpt': 'api',
